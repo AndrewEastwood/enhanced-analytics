@@ -1,6 +1,6 @@
 {
     "name": "enhanced-analytics",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Couple of convenient tools for populating dataLayer ecommerce event data.",
     "main": "index.js",
     "types": "index.d.ts",
@@ -20,14 +20,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/AndrewEastwood/react-analytics.git"
+        "url": "git+https://github.com/AndrewEastwood/enhanced-analytics.git"
     },
     "author": "Andy Eastwood",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/AndrewEastwood/react-analytics/issues"
+        "url": "https://github.com/AndrewEastwood/enhanced-analytics/issues"
     },
-    "homepage": "https://github.com/AndrewEastwood/react-analytics#readme",
+    "homepage": "https://github.com/AndrewEastwood/enhanced-analytics#readme",
     "dependencies": {
         "@types/express": "^4.17.13",
         "@types/lodash": "^4.14.167",
