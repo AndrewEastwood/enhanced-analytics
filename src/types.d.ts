@@ -130,4 +130,10 @@ export type TDataOrder = {
   payment: {
     type: string;
   };
-}
+};
+
+type TEvtType<TPayload> = {
+  when: (check:() => boolean) => TEvtType<TPayload>;
+  push: (w: Window & typeof globalThis) => TEvtType<TPayload>;
+  value: () => TPayload;
+};

@@ -1,11 +1,5 @@
-import { TDataBasket, TDataOrder, TDataProduct, TEECParams, TSettings } from "./types";
+import { TDataBasket, TDataOrder, TDataProduct, TEECParams, TEvtType, TSettings } from "./types";
 import * as trackUtils from './utils';
-
-type TEvtType<TPayload> = {
-  when: (check:() => boolean) => TEvtType<TPayload>;
-  push: (w: Window & typeof globalThis) => TEvtType<TPayload>;
-  value: () => TPayload;
-};
 
 export const getEEC = (options:TSettings) => {
 
