@@ -96,7 +96,7 @@ export const useAnalytics = () => {
         events: getEEC(store).groups.catalog(v),
       }
     },
-    withBasket: (payload:TDataBasket|Record<string,any>) => {
+    withBasket: (payload:TDataBasket|Record<string,any>|null) => {
       const store = getConfig();
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
@@ -115,7 +115,7 @@ export const useAnalytics = () => {
         events: getEEC(store).groups.basket(v),
       }
     },
-    withOrder: (payload:TDataOrder|Record<string,any>) => {
+    withOrder: (payload:TDataOrder|Record<string,any>|null) => {
       const store = getConfig();
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
