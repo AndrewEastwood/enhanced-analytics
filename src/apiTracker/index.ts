@@ -1,159 +1,167 @@
-import { ETrackers, TDataBasket, TDataOrder, TDataPage, TDataProduct, TDataProfile, TSettings } from "../types";
+import { Request } from "express";
+import { ETrackers, TDataBasket, TDataOrder, TDataPage, TDataProduct, TDataProfile, TSettings } from "../shared";
 import tFb from './facebook';
 import tKlyo from './klaviyo';
 
 type TTrackers = {} & Partial<Record<ETrackers, boolean>>;
 
 export const apiTracker = (config:TSettings, trackers?:TTrackers) => {
+  const {
+    serverAnalytics:analytics,
+  } = config;
+  const useFb = analytics?.[ETrackers.Facebook]?.enabled &&
+    (trackers?.fb || true);
+  const useKl = analytics?.[ETrackers.Klaviyo]?.enabled &&
+    (trackers?.klaviyo || true);
 
-  const trackTransactionRefund = (order:TDataOrder) => async (request) => {
+    const trackTransactionRefund = (order:TDataOrder) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackTransactionRefund : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackTransactionRefund : null
+      useFb ? tFb(config).trackTransactionRefund : null,
+      useKl ? tKlyo(config).trackTransactionRefund : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, order));
   }
 
-  const trackTransactionCancel = (order:TDataOrder) => async (request) => {
+  const trackTransactionCancel = (order:TDataOrder) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackTransactionCancel : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackTransactionCancel : null
+      useFb ? tFb(config).trackTransactionCancel : null,
+      useKl ? tKlyo(config).trackTransactionCancel : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, order));
   }
 
-  const trackTransactionFulfill = (order:TDataOrder) => async (request) => {
+  const trackTransactionFulfill = (order:TDataOrder) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackTransactionFulfill : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackTransactionFulfill : null
+      useFb ? tFb(config).trackTransactionFulfill : null,
+      useKl ? tKlyo(config).trackTransactionFulfill : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, order));
   }
 
-  const trackTransaction = (order:TDataOrder) => async (request) => {
+  const trackTransaction = (order:TDataOrder) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackTransaction : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackTransaction : null
+      useFb ? tFb(config).trackTransaction : null,
+      useKl ? tKlyo(config).trackTransaction : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, order));
   }
 
-  const trackProductAddToCart = (basket:TDataBasket) => async (request) => {
+  const trackProductAddToCart = (basket:TDataBasket) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackProductAddToCart : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackProductAddToCart : null
+      useFb ? tFb(config).trackProductAddToCart : null,
+      useKl ? tKlyo(config).trackProductAddToCart : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, basket));
   }
 
-  const trackProductRemoveFromCart = (basket:TDataBasket) => async (request) => {
+  const trackProductRemoveFromCart = (basket:TDataBasket) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackProductRemoveFromCart : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackProductRemoveFromCart : null
+      useFb ? tFb(config).trackProductRemoveFromCart : null,
+      useKl ? tKlyo(config).trackProductRemoveFromCart : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, basket));
   }
 
-  const trackProductsItemView = (products:TDataProduct[]) => async (request) => {
+  const trackProductsItemView = (products:TDataProduct[]) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackProductsItemView : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackProductsItemView : null
+      useFb ? tFb(config).trackProductsItemView : null,
+      useKl ? tKlyo(config).trackProductsItemView : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, products));
   }
 
-  const trackProductItemView = (product:TDataProduct) => async (request) => {
+  const trackProductItemView = (product:TDataProduct) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackProductItemView : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackProductItemView : null
+      useFb ? tFb(config).trackProductItemView : null,
+      useKl ? tKlyo(config).trackProductItemView : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, product));
   }
 
-  const trackPageView = (page:TDataPage) => async (request) => {
+  const trackPageView = (page:TDataPage) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackPageView : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackPageView : null
+      useFb ? tFb(config).trackPageView : null,
+      useKl ? tKlyo(config).trackPageView : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, page));
   }
 
-  const trackInitiateCheckout = (basket:TDataBasket) => async (request) => {
+  const trackInitiateCheckout = (basket:TDataBasket) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackInitiateCheckout : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackInitiateCheckout : null
+      useFb ? tFb(config).trackInitiateCheckout : null,
+      useKl ? tKlyo(config).trackInitiateCheckout : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, basket));
   }
 
-  const trackSearch = (searchTerm:string, products:TDataProduct[]) => async (request) => {
+  const trackSearch = (searchTerm:string, products:TDataProduct[]) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackSearch : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackSearch : null
+      useFb ? tFb(config).trackSearch : null,
+      useKl ? tKlyo(config).trackSearch : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, searchTerm, products));
   }
 
-  const trackIdentify = (profile:TDataProfile) => async (request) => {
+  const trackIdentify = (profile:TDataProfile) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackIdentify : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackIdentify : null
+      useFb ? tFb(config).trackIdentify : null,
+      useKl ? tKlyo(config).trackIdentify : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, profile));
   }
 
-  const trackNewProfile = (profile:TDataProfile) => async (request) => {
+  const trackNewProfile = (profile:TDataProfile) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackNewProfile : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackNewProfile : null
+      useFb ? tFb(config).trackNewProfile : null,
+      useKl ? tKlyo(config).trackNewProfile : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, profile));
   }
 
-  const trackProfileResetPassword = (profile:TDataProfile) => async (request) => {
+  const trackProfileResetPassword = (profile:TDataProfile) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackProfileResetPassword : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackProfileResetPassword : null
+      useFb ? tFb(config).trackProfileResetPassword : null,
+      useKl ? tKlyo(config).trackProfileResetPassword : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, profile));
   }
 
-  const trackProfileLogIn = (profile:TDataProfile) => async (request) => {
+  const trackProfileLogIn = (profile:TDataProfile) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackProfileLogIn : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackProfileLogIn : null
+      useFb ? tFb(config).trackProfileLogIn : null,
+      useKl ? tKlyo(config).trackProfileLogIn : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, profile));
   }
 
-  const trackProfileLogOut = (profile:TDataProfile) => async (request) => {
+  const trackProfileLogOut = (profile:TDataProfile) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackProfileLogOut : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackProfileLogOut : null
+      useFb ? tFb(config).trackProfileLogOut : null,
+      useKl ? tKlyo(config).trackProfileLogOut : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, profile));
   }
 
-  const trackProfileSubscribeNL = (profile:TDataProfile) => async (request) => {
+  const trackProfileSubscribeNL = (profile:TDataProfile) => async (request:Request) => {
     [
-      (!trackers || trackers?.fb) ? tFb(config).trackProfileSubscribeNL : null,
-      (!trackers || trackers?.klaviyo) ? tKlyo(config).trackProfileSubscribeNL : null
+      useFb ? tFb(config).trackProfileSubscribeNL : null,
+      useKl ? tKlyo(config).trackProfileSubscribeNL : null
     ]
     .filter(v => !!v)
     .map(v => v!(request, profile));
@@ -161,31 +169,31 @@ export const apiTracker = (config:TSettings, trackers?:TTrackers) => {
 
   return {
     page: (page:TDataPage) => ({
-      trackPageView: trackPageView.bind(null, page),
+      trackPageView: trackPageView(page),
     }),
     profile: (profile:TDataProfile) => ({
-      trackIdentify: trackIdentify.bind(null, profile),
-      trackNewProfile: trackNewProfile.bind(null, profile),
-      trackProfileResetPassword: trackProfileResetPassword.bind(null, profile),
-      trackProfileLogIn: trackProfileLogIn.bind(null, profile),
-      trackProfileLogOut: trackProfileLogOut.bind(null, profile),
-      trackProfileSubscribeNL: trackProfileSubscribeNL.bind(null, profile),
+      trackIdentify: trackIdentify(profile),
+      trackNewProfile: trackNewProfile(profile),
+      trackProfileResetPassword: trackProfileResetPassword(profile),
+      trackProfileLogIn: trackProfileLogIn(profile),
+      trackProfileLogOut: trackProfileLogOut(profile),
+      trackProfileSubscribeNL: trackProfileSubscribeNL(profile),
     }),
     catalog: (products:TDataProduct[], search = '') => ({
-      trackProductsItemView: trackProductsItemView.bind(null, products),
-      trackProductItemView: trackProductItemView.bind(null, products[0]),
-      trackSearch: trackSearch.bind(null, search, products),
+      trackProductsItemView: trackProductsItemView(products),
+      trackProductItemView: trackProductItemView(products[0]),
+      trackSearch: trackSearch(search, products),
     }),
     basket: (basket:TDataBasket) => ({
-      trackProductAddToCart: trackProductAddToCart.bind(null, basket),
-      trackProductRemoveFromCart: trackProductRemoveFromCart.bind(null, basket),
-      trackInitiateCheckout: trackInitiateCheckout.bind(null, basket),
+      trackProductAddToCart: trackProductAddToCart(basket),
+      trackProductRemoveFromCart: trackProductRemoveFromCart(basket),
+      trackInitiateCheckout: trackInitiateCheckout(basket),
     }),
     order: (order:TDataOrder) => ({
-      trackTransaction: trackTransaction.bind(null, order),
-      trackTransactionRefund: trackTransactionRefund.bind(null, order),
-      trackTransactionCancel: trackTransactionCancel.bind(null, order),
-      trackTransactionFulfill: trackTransactionFulfill.bind(null, order),
+      trackTransaction: trackTransaction(order),
+      trackTransactionRefund: trackTransactionRefund(order),
+      trackTransactionCancel: trackTransactionCancel(order),
+      trackTransactionFulfill: trackTransactionFulfill(order),
     }),
   };
 }

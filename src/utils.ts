@@ -1,44 +1,46 @@
-import bizSdk from 'facebook-nodejs-business-sdk';
-import { TDataBasket, TDataOrder, TDataProduct, TEECParams, TSettings } from './types';
+import { getConfig } from './config';
+import { Request } from 'express';
+import { ETrackers, TDataBasket, TDataOrder, TDataProduct, TEECParams, TSettings } from './shared';
 
-const getEvtUUIDStr = (request) => {
-  return `_uuid_${request.app.locals.evtUuid}`;
+const getEvtUUIDStr = (request:Request) => {
+  const c = getConfig();
+  return `_uuid_${c?.serverAnalytics?.resolvers?.serverEventUUID(request)}`;
 }
 
-const getEventNameOfIdentify = (request) => {
+const getEventNameOfIdentify = (request:Request) => {
   return '';
 }
 
-const getEventNameOfTransaction = (request, order:TDataOrder) => {
+const getEventNameOfTransaction = (request:Request, order:TDataOrder) => {
   return `new_order_of_${order.id}${getEvtUUIDStr(request)}`;
 }
 
-const getEventNameOfProductAddToCart = (request, p:TDataProduct) => {
+const getEventNameOfProductAddToCart = (request:Request, p:TDataProduct) => {
   // const ids = p.map(v => v.id).join('/');
   // const qqs = p.map(v => v.quantity).join('/');
   return `add_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr(request)}`;
 }
 
-const getEventNameOfProductRemoveFromCart = (request, p:TDataProduct) => {
+const getEventNameOfProductRemoveFromCart = (request:Request, p:TDataProduct) => {
   // const ids = p.map(v => v.id).join('/');
   // const qqs = p.map(v => v.quantity).join('/');
   return `rem_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr(request)}`;
 }
 
-const getEventNameOfProductItemView = (request, product:TDataProduct) => {
+const getEventNameOfProductItemView = (request:Request, product:TDataProduct) => {
   return `view_product_of_${product.id}${getEvtUUIDStr(request)}`;
 }
 
-const getEventNameOfSearch = (request, searchTerm:string, products:TDataProduct[]) => {
+const getEventNameOfSearch = (request:Request, searchTerm:string, products:TDataProduct[]) => {
   return `search_of_${searchTerm}_found${products.length}${getEvtUUIDStr(request)}`;
 }
 
-const getEventNameOfPageView = (request) => {
+const getEventNameOfPageView = (request:Request) => {
   return `page_view_of_${encodeURIComponent(request.path.substr(1) || 'root')}${getEvtUUIDStr(request)}`;
 }
 
-const getEventNameOfInitiateCheckout = (request, basket) => {
-  return `init_checkout_of_p${basket.totalQuantity}_${basket.total.toFixed(2)}${getEvtUUIDStr(request)}`;
+const getEventNameOfInitiateCheckout = (request:Request, basket:TDataBasket) => {
+  return `init_checkout_of_p${basket.quantity}_${basket.total.toFixed(2)}${getEvtUUIDStr(request)}`;
 }
 
 const getEventNameOfNewProfile = (request) => {
@@ -47,8 +49,12 @@ const getEventNameOfNewProfile = (request) => {
 
 const InitCheckout = (options:TSettings, basket:TDataBasket) => ({
   getContents: () => {
-    const Content = bizSdk.Content;
-    const DeliveryCategory = bizSdk.DeliveryCategory;
+    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    if (!sdk) {
+      throw 'Facebook is configured without SDK; Please provide SDK;'
+    }
+    const Content = sdk.Content;
+    const DeliveryCategory = sdk.DeliveryCategory;
     return Object
       .values(basket.products)
       .map(storedProduct => (new Content())
@@ -68,6 +74,7 @@ const InitCheckout = (options:TSettings, basket:TDataBasket) => ({
   getEECDataLayer: (params?:TEECParams) => {
     return {
       event: params?.evName || 'eec.checkout',
+      basket,
       custom: {
         value: basket.total,
         currency: options.currency,
@@ -89,7 +96,7 @@ const InitCheckout = (options:TSettings, basket:TDataBasket) => ({
               brand: p.brand,
               price: p.price,
               quantity: p.quantity,
-              variant: p.variant,
+              variant: p.variant || '',
               ...(p.dimensions || []).reduce((r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
@@ -107,7 +114,11 @@ const InitCheckout = (options:TSettings, basket:TDataBasket) => ({
 
 const ProductDetails = (options:TSettings, product:TDataProduct) => ({
   getContents: () => {
-    const Content = bizSdk.Content;
+    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    if (!sdk) {
+      throw 'Facebook is configured without SDK; Please provide SDK;'
+    }
+    const Content = sdk.Content;
     return new Content()
       .setId(product.id)
       .setTitle(product.title)
@@ -132,6 +143,7 @@ const ProductDetails = (options:TSettings, product:TDataProduct) => ({
         id: product.id,
       },
       ecommerce: {
+        currencyCode: options.currency,
         detail: {
           actionField: {
             list: params?.listName || options.defaultCatalogName,
@@ -161,8 +173,12 @@ const ProductDetails = (options:TSettings, product:TDataProduct) => ({
 
 const Purchase = (options:TSettings, order:TDataOrder) => ({
   getContents: () => {
-    const Content = bizSdk.Content;
-    const DeliveryCategory = bizSdk.DeliveryCategory;
+    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    if (!sdk) {
+      throw 'Facebook is configured without SDK; Please provide SDK;'
+    }
+    const Content = sdk.Content;
+    const DeliveryCategory = sdk.DeliveryCategory;
     return Object
       .values(order.products)
       .map(storedProduct => (new Content())
@@ -187,13 +203,7 @@ const Purchase = (options:TSettings, order:TDataOrder) => ({
         currency: options.currency,
         totalQuantity: order.quantity,
       },
-      order: {
-        id: order.id,
-        total: order.revenue,
-        tax: order.tax || null,
-        datetime: order.dateCreated,
-        paymentType: order.payment.type,
-      },
+      order,
       shipping: order.shipping,
       userData: {
         email: order.customer.email,
@@ -228,7 +238,7 @@ const Purchase = (options:TSettings, order:TDataOrder) => ({
               brand: p.brand,
               price: p.price,
               quantity: p.quantity,
-              variant: p.variant,
+              variant: p.variant || '',
               ...(p.dimensions || []).reduce((r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
@@ -246,8 +256,12 @@ const Purchase = (options:TSettings, order:TDataOrder) => ({
 
 const Refund = (options:TSettings, order:TDataOrder) => ({
   getContents: () => {
-    const Content = bizSdk.Content;
-    const DeliveryCategory = bizSdk.DeliveryCategory;
+    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    if (!sdk) {
+      throw 'Facebook is configured without SDK; Please provide SDK;'
+    }
+    const Content = sdk.Content;
+    const DeliveryCategory = sdk.DeliveryCategory;
     return order.products
       .map(storedProduct => (new Content())
         .setId(storedProduct.id)
@@ -290,7 +304,7 @@ const Refund = (options:TSettings, order:TDataOrder) => ({
               brand: p.brand,
               price: p.price,
               quantity: p.quantity,
-              variant: p.variant,
+              variant: p.variant || '',
               ...(p.dimensions || []).reduce((r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
@@ -308,8 +322,12 @@ const Refund = (options:TSettings, order:TDataOrder) => ({
 
 const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
   getContents: () => {
+    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    if (!sdk) {
+      throw 'Facebook is configured without SDK; Please provide SDK;'
+    }
     // const product = basket.lastAdded?.[0] || {};
-    const Content = bizSdk.Content;
+    const Content = sdk.Content;
     return basket.lastAdded
       .map(product => (new Content())
       .setId(product.id)
@@ -328,8 +346,9 @@ const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
     const product = basket.lastAdded?.[0] || {};
     return {
       event: params?.evName || 'eec.add',
+      basket,
       custom: {
-        value: product.price,
+        value: product.total || 0,
         currency: options.currency,
         totalQuantity: product.quantity,
         category: product.category,
@@ -338,11 +357,12 @@ const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
         id: product.id,
       },
       ecommerce: {
+        currencyCode: options.currency,
         add: {
           actionField: {
             list: params?.listName || options.defaultBasketName,
           },
-          products: basket.products
+          products: basket.lastAdded
             .map(p => ({
               id: p.id,
               sku: p.sku,
@@ -351,6 +371,7 @@ const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
               brand: p.brand,
               price: p.price,
               quantity: p.quantity,
+              variant: p.variant || '',
               ...(p.dimensions || []).reduce((r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
@@ -368,8 +389,12 @@ const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
 
 const BasketRemoveProduct = (options:TSettings, basket:TDataBasket) => ({
   getContents: () => {
+    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    if (!sdk) {
+      throw 'Facebook is configured without SDK; Please provide SDK;'
+    }
     // const product = basket.lastRemoved?.[0] || {};
-    const Content = bizSdk.Content;
+    const Content = sdk.Content;
     return basket.lastRemoved.map(product =>
       (new Content())
         .setId(product.id)
@@ -388,8 +413,9 @@ const BasketRemoveProduct = (options:TSettings, basket:TDataBasket) => ({
     const product = basket.lastRemoved?.[0] || {};
     return {
       event: params?.evName || 'eec.remove',
+      basket,
       custom: {
-        value: product.price,
+        value: product.total || 0,
         currency: options.currency,
         totalQuantity: product.quantity,
         category: product.category,
@@ -398,11 +424,12 @@ const BasketRemoveProduct = (options:TSettings, basket:TDataBasket) => ({
         id: product.id,
       },
       ecommerce: {
-        add: {
+        currencyCode: options.currency,
+        remove: {
           actionField: {
             list: params?.listName || options.defaultBasketName,
           },
-          products: basket.products
+          products: basket.lastRemoved
             .map(p => ({
               id: p.id,
               sku: p.sku,
@@ -411,6 +438,7 @@ const BasketRemoveProduct = (options:TSettings, basket:TDataBasket) => ({
               brand: p.brand,
               price: p.price,
               quantity: p.quantity,
+              variant: p.variant || '',
               ...(p.dimensions || []).reduce((r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
@@ -436,16 +464,17 @@ const Products = (options:TSettings, products:TDataProduct[]) => ({
         totalQuantity: products.length,
       },
       ecommerce: {
+        currencyCode: options.currency,
         impressions: products
           .map(p => ({
-            list: params?.listName || options.defaultCatalogName,
+            list: p.list || params?.listName || options.defaultCatalogName,
             id: p.id,
             sku: p.sku,
             name: p.title,
             category: p.category,
             brand: p.brand,
             price: p.price,
-            variant: p.variant,
+            variant: p.variant || '',
             ...(p.dimensions || []).reduce((r, v, idx) => ({
               ...r,
               [`dimension${idx}`]: v,

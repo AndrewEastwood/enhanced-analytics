@@ -1,4 +1,4 @@
-import { TDataBasket, TDataOrder, TDataProduct, TEECParams, TEvtType, TSettings } from "./types";
+import { TDataBasket, TDataOrder, TDataProduct, TEECParams, TEvtType, TSettings } from "./shared";
 import * as trackUtils from './utils';
 
 export const getEEC = (options:TSettings) => {

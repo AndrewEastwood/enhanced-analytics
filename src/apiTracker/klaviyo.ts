@@ -1,23 +1,28 @@
 import { Request } from 'express';
-import Klaviyo from 'node-klaviyo';
-import { TSettings, TDataProduct, TDataProfile, TDataOrder, TDataBasket, TDataPage } from '../types';
+import { TSettings, TDataProduct, TDataProfile, TDataOrder, TDataBasket, TDataPage } from '../shared';
 import * as trackUtils from '../utils';
 
-let KlaviyoClient:(typeof Klaviyo) = null;
+let KlaviyoClient:any = null;
 
 export const klaviyoTracker = (options:TSettings) => {
   const {
     absoluteURL,
-    analytics,
+    serverAnalytics:analytics,
   } = options;
 
-  KlaviyoClient = KlaviyoClient || new Klaviyo({
-      publicToken: analytics.klaviyo.siteId,
-      privateToken: analytics.klaviyo.token
+  const sdk = analytics?.klaviyo?.sdk;
+
+  if (!sdk) {
+    throw 'Klaviyo is configured without SDK; Please provide SDK;'
+  }
+
+  KlaviyoClient = KlaviyoClient || new sdk({
+      publicToken: analytics.klaviyo?.siteId,
+      privateToken: analytics.klaviyo?.token
   });
 
   const getUserObj = (request:Request, profile?:TDataProfile) => {
-    return profile ? profile : options.resolvers.userData(request);
+    return profile ? profile : options.serverAnalytics.resolvers.userData(request);
 
     // [TODO] move into app middleware >>
     // const user = request.user || null; // session user
@@ -398,7 +403,7 @@ export const klaviyoTracker = (options:TSettings) => {
         "$email": user.email,
       },
       properties: {
-        PasswordResetLink: absoluteURL + options.links.resetPassword,
+        PasswordResetLink: absoluteURL + options.serverAnalytics.links.resetPassword,
       }
     }) : void 0;
     trackIdentify(request);

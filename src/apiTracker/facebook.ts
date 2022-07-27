@@ -1,27 +1,31 @@
 import { Request } from 'express';
-import bizSdk from 'facebook-nodejs-business-sdk';
-import { TDataBasket, TDataOrder, TDataPage, TDataProduct, TDataProfile, TSettings } from '../types';
+import { TDataBasket, TDataOrder, TDataPage, TDataProduct, TDataProfile, TSettings } from '../shared';
 import * as trackUtils from '../utils';
-
-// const Content = bizSdk.Content;
-const CustomData = bizSdk.CustomData;
-// const DeliveryCategory = bizSdk.DeliveryCategory;
-const EventRequest = bizSdk.EventRequest;
-const UserData = bizSdk.UserData;
-const ServerEvent = bizSdk.ServerEvent;
 
 export const fbTracker = (options:TSettings) => {
   const {
-    analytics,
+    serverAnalytics:analytics,
     absoluteURL,
     currency,
   } = options;
-  const access_token = analytics.fb.token;
-  const pixel_id = analytics.fb.pixelId;
-  const testCode = analytics.testing ? analytics.fb.testCode : '';
+  const access_token = analytics?.fb?.token;
+  const pixel_id = analytics?.fb?.pixelId;
+  const testCode = analytics?.testing ? analytics.fb?.testCode : '';
+  const bizSdk = analytics?.fb?.sdk;
+
+  if (!bizSdk) {
+    throw 'Facebook is configured without SDK; Please provide SDK;'
+  }
+
+  // const Content = bizSdk.Content;
+  const CustomData = bizSdk.CustomData;
+  // const DeliveryCategory = bizSdk.DeliveryCategory;
+  const EventRequest = bizSdk.EventRequest;
+  const UserData = bizSdk.UserData;
+  const ServerEvent = bizSdk.ServerEvent;
 
   const trackIdentify = (request:Request, profile?:TDataProfile) => {
-    const user = profile ? profile : options.resolvers?.userData(request) || request['user'] || null;
+    const user = profile ? profile : options.serverAnalytics.resolvers?.userData(request) || request['user'] || null;
     return user;
   };
 

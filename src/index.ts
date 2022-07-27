@@ -1,63 +1,55 @@
-import { Request } from "express";
-import { defaults } from "lodash";
+import { getConfig } from "./config";
 import apiTracker from "./apiTracker"
 import { getEEC } from "./ecommerce";
-import { ETrackers, TDataBasket, TDataOrder, TDataPage, TDataProduct, TDataProfile, TSettings } from "./types";
+import { ETrackers, TDataBasket, TDataOrder, TDataPage, TDataProduct, TDataProfile } from "./shared";
 import * as trackUtils from './utils';
 
-export const useAnalytics = (_store:Partial<TSettings>) => {
-  const getDefaultParams = ():TSettings => ({
-    absoluteURL: '/',
-    currency: 'usd',
-    affiliation: 'WebSite',
-    defaultCatalogName: 'Search Results',
-    defaultBasketName: 'Basket',
-    dataLayerName: 'dataLayer',
-    analytics: {
-      fb: {
-        enabled: false,
-        pixelId: null,
-        testCode: null,
-        token: null,
-      },
-      klaviyo: {
-        enabled: false,
-        siteId: null,
-        token: null,
-      },
-      testing: false,
-    },
-    links: {
-      ...(_store.links || {}),
-      resetPassword: '',
-    },
-    resolvers: {
-      ...(_store.resolvers || {}),
-      userData: _store.resolvers?.userData || ((r:Request) => (r['user'] || null) as TDataProfile),
-    },
-    map: {
-      ...(_store.map || {}),
-      product: _store.map?.product || ((p) => p as TDataProduct),
-      order: _store.map?.order || ((p) => p as TDataOrder),
-      basket: _store.map?.basket || ((p) => p as TDataBasket),
-      profile: _store.map?.profile || ((p) => p as TDataProfile),
-      page: _store.map?.page || ((p) => p as TDataPage),
-    },
-  });
-  const store = defaults(getDefaultParams(), _store);
-  const {
-    map: {
-      product = (p) => p as TDataProduct,
-      order = (p) => p as TDataOrder,
-      basket = (p) => p as TDataBasket,
-      profile = (p) => p as TDataProfile,
-      page = (p) => p as TDataPage,
-    },
-  } = store;
+export * from './apiTracker';
+export * from './ecommerce';
+export * from './utils';
+export {
+  TSettings,
+  TDataAddress,
+  TDataBasket,
+  TDataOrder,
+  TDataPage,
+  TDataProduct,
+  TDataProfile,
+  TEECParams,
+  TEvtType
+} from './shared';
+
+export * from './config';
+
+export const useAnalytics = () => {
+
+  // const _config = getConfig();
+
+  // if (_config === null) {
+  //   throw "Invoke configureAnalytics first and provide configuration";
+  // };
+
+  // const store = _config!;
+  // const {
+  //   map: {
+  //     product = (p) => p,
+  //     order = (p) => p,
+  //     basket = (p) => p,
+  //     profile = (p) => p,
+  //     page = (p) => p,
+  //   },
+  // } = store;
 
   return {
     withPage: (payload:TDataPage|Record<string,any>) => {
-      const v = page(payload);
+      const store = getConfig();
+      if (store === null) {
+        throw "Invoke configureAnalytics first and provide configuration";
+      };
+      if (!store.map.page) {
+        throw "[store.map.page] is not defined";
+      };
+      const v = store.map.page(payload);
       return {
         sendTo: {
           all: apiTracker(store).page(v),
@@ -68,7 +60,14 @@ export const useAnalytics = (_store:Partial<TSettings>) => {
       };
     },
     withProfile: (payload:TDataProfile|Record<string,any>) => {
-      const v = profile(payload);
+      const store = getConfig();
+      if (store === null) {
+        throw "Invoke configureAnalytics first and provide configuration";
+      };
+      if (!store.map.profile) {
+        throw "[store.map.profile] is not defined";
+      };
+      const v = store.map.profile(payload);
       return {
         sendTo: {
           all: apiTracker(store).profile(v),
@@ -79,7 +78,14 @@ export const useAnalytics = (_store:Partial<TSettings>) => {
       };
     },
     withCatalog: (payload:(TDataProduct|Record<string,any>)[]) => {
-      const v = payload.map(product);
+      const store = getConfig();
+      if (store === null) {
+        throw "Invoke configureAnalytics first and provide configuration";
+      };
+      if (!store.map.product) {
+        throw "[store.map.product] is not defined";
+      };
+      const v = payload.map(store.map.product);
       return {
         sendToServer: {
           all: apiTracker(store).catalog(v),
@@ -87,11 +93,18 @@ export const useAnalytics = (_store:Partial<TSettings>) => {
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true, }).catalog(v),
         },
         data: trackUtils.Catalog(store, v),
-        events: getEEC(store).groups.catalog,
+        events: getEEC(store).groups.catalog(v),
       }
     },
     withBasket: (payload:TDataBasket|Record<string,any>) => {
-      const v = basket(payload);
+      const store = getConfig();
+      if (store === null) {
+        throw "Invoke configureAnalytics first and provide configuration";
+      };
+      if (!store.map.basket) {
+        throw "[store.map.basket] is not defined";
+      };
+      const v = store.map.basket(payload);
       return {
         sendToServer: {
           all: apiTracker(store).basket(v),
@@ -99,11 +112,18 @@ export const useAnalytics = (_store:Partial<TSettings>) => {
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true, }).basket(v),
         },
         data: trackUtils.Basket(store, v),
-        events: getEEC(store).groups.basket,
+        events: getEEC(store).groups.basket(v),
       }
     },
     withOrder: (payload:TDataOrder|Record<string,any>) => {
-      const v = order(payload);
+      const store = getConfig();
+      if (store === null) {
+        throw "Invoke configureAnalytics first and provide configuration";
+      };
+      if (!store.map.order) {
+        throw "[store.map.order] is not defined";
+      };
+      const v = store.map.order(payload);
       return {
         sendToServer: {
           all: apiTracker(store).order(v),

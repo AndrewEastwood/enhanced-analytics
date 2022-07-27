@@ -7,17 +7,17 @@ export type TDataPage = {
 }
 
 export type TDataAddress = {
-  countryCode: string;
-  country: string;
-  state: string;
-  city: string;
-  street: string;
-  postcode: string;
-  region: string;
+  countryCode?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  street?: string;
+  postcode?: string;
+  region?: string;
 };
 
 export type TDataProfile = {
-  // id: string|number;
+  // id?: string|number;
   // name: string;
   // firstName: string;
   // lastName: string;
@@ -25,7 +25,7 @@ export type TDataProfile = {
   // email: null|string;
   id?: string|number|null;
   firstName: string;
-  lastName: string;
+  lastName?: string;
   isNew?: string;
   phone: string;
   email: string;
@@ -53,7 +53,7 @@ export type TDataProduct = {
   imageUrl?: string;
   // basket features
   total?: number;
-  quantity?: string;
+  quantity?: number;
 }
 
 export type TDataBasket = {
@@ -83,32 +83,35 @@ export type TSettings = {
   defaultCatalogName: string;
   defaultBasketName: string;
   dataLayerName: string;
-  links: {
-    resetPassword: string,
-  },
-  resolvers: {
-    userData: (request:Request) => TDataProfile|null,
-  };
-  analytics: {
+  serverAnalytics: {
     testing: boolean;
-    [ETrackers.Facebook]: {
+    [ETrackers.Facebook]?: {
       enabled: boolean;
+      sdk: any;
       pixelId: null|string;
       token: null|string;
       testCode: null|string;
     },
-    [ETrackers.Klaviyo]: {
+    [ETrackers.Klaviyo]?: {
       enabled: boolean;
+      sdk: any;
       siteId: null|string;
       token: null|string;
-    }
+    },
+    links: {
+      resetPassword: string,
+    },
+    resolvers: {
+      userData: (request:Request) => TDataProfile|null,
+      serverEventUUID: (request:Request) => string|number,
+    };
   };
   map: {
-    product: (data:Record<string,any>) => TDataProduct;
-    order: (data:Record<string,any>) => TDataOrder;
-    basket: (data:Record<string,any>) => TDataBasket;
-    profile: (data:Record<string,any>) => TDataProfile;
-    page: (data:Record<string,any>) => TDataPage;
+    product?: (data:any) => TDataProduct;
+    order?: (data:any) => TDataOrder;
+    basket?: (data:any) => TDataBasket;
+    profile?: (data:any) => TDataProfile;
+    page?: (data:any) => TDataPage;
   };
 }
 
@@ -132,7 +135,7 @@ export type TDataOrder = {
   };
 };
 
-type TEvtType<TPayload> = {
+export type TEvtType<TPayload> = {
   when: (check:() => boolean) => TEvtType<TPayload>;
   push: (w: Window & typeof globalThis) => TEvtType<TPayload>;
   value: () => TPayload;
