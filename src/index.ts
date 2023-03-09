@@ -96,7 +96,7 @@ export const useAnalytics = () => {
         events: getEEC(store).groups.catalog(v),
       }
     },
-    withBasket: (payload:TDataBasket|Record<string,any>|null) => {
+    withBasket: (payload:TDataBasket|Record<string,any>|null = null) => {
       const store = getConfig();
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";

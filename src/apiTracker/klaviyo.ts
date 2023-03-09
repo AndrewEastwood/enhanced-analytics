@@ -108,12 +108,12 @@ export const klaviyoTracker = (options:TSettings) => {
   const trackTransaction = async (request:Request, order:TDataOrder) => {
     const evtName = trackUtils.getEventNameOfTransaction(request, order);
     // console.error('klaviyo:trackTransaction', evtName);
-    const user:TDataProfile = {
-      phone: order.customer.phone,
-      email: order.customer.email,
-      firstName: order.customer.firstName,
-      lastName: order.customer.lastName,
-    };
+    // const user:TDataProfile = {
+    //   phone: order.customer.phone,
+    //   email: order.customer.email,
+    //   firstName: order.customer.firstName,
+    //   lastName: order.customer.lastName,
+    // };
     collectEvent(request, {
       event: "Placed Order",
       customerProperties: {
