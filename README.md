@@ -108,7 +108,7 @@ const MyApp = () => {
 
 
 ## 2 Use It
-Then somehwere in a component:
+Then somewhere in a component:
 ```
 import useAnalytics from 'enhanced-analytics';
 
