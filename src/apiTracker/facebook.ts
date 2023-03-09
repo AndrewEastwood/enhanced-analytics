@@ -269,8 +269,15 @@ export const fbTracker = (options:TSettings) => {
     //                 .setClientUserAgent(request.headers['user-agent'])
     //                 .setFbp(request.cookies['_fbp'])
 
+    const contents = trackUtils
+                    .Page(options)
+                    .View
+                    .getContents();
+
     const userData = _getUserDataObject(request);
-    const customData = (new CustomData());
+    const customData = (new CustomData())
+                    .setContents([contents]);
+
 
     const serverEvent = (new ServerEvent())
                     .setEventId(evtName)

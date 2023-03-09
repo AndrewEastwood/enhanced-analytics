@@ -1,14 +1,16 @@
 # enhanced-analytics
-Couple of convenient tools for populating dataLayer ecommerce event data.  
+A couple of convenient tools for populating dataLayer ecommerce event data or even more.
 
-
-
-Here I will describe how to use this tool soon
+**integrated services**:\
+&nbsp;&nbsp;✅ Google Analytics\
+&nbsp;&nbsp;✅ Klaviyo\
+&nbsp;&nbsp;✅ Facebook\
+&nbsp;&nbsp;🚣 FullStory (soon)
 
 ---
 ## 1 Configure 
 
-```
+```typescript
 import { useEffect } from 'react';
 import { configureAnalytics, useAnalytics } from 'enhanced-analytics';
 import * as EATypes from 'enhanced-analytics';
@@ -31,9 +33,11 @@ const MyApp = () => {
       currency: activeStore.localization.currency,
       defaultCatalogName: `${activeStore.name} Landing Products`,
       defaultBasketName: 'Shopping Cart',
+
       // you may have your own data structure
       // therefore we need it converted for the lib here
       map: {
+        // custom data transformation configuration
         // @ts-ignore
         product: (p: IDataProduct, viewOrder: number) => {
           const res: EATypes.TDataProduct = {
@@ -108,21 +112,59 @@ const MyApp = () => {
 
 
 ## 2 Use It
-Then somewhere in a component:
-```
+### 2.GoogleAnalytics
+... somewhere in components:
+```typescript
 import useAnalytics from 'enhanced-analytics';
 
 const MyComponent = () => {
   const analytics = useAnalytics();
 
   useEffect(() => {
+    const myProductItems = [];
+
+    //
+    // Google Analytics: track basket add/remove items
+    //
     analytics
-      .withBasket()
+      .withBasket(/* TDataBasket|Record<any>|null */) // <- this can be empty or TDataBasket AND map.basket is being invoked as well
       .events.getEECCheckoutList()
       .when(() => true /* or your condition */)
-      .push(window); // <- inject event into the dataLayer (config dataLayerName default is 'dataLayer')
+      .push(window); // <- inject event into the dataLayer (config dataLayerName default is 'dataLayer');
+
+    // 
+    // Google Analytics: track search/on-page product items
+    //
+    analytics
+      .withCatalog(/* your array of goods; any custom data[] or TDataProduct[] */)
+      // ^ the map.product is being invoked over the each item in the given collection
+      .events.getEECProductsList()
+      .when(() => myProductItems.length > 0)
+      .push(window);
+
+    // 
+    // Google Analytics: track order creation
+    //
+    analytics
+      .withOrder(/* TDataOrder or any custom object */)
+      // ^ invokes map.order
+      .events.getEECPurchased()
+      .when(() => !thisOrderWasSeen) // why not, implement your logic, that prevents duplicated events
+      .push(window);
+
+    // and few more things like:
+    analytics.withPage();
+
+    // and
+    analytics.withProfile();
+
   }, []);
 
   return <></>;
 }
 ```
+
+### 2.Klaviyo (Server Side)
+... docs are in progress
+### 2.FB Events (Server Side)
+... docs are in progress

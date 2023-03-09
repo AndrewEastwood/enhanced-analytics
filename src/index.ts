@@ -51,12 +51,14 @@ export const useAnalytics = () => {
       };
       const v = store.map.page(payload);
       return {
-        sendTo: {
+        sendToServer: {
           all: apiTracker(store).page(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true, }).page(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true, }).page(v),
-          [ETrackers.GoogleEEC]: apiTracker(store, { geec: true, }).page(v),
+          // [ETrackers.GoogleEEC]: apiTracker(store, { geec: true, }).page(v),
         },
+        data: trackUtils.Page(store),
+        events: getEEC(store).groups.general(),
       };
     },
     withProfile: (payload:TDataProfile|Record<string,any>) => {
@@ -69,12 +71,14 @@ export const useAnalytics = () => {
       };
       const v = store.map.profile(payload);
       return {
-        sendTo: {
+        sendToServer: {
           all: apiTracker(store).profile(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true, }).profile(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true, }).profile(v),
-          [ETrackers.GoogleEEC]: apiTracker(store, { geec: true, }).profile(v),
+          // [ETrackers.GoogleEEC]: apiTracker(store, { geec: true, }).profile(v),
         },
+        data: trackUtils.Profile(store),
+        events: getEEC(store).groups.profile(),
       };
     },
     withCatalog: (payload:(TDataProduct|Record<string,any>)[]) => {

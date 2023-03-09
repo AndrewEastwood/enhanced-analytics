@@ -26,6 +26,15 @@ export const getEEC = (options:TSettings) => {
     });
   }
 
+
+  const getEECPageView = (params?:TEECParams) => {
+    return _evt({
+      pageData: {
+
+      }
+    });
+  }
+
   const getEECProductDetails = (products:TDataProduct[], params?:TEECParams) => {
     const dl = trackUtils.Catalog(options, products).ProductDetails.getEECDataLayer(params);
     return _evt(dl);
@@ -220,8 +229,12 @@ export const getEEC = (options:TSettings) => {
 
   return {
     groups: {
-      page: {},
-      profile: {},
+      general: () => ({
+        getEECPageView: (p?:TEECParams) => getEECPageView(p),
+      }),
+      profile: () => ({
+        getEECUserData: (p?:TEECParams) => getEECUserData(p),
+      }),
       catalog: (products:TDataProduct[]) => ({
         getEECProductsList: (p?:TEECParams) => getEECProductsList(products, p),
         getEECProductDetails: (p?:TEECParams) => getEECProductDetails(products, p),

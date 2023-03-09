@@ -330,14 +330,14 @@ const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
     const Content = sdk.Content;
     return basket.lastAdded
       .map(product => (new Content())
-      .setId(product.id)
-      .setQuantity(product.quantity)
-      .setTitle(product.title)
-      .setBrand(product.brand)
-      .setDescription(product.description)
-      .setCategory(product.category)
-      .setItemPrice(product.price)
-    );
+        .setId(product.id)
+        .setQuantity(product.quantity)
+        .setTitle(product.title)
+        .setBrand(product.brand)
+        .setDescription(product.description)
+        .setCategory(product.category)
+        .setItemPrice(product.price)
+      );
   },
   getContentsStr: () => {
     return JSON.stringify(BasketAddProduct(options, basket).getContents().map(v => v.normalize()));
@@ -489,15 +489,53 @@ const Products = (options:TSettings, products:TDataProduct[]) => ({
   },
 });
 
-
-
-const Page = (options:TSettings) => ({
+const PageView = (options:TSettings) => ({
+  getContents: () => {
+    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    if (!sdk) {
+      throw 'Facebook is configured without SDK; Please provide SDK;'
+    }
+    return [] as any[];
+  },
+  getContentsStr: () => {
+    return JSON.stringify(PageView(options).getContents().map(v => v.normalize()));
+  },
   getEECDataLayer: (params?:TEECParams) => {
     return {
-      event: params?.evName || 'eec.impressionView',
+      event: params?.evName || 'eec.pageView',
     };
   },
 });
+
+const ProfileView = (options:TSettings) => ({
+  getContents: () => {
+    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    if (!sdk) {
+      throw 'Facebook is configured without SDK; Please provide SDK;'
+    }
+    return [] as any[];
+  },
+  getContentsStr: () => {
+    return JSON.stringify(ProfileView(options).getContents().map(v => v.normalize()));
+  },
+  getEECDataLayer: (params?:TEECParams) => {
+    return {
+      event: params?.evName || 'eec.profileView',
+    };
+  },
+});
+
+const Page = (options:TSettings) => {
+  return {
+    View: PageView(options),
+  };
+}
+
+const Profile = (options:TSettings) => {
+  return {
+    View: ProfileView(options),
+  };
+}
 
 const Catalog = (options:TSettings, products:TDataProduct[]) => {
   return {
@@ -534,5 +572,6 @@ export {
   Basket,
   Order,
   Catalog,
-  // Page,
+  Page,
+  Profile,
 }
