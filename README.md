@@ -117,7 +117,7 @@ const MyComponent = () => {
 
   useEffect(() => {
     analytics
-      .withBasket(null)
+      .withBasket()
       .events.getEECCheckoutList()
       .when(() => true /* or your condition */)
       .push(window); // <- inject event into the dataLayer (config dataLayerName default is 'dataLayer')
