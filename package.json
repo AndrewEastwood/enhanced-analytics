@@ -1,6 +1,6 @@
 {
     "name": "enhanced-analytics",
-    "version": "1.0.32",
+    "version": "1.0.46",
     "description": "Couple of convenient tools for populating dataLayer ecommerce event data.",
     "main": "index.js",
     "types": "index.d.ts",
@@ -22,7 +22,7 @@
         "type": "git",
         "url": "git+https://github.com/AndrewEastwood/enhanced-analytics.git"
     },
-    "author": "Andy Eastwood",
+    "author": "james_eastwood",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/AndrewEastwood/enhanced-analytics/issues"
