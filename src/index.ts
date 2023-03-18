@@ -22,26 +22,8 @@ export {
 export * from './config';
 
 export const useAnalytics = () => {
-
-  // const _config = getConfig();
-
-  // if (_config === null) {
-  //   throw "Invoke configureAnalytics first and provide configuration";
-  // };
-
-  // const store = _config!;
-  // const {
-  //   map: {
-  //     product = (p) => p,
-  //     order = (p) => p,
-  //     basket = (p) => p,
-  //     profile = (p) => p,
-  //     page = (p) => p,
-  //   },
-  // } = store;
-
   return {
-    withPage: (payload:TDataPage|Record<string,any>) => {
+    withPage: (payload:TDataPage|Record<string,any>|null = null) => {
       const store = getConfig();
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
@@ -61,7 +43,7 @@ export const useAnalytics = () => {
         events: getEEC(store).groups.general(),
       };
     },
-    withProfile: (payload:TDataProfile|Record<string,any>) => {
+    withProfile: (payload:TDataProfile|Record<string,any>|null = null) => {
       const store = getConfig();
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
@@ -81,7 +63,7 @@ export const useAnalytics = () => {
         events: getEEC(store).groups.profile(),
       };
     },
-    withCatalog: (payload:(TDataProduct|Record<string,any>)[]) => {
+    withCatalog: (payload:(TDataProduct|Record<string,any>)[]|null = null) => {
       const store = getConfig();
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
@@ -89,7 +71,7 @@ export const useAnalytics = () => {
       if (!store.map.product) {
         throw "[store.map.product] is not defined";
       };
-      const v = payload.map(store.map.product);
+      const v = payload?.map(store.map.product) ?? [];
       return {
         sendToServer: {
           all: apiTracker(store).catalog(v),
