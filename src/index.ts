@@ -28,16 +28,15 @@ export const useAnalytics = () => {
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
       };
-      if (!store.map.page) {
-        throw "[store.map.page] is not defined";
+      if (!store.resolvers?.page) {
+        throw "[store.resolvers.page] is not defined";
       };
-      const v = store.map.page(payload);
+      const v = store.resolvers?.page(payload);
       return {
         sendToServer: {
           all: apiTracker(store).page(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true, }).page(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true, }).page(v),
-          // [ETrackers.GoogleEEC]: apiTracker(store, { geec: true, }).page(v),
         },
         data: trackUtils.Page(store),
         events: getEEC(store).groups.general(),
@@ -48,16 +47,15 @@ export const useAnalytics = () => {
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
       };
-      if (!store.map.profile) {
-        throw "[store.map.profile] is not defined";
+      if (!store.resolvers?.profile) {
+        throw "[store.resolvers.profile] is not defined";
       };
-      const v = store.map.profile(payload);
+      const v = store.resolvers?.profile(payload);
       return {
         sendToServer: {
           all: apiTracker(store).profile(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true, }).profile(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true, }).profile(v),
-          // [ETrackers.GoogleEEC]: apiTracker(store, { geec: true, }).profile(v),
         },
         data: trackUtils.Profile(store),
         events: getEEC(store).groups.profile(),
@@ -68,10 +66,10 @@ export const useAnalytics = () => {
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
       };
-      if (!store.map.product) {
-        throw "[store.map.product] is not defined";
+      if (!store.resolvers?.product) {
+        throw "[store.resolvers.product] is not defined";
       };
-      const v = payload?.map(store.map.product) ?? [];
+      const v = payload?.map(store.resolvers?.product) ?? [];
       return {
         sendToServer: {
           all: apiTracker(store).catalog(v),
@@ -87,10 +85,10 @@ export const useAnalytics = () => {
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
       };
-      if (!store.map.basket) {
-        throw "[store.map.basket] is not defined";
+      if (!store.resolvers?.basket) {
+        throw "[store.resolvers.basket] is not defined";
       };
-      const v = store.map.basket(payload);
+      const v = store.resolvers?.basket(payload);
       return {
         sendToServer: {
           all: apiTracker(store).basket(v),
@@ -106,10 +104,10 @@ export const useAnalytics = () => {
       if (store === null) {
         throw "Invoke configureAnalytics first and provide configuration";
       };
-      if (!store.map.order) {
-        throw "[store.map.order] is not defined";
+      if (!store.resolvers?.order) {
+        throw "[store.resolvers.order] is not defined";
       };
-      const v = store.map.order(payload);
+      const v = store.resolvers?.order(payload);
       return {
         sendToServer: {
           all: apiTracker(store).order(v),
@@ -124,8 +122,3 @@ export const useAnalytics = () => {
 };
 
 export default useAnalytics;
-
-// useAnalytics({}).withPurchase({}).sendToServer.klaviyo.({});
-// useAnalytics({}).withOrder({}).data.Purchase.getEECDataLayer()
-// useAnalytics({}).withOrder({}).events.getEECPurchased().when().push()
-// useAnalytics({}).withCheckout({}).events({}).getEECCheckoutList()

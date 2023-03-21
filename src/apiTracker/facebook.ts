@@ -24,13 +24,13 @@ export const fbTracker = (options:TSettings) => {
   const UserData = bizSdk.UserData;
   const ServerEvent = bizSdk.ServerEvent;
 
-  const trackIdentify = (request:Request, profile?:TDataProfile) => {
-    const user = profile ? profile : options.serverAnalytics.resolvers?.userData(request) || request['user'] || null;
+  const trackIdentify = (profile?:TDataProfile) => {
+    const user = profile ? profile : options.resolvers?.user?.() || null;
     return user;
   };
 
-  const _getUserDataObject = (request:Request, order?:TDataOrder) => {
-    const user = trackIdentify(request);
+  const _getUserDataObject = (order?:TDataOrder) => {
+    const user = trackIdentify();
     // const userData = (new UserData())
     //   .setExternalId(user)
     //   .setEmail(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
@@ -44,7 +44,7 @@ export const fbTracker = (options:TSettings) => {
     //   .setClientIpAddress(request.ip)
     //   .setClientUserAgent(request.headers['user-agent'])
     //   .setFbp(request.cookies['_fbp']);
-
+      const session = options.resolvers?.session?.();
       const userData = (new UserData())
         .setExternalId(order ? order.customer.email : user?.email)
         .setEmail(order ? order.customer.email : user?.email)
@@ -55,23 +55,23 @@ export const fbTracker = (options:TSettings) => {
         .setZip(order ? order.shipping.address.postcode : user?.address?.postcode)
         .setPhone(order ? order.customer.phone : user?.phone)
         // It is recommended to send Client IP and User Agent for Conversions API Events.
-        .setClientIpAddress(request.ip)
-        .setClientUserAgent(request.headers['user-agent'])
-        .setFbp(request.cookies['_fbp']);
+        .setClientIpAddress(session?.ip)
+        .setClientUserAgent(session?.agent)// request.headers['user-agent'])
+        .setFbp(session?.fbp);// request.cookies['_fbp']);
     return userData;
   }
 
-  const trackTransactionRefund = async (request:Request, order:TDataOrder) => {}
+  const trackTransactionRefund = async (order:TDataOrder) => {}
 
-  const trackTransactionCancel = async (request:Request, order:TDataOrder) => {}
+  const trackTransactionCancel = async (order:TDataOrder) => {}
 
-  const trackTransactionFulfill = async (request:Request, order:TDataOrder) => {}
+  const trackTransactionFulfill = async (order:TDataOrder) => {}
 
-  const trackTransaction = async (request:Request, order:TDataOrder) => {
-    const evtName = trackUtils.getEventNameOfTransaction(request, order);
+  const trackTransaction = async (order:TDataOrder) => {
+    const evtName = trackUtils.getEventNameOfTransaction(order);
     console.error('fb:trackTransaction', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
-    const userData = _getUserDataObject(request, order);
+    const userData = _getUserDataObject(order);
     // const userData = (new UserData())
     //                 .setExternalId(order.customer.email)
     //                 .setEmail(order.customer.email)
@@ -96,13 +96,14 @@ export const fbTracker = (options:TSettings) => {
                     .setNumItems(order.quantity)
                     .setValue(order.revenue);
 
+    const session = options.resolvers?.session?.();
     const serverEvent = (new ServerEvent())
                     .setEventId(evtName)
                     .setEventName('Purchase')
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(absoluteURL + request.originalUrl)
+                    .setEventSourceUrl(absoluteURL + session?.originalUrl)
                     .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -118,13 +119,13 @@ export const fbTracker = (options:TSettings) => {
     }
   }
 
-  const trackProductAddToCart = async (request:Request, basket:TDataBasket) => {
+  const trackProductAddToCart = async (basket:TDataBasket) => {
     basket.lastAdded.forEach(async product => {
-      const evtName = trackUtils.getEventNameOfProductAddToCart(request, product);
+      const evtName = trackUtils.getEventNameOfProductAddToCart(product);
       console.error('fb:trackProductAddToCart', evtName);
       const current_timestamp = Math.floor(Date.now() / 1000);
 
-      const userData = _getUserDataObject(request);
+      const userData = _getUserDataObject();
       const contents = trackUtils.Basket(options, basket).BasketAddProduct.getContents();
 
       const customData = (new CustomData())
@@ -133,13 +134,14 @@ export const fbTracker = (options:TSettings) => {
                       .setContentName(product.title)
                       .setCurrency(currency);
 
+      const session = options.resolvers?.session?.();
       const serverEvent = (new ServerEvent())
                       .setEventId(evtName)
                       .setEventName('AddToCart')
                       .setEventTime(current_timestamp)
                       .setUserData(userData)
                       .setCustomData(customData)
-                      .setEventSourceUrl(absoluteURL + request.originalUrl)
+                      .setEventSourceUrl(absoluteURL + session?.originalUrl)
                       .setActionSource('website');
 
       const eventsData = [serverEvent];
@@ -156,13 +158,13 @@ export const fbTracker = (options:TSettings) => {
     });
   }
 
-  const trackProductRemoveFromCart = async (request:Request, basket:TDataBasket) => {
+  const trackProductRemoveFromCart = async (basket:TDataBasket) => {
     basket.lastRemoved.forEach(async product => {
-      const evtName = trackUtils.getEventNameOfProductRemoveFromCart(request, product);
+      const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
       console.error('fb:trackProductRemoveFromCart', evtName);
       const current_timestamp = Math.floor(Date.now() / 1000);
 
-      const userData = _getUserDataObject(request);
+      const userData = _getUserDataObject();
       const contents = trackUtils.Basket(options, basket).BasketRemoveProduct.getContents();
 
       const customData = (new CustomData())
@@ -171,13 +173,14 @@ export const fbTracker = (options:TSettings) => {
                       .setContentName(product.title)
                       .setCurrency(currency);
 
+      const session = options.resolvers?.session?.();
       const serverEvent = (new ServerEvent())
                       .setEventId(evtName)
                       .setEventName('RemoveFromCart')
                       .setEventTime(current_timestamp)
                       .setUserData(userData)
                       .setCustomData(customData)
-                      .setEventSourceUrl(absoluteURL + request.originalUrl)
+                      .setEventSourceUrl(absoluteURL + session?.originalUrl)
                       .setActionSource('website');
 
       const eventsData = [serverEvent];
@@ -194,10 +197,10 @@ export const fbTracker = (options:TSettings) => {
     });
   }
 
-  const trackProductItemView = async (request:Request, product:TDataProduct) => {
-    const evtName = trackUtils.getEventNameOfProductItemView(request, product);
+  const trackProductItemView = async (product:TDataProduct) => {
+    const evtName = trackUtils.getEventNameOfProductItemView(product);
     console.error('fb:trackProductItemView', evtName);
-    // const user = trackIdentify(request);
+    // const user = trackIdentify();
     const current_timestamp = Math.floor(Date.now() / 1000);
     // const userData = (new UserData())
     //                 .setExternalId(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
@@ -213,7 +216,7 @@ export const fbTracker = (options:TSettings) => {
     //                 .setClientUserAgent(request.headers['user-agent'])
     //                 .setFbp(request.cookies['_fbp'])
 
-    const userData = _getUserDataObject(request);
+    const userData = _getUserDataObject();
     const contents = trackUtils
       .Catalog(options, [product])
       .ProductDetails
@@ -225,13 +228,14 @@ export const fbTracker = (options:TSettings) => {
                     .setContentName(product.title)
                     .setCurrency(currency);
 
+    const session = options.resolvers?.session?.();
     const serverEvent = (new ServerEvent())
                     .setEventId(evtName)
                     .setEventName('ViewContent')
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(absoluteURL + request.originalUrl)
+                    .setEventSourceUrl(absoluteURL + session?.originalUrl)
                     .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -247,12 +251,12 @@ export const fbTracker = (options:TSettings) => {
     }
   }
 
-  const trackProductsItemView = async (request:Request, products) => {
+  const trackProductsItemView = async (products) => {
 
   }
 
-  const trackPageView = async (request:Request, page:TDataPage) => {
-    const evtName = trackUtils.getEventNameOfPageView(request);
+  const trackPageView = async (page:TDataPage) => {
+    const evtName = trackUtils.getEventNameOfPageView();
     console.error('fb:trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     // const userData = (new UserData())
@@ -274,18 +278,19 @@ export const fbTracker = (options:TSettings) => {
                     .View
                     .getContents();
 
-    const userData = _getUserDataObject(request);
+    const userData = _getUserDataObject();
     const customData = (new CustomData())
                     .setContents([contents]);
 
 
+    const session = options.resolvers?.session?.();
     const serverEvent = (new ServerEvent())
                     .setEventId(evtName)
                     .setEventName('PageView')
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(absoluteURL + request.originalUrl)
+                    .setEventSourceUrl(absoluteURL + session?.originalUrl)
                     .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -301,8 +306,8 @@ export const fbTracker = (options:TSettings) => {
     }
   }
 
-  const trackInitiateCheckout = async (request:Request, basket:TDataBasket) => {
-    const evtName = trackUtils.getEventNameOfInitiateCheckout(request, basket);
+  const trackInitiateCheckout = async (basket:TDataBasket) => {
+    const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
     console.error('fb:trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     // const userData = (new UserData())
@@ -319,7 +324,7 @@ export const fbTracker = (options:TSettings) => {
     //                 .setClientUserAgent(request.headers['user-agent'])
     //                 .setFbp(request.cookies['_fbp'])
 
-    const userData = _getUserDataObject(request);
+    const userData = _getUserDataObject();
     const contents = trackUtils.Basket(options, basket).InitCheckout.getContents();
 
     const customData = (new CustomData())
@@ -328,13 +333,14 @@ export const fbTracker = (options:TSettings) => {
                     .setCurrency(currency)
                     .setNumItems(basket.quantity);
 
+    const session = options.resolvers?.session?.();
     const serverEvent = (new ServerEvent())
                     .setEventId(evtName)
                     .setEventName('InitiateCheckout')
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(absoluteURL + request.originalUrl)
+                    .setEventSourceUrl(absoluteURL + session?.originalUrl)
                     .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -350,8 +356,8 @@ export const fbTracker = (options:TSettings) => {
     }
   }
 
-  const trackSearch = async (request:Request, searchTerm, matchingProducts) => {
-    const evtName = trackUtils.getEventNameOfSearch(request, searchTerm, matchingProducts);
+  const trackSearch = async (searchTerm, matchingProducts) => {
+    const evtName = trackUtils.getEventNameOfSearch(searchTerm, matchingProducts);
     console.error('fb:trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     // const userData = (new UserData())
@@ -368,17 +374,18 @@ export const fbTracker = (options:TSettings) => {
     //                 .setClientUserAgent(request.headers['user-agent'])
     //                 .setFbp(request.cookies['_fbp'])
 
-    const userData = _getUserDataObject(request);
+    const userData = _getUserDataObject();
     const customData = (new CustomData())
                     .setSearchString(searchTerm);
 
+    const session = options.resolvers?.session?.();
     const serverEvent = (new ServerEvent())
                     .setEventId(evtName)
                     .setEventName('Search')
                     .setEventTime(current_timestamp)
                     .setUserData(userData)
                     .setCustomData(customData)
-                    .setEventSourceUrl(absoluteURL + request.originalUrl)
+                    .setEventSourceUrl(absoluteURL + session?.originalUrl)
                     .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -394,15 +401,15 @@ export const fbTracker = (options:TSettings) => {
     }
   }
 
-  const trackNewProfile = async (request:Request, profile:TDataProfile) => {}
+  const trackNewProfile = async (profile:TDataProfile) => {}
 
-  const trackProfileResetPassword = async (request:Request, profile:TDataProfile) => {}
+  const trackProfileResetPassword = async (profile:TDataProfile) => {}
 
-  const trackProfileLogIn = async (request:Request, profile:TDataProfile) => {}
+  const trackProfileLogIn = async (profile:TDataProfile) => {}
 
-  const trackProfileLogOut = async (request:Request, profile:TDataProfile) => {}
+  const trackProfileLogOut = async (profile:TDataProfile) => {}
 
-  const trackProfileSubscribeNL = async (request:Request, profile:TDataProfile) => {}
+  const trackProfileSubscribeNL = async (profile:TDataProfile) => {}
 
   return {
     trackIdentify,

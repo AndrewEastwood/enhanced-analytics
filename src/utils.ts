@@ -1,49 +1,50 @@
 import { getConfig } from './config';
-import { Request } from 'express';
 import { ETrackers, TDataBasket, TDataOrder, TDataProduct, TEECParams, TSettings } from './shared';
 
-const getEvtUUIDStr = (request:Request) => {
+const getEvtUUIDStr = () => {
   const c = getConfig();
-  return `_uuid_${c?.serverAnalytics?.resolvers?.serverEventUUID(request)}`;
+  return `_uuid_${c?.resolvers?.eventUUID?.()}`;
 }
 
-const getEventNameOfIdentify = (request:Request) => {
+const getEventNameOfIdentify = () => {
   return '';
 }
 
-const getEventNameOfTransaction = (request:Request, order:TDataOrder) => {
-  return `new_order_of_${order.id}${getEvtUUIDStr(request)}`;
+const getEventNameOfTransaction = (order:TDataOrder) => {
+  return `new_order_of_${order.id}${getEvtUUIDStr()}`;
 }
 
-const getEventNameOfProductAddToCart = (request:Request, p:TDataProduct) => {
+const getEventNameOfProductAddToCart = (p:TDataProduct) => {
   // const ids = p.map(v => v.id).join('/');
   // const qqs = p.map(v => v.quantity).join('/');
-  return `add_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr(request)}`;
+  return `add_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr()}`;
 }
 
-const getEventNameOfProductRemoveFromCart = (request:Request, p:TDataProduct) => {
+const getEventNameOfProductRemoveFromCart = (p:TDataProduct) => {
   // const ids = p.map(v => v.id).join('/');
   // const qqs = p.map(v => v.quantity).join('/');
-  return `rem_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr(request)}`;
+  return `rem_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr()}`;
 }
 
-const getEventNameOfProductItemView = (request:Request, product:TDataProduct) => {
-  return `view_product_of_${product.id}${getEvtUUIDStr(request)}`;
+const getEventNameOfProductItemView = (product:TDataProduct) => {
+  return `view_product_of_${product.id}${getEvtUUIDStr()}`;
 }
 
-const getEventNameOfSearch = (request:Request, searchTerm:string, products:TDataProduct[]) => {
-  return `search_of_${searchTerm}_found${products.length}${getEvtUUIDStr(request)}`;
+const getEventNameOfSearch = (searchTerm:string, products:TDataProduct[]) => {
+  return `search_of_${searchTerm}_found${products.length}${getEvtUUIDStr()}`;
 }
 
-const getEventNameOfPageView = (request:Request) => {
-  return `page_view_of_${encodeURIComponent(request.path.substr(1) || 'root')}${getEvtUUIDStr(request)}`;
+const getEventNameOfPageView = () => {
+  const c = getConfig();
+  const page = c?.resolvers?.page?.();
+  return `page_view_of_${encodeURIComponent(page?.name || 'root')}${getEvtUUIDStr()}`;
 }
 
-const getEventNameOfInitiateCheckout = (request:Request, basket:TDataBasket) => {
-  return `init_checkout_of_p${basket.quantity}_${basket.total.toFixed(2)}${getEvtUUIDStr(request)}`;
+const getEventNameOfInitiateCheckout = (basket:TDataBasket) => {
+  return `init_checkout_of_p${basket.quantity}_${basket.total.toFixed(2)}${getEvtUUIDStr()}`;
 }
 
-const getEventNameOfNewProfile = (request) => {
+const getEventNameOfNewProfile = () => {
   return '';
 }
 

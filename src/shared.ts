@@ -3,6 +3,7 @@ import { Request } from "express"
 export type TDataPage = {
   id: string|number;
   title: string;
+  name: string;
   path: string;
 }
 
@@ -14,6 +15,19 @@ export type TDataAddress = {
   street?: string;
   postcode?: string;
   region?: string;
+  timezone?: string;
+};
+
+export type TDataSession = {
+  ip?: string;
+  fbp?: string;
+  agent?: string;
+  // express Request.originalUrl <= '/admin/new?sort=desc'
+  originalUrl?: string;
+  // express Request.baseUrl + Request.path
+  pagePath?: string;
+  // custom page name
+  pageName?: string;
 };
 
 export type TDataProfile = {
@@ -26,10 +40,14 @@ export type TDataProfile = {
   id?: string|number|null;
   firstName: string;
   lastName?: string;
+  title?: string;
   isNew?: string;
   phone: string;
   email: string;
   address?: TDataAddress;
+  organization?: string;
+  avatarUrl?: string;
+  extraProps?: Record<string, string>;
 }
 
 export type TDataProduct = {
@@ -83,7 +101,7 @@ export type TSettings = {
   defaultCatalogName: string;
   defaultBasketName: string;
   dataLayerName: string;
-  serverAnalytics: {
+  serverAnalytics?: {
     testing: boolean;
     [ETrackers.Facebook]?: {
       enabled: boolean;
@@ -98,20 +116,19 @@ export type TSettings = {
       siteId: null|string;
       token: null|string;
     },
-    links: {
-      resetPassword: string,
-    },
-    resolvers: {
-      userData: (request:Request) => TDataProfile|null,
-      serverEventUUID: (request:Request) => string|number,
-    };
   };
-  map: {
-    product?: (data:any) => TDataProduct;
-    order?: (data:any) => TDataOrder;
-    basket?: (data:any) => TDataBasket;
-    profile?: (data:any) => TDataProfile;
-    page?: (data:any) => TDataPage;
+  links?: {
+    resetPassword?: string,
+  };
+  resolvers?: {
+    session?: () => TDataSession,
+    user?: (request?:Request) => TDataProfile|null,
+    eventUUID?: (request?:Request) => string|number,
+    product?: (data?:any) => TDataProduct;
+    order?: (data?:any) => TDataOrder;
+    basket?: (data?:any) => TDataBasket;
+    profile?: (data?:any) => TDataProfile;
+    page?: (data?:any) => TDataPage;
   };
 }
 
