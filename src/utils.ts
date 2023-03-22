@@ -1,64 +1,74 @@
 import { getConfig } from './config';
-import { ETrackers, TDataBasket, TDataOrder, TDataProduct, TEECParams, TSettings } from './shared';
+import {
+  ETrackers,
+  TDataBasket,
+  TDataOrder,
+  TDataProduct,
+  TEECParams,
+  TSettings,
+} from './shared';
 
 const getEvtUUIDStr = () => {
   const c = getConfig();
   return `_uuid_${c?.resolvers?.eventUUID?.()}`;
-}
+};
 
 const getEventNameOfIdentify = () => {
   return '';
-}
+};
 
-const getEventNameOfTransaction = (order:TDataOrder) => {
+const getEventNameOfTransaction = (order: TDataOrder) => {
   return `new_order_of_${order.id}${getEvtUUIDStr()}`;
-}
+};
 
-const getEventNameOfProductAddToCart = (p:TDataProduct) => {
+const getEventNameOfProductAddToCart = (p: TDataProduct) => {
   // const ids = p.map(v => v.id).join('/');
   // const qqs = p.map(v => v.quantity).join('/');
   return `add_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr()}`;
-}
+};
 
-const getEventNameOfProductRemoveFromCart = (p:TDataProduct) => {
+const getEventNameOfProductRemoveFromCart = (p: TDataProduct) => {
   // const ids = p.map(v => v.id).join('/');
   // const qqs = p.map(v => v.quantity).join('/');
   return `rem_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr()}`;
-}
+};
 
-const getEventNameOfProductItemView = (product:TDataProduct) => {
+const getEventNameOfProductItemView = (product: TDataProduct) => {
   return `view_product_of_${product.id}${getEvtUUIDStr()}`;
-}
+};
 
-const getEventNameOfSearch = (searchTerm:string, products:TDataProduct[]) => {
+const getEventNameOfSearch = (searchTerm: string, products: TDataProduct[]) => {
   return `search_of_${searchTerm}_found${products.length}${getEvtUUIDStr()}`;
-}
+};
 
 const getEventNameOfPageView = () => {
   const c = getConfig();
   const page = c?.resolvers?.page?.();
-  return `page_view_of_${encodeURIComponent(page?.name || 'root')}${getEvtUUIDStr()}`;
-}
+  return `page_view_of_${encodeURIComponent(
+    page?.name || 'root'
+  )}${getEvtUUIDStr()}`;
+};
 
-const getEventNameOfInitiateCheckout = (basket:TDataBasket) => {
-  return `init_checkout_of_p${basket.quantity}_${basket.total.toFixed(2)}${getEvtUUIDStr()}`;
-}
+const getEventNameOfInitiateCheckout = (basket: TDataBasket) => {
+  return `init_checkout_of_p${basket.quantity}_${basket.total.toFixed(
+    2
+  )}${getEvtUUIDStr()}`;
+};
 
 const getEventNameOfNewProfile = () => {
   return '';
-}
+};
 
-const InitCheckout = (options:TSettings, basket:TDataBasket) => ({
+const InitCheckout = (options: TSettings, basket: TDataBasket) => ({
   getContents: () => {
     const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;'
+      throw 'Facebook is configured without SDK; Please provide SDK;';
     }
     const Content = sdk.Content;
     const DeliveryCategory = sdk.DeliveryCategory;
-    return Object
-      .values(basket.products)
-      .map(storedProduct => (new Content())
+    return Object.values(basket.products).map((storedProduct) =>
+      new Content()
         .setId(storedProduct.id)
         .setQuantity(storedProduct.quantity)
         .setTitle(storedProduct.title)
@@ -67,12 +77,16 @@ const InitCheckout = (options:TSettings, basket:TDataBasket) => ({
         .setCategory(storedProduct.category)
         .setItemPrice(storedProduct.price)
         .setDeliveryCategory(DeliveryCategory.HOME_DELIVERY)
-      );
+    );
   },
   getContentsStr: () => {
-    return JSON.stringify(InitCheckout(options, basket).getContents().map(v => v.normalize()));
+    return JSON.stringify(
+      InitCheckout(options, basket)
+        .getContents()
+        .map((v) => v.normalize())
+    );
   },
-  getEECDataLayer: (params?:TEECParams) => {
+  getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.checkout',
       basket,
@@ -87,37 +101,42 @@ const InitCheckout = (options:TSettings, basket:TDataBasket) => ({
           actionField: {
             step: 1,
           },
-          products: basket.products
-            .map(p => ({
-              list: params?.listName || options.defaultBasketName,
-              id: p.id,
-              sku: p.sku,
-              name: p.title,
-              category: p.category,
-              brand: p.brand,
-              price: p.price,
-              quantity: p.quantity,
-              variant: p.variant || '',
-              ...(p.dimensions || []).reduce((r, v, idx) => ({
+          products: basket.products.map((p) => ({
+            list: params?.listName || options.defaultBasketName,
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
-              }), {}),
-              ...(p.metrics || []).reduce((r, v, idx) => ({
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`metric${idx}`]: v,
-              }), {}),
-            })),
+              }),
+              {}
+            ),
+          })),
         },
       },
     };
   },
 });
 
-const ProductDetails = (options:TSettings, product:TDataProduct) => ({
+const ProductDetails = (options: TSettings, product: TDataProduct) => ({
   getContents: () => {
     const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;'
+      throw 'Facebook is configured without SDK; Please provide SDK;';
     }
     const Content = sdk.Content;
     return new Content()
@@ -129,9 +148,11 @@ const ProductDetails = (options:TSettings, product:TDataProduct) => ({
       .setItemPrice(product.price);
   },
   getContentsStr: (product) => {
-    return JSON.stringify([ProductDetails(options, product).getContents().normalize()]);
+    return JSON.stringify([
+      ProductDetails(options, product).getContents().normalize(),
+    ]);
   },
-  getEECDataLayer: (params?:TEECParams) => {
+  getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.detail',
       custom: {
@@ -149,40 +170,47 @@ const ProductDetails = (options:TSettings, product:TDataProduct) => ({
           actionField: {
             list: params?.listName || options.defaultCatalogName,
           },
-          products: [{
-            id: product.id,
-            sku: product.sku,
-            name: product.title,
-            category: product.category,
-            brand: product.brand,
-            price: product.price,
-            variant: product.variant,
-            ...(product.dimensions || []).reduce((r, v, idx) => ({
-              ...r,
-              [`dimension${idx}`]: v,
-            }), {}),
-            ...(product.metrics || []).reduce((r, v, idx) => ({
-              ...r,
-              [`metric${idx}`]: v,
-            }), {}),
-          }]
+          products: [
+            {
+              id: product.id,
+              sku: product.sku,
+              name: product.title,
+              category: product.category,
+              brand: product.brand,
+              price: product.price,
+              variant: product.variant,
+              ...(product.dimensions || []).reduce(
+                (r, v, idx) => ({
+                  ...r,
+                  [`dimension${idx}`]: v,
+                }),
+                {}
+              ),
+              ...(product.metrics || []).reduce(
+                (r, v, idx) => ({
+                  ...r,
+                  [`metric${idx}`]: v,
+                }),
+                {}
+              ),
+            },
+          ],
         },
       },
     };
   },
 });
 
-const Purchase = (options:TSettings, order:TDataOrder) => ({
+const Purchase = (options: TSettings, order: TDataOrder) => ({
   getContents: () => {
     const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;'
+      throw 'Facebook is configured without SDK; Please provide SDK;';
     }
     const Content = sdk.Content;
     const DeliveryCategory = sdk.DeliveryCategory;
-    return Object
-      .values(order.products)
-      .map(storedProduct => (new Content())
+    return Object.values(order.products).map((storedProduct) =>
+      new Content()
         .setId(storedProduct.id)
         .setQuantity(storedProduct.quantity)
         .setTitle(storedProduct.title)
@@ -191,12 +219,16 @@ const Purchase = (options:TSettings, order:TDataOrder) => ({
         .setCategory(storedProduct.category)
         .setItemPrice(storedProduct.price)
         .setDeliveryCategory(DeliveryCategory.HOME_DELIVERY)
-      )
+    );
   },
   getContentsStr: () => {
-    return JSON.stringify(Purchase(options, order).getContents().map(c => c.normalize()));
+    return JSON.stringify(
+      Purchase(options, order)
+        .getContents()
+        .map((c) => c.normalize())
+    );
   },
-  getEECDataLayer: (params?:TEECParams) => {
+  getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.purchase',
       custom: {
@@ -227,44 +259,49 @@ const Purchase = (options:TSettings, order:TDataOrder) => ({
             affiliation: options.affiliation,
             revenue: order.revenue,
             shipping: order.shipping.cost,
-            coupon: order.coupon && order.coupon || '',
+            coupon: (order.coupon && order.coupon) || '',
           },
-          products: order.products
-            .map(p => ({
-              list: params?.listName || options.defaultBasketName,
-              id: p.id,
-              sku: p.sku,
-              name: p.title,
-              category: p.category,
-              brand: p.brand,
-              price: p.price,
-              quantity: p.quantity,
-              variant: p.variant || '',
-              ...(p.dimensions || []).reduce((r, v, idx) => ({
+          products: order.products.map((p) => ({
+            list: params?.listName || options.defaultBasketName,
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
-              }), {}),
-              ...(p.metrics || []).reduce((r, v, idx) => ({
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`metric${idx}`]: v,
-              }), {}),
-            })),
+              }),
+              {}
+            ),
+          })),
         },
       },
     };
   },
 });
 
-const Refund = (options:TSettings, order:TDataOrder) => ({
+const Refund = (options: TSettings, order: TDataOrder) => ({
   getContents: () => {
     const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;'
+      throw 'Facebook is configured without SDK; Please provide SDK;';
     }
     const Content = sdk.Content;
     const DeliveryCategory = sdk.DeliveryCategory;
-    return order.products
-      .map(storedProduct => (new Content())
+    return order.products.map((storedProduct) =>
+      new Content()
         .setId(storedProduct.id)
         .setQuantity(storedProduct.quantity)
         .setTitle(storedProduct.title)
@@ -273,12 +310,16 @@ const Refund = (options:TSettings, order:TDataOrder) => ({
         .setCategory(storedProduct.category)
         .setItemPrice(storedProduct.price)
         .setDeliveryCategory(DeliveryCategory.HOME_DELIVERY)
-      )
+    );
   },
   getContentsStr: () => {
-    return JSON.stringify(Refund(options, order).getContents().map(v => v.normalize()));
+    return JSON.stringify(
+      Refund(options, order)
+        .getContents()
+        .map((v) => v.normalize())
+    );
   },
-  getEECDataLayer: (params?:TEECParams) => {
+  getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.purchase',
       custom: {
@@ -296,41 +337,46 @@ const Refund = (options:TSettings, order:TDataOrder) => ({
             shipping: order.shipping.cost,
             coupon: order.coupon || '',
           },
-          products: order.products
-            .map(p => ({
-              id: p.id,
-              sku: p.sku,
-              name: p.title,
-              category: p.category,
-              brand: p.brand,
-              price: p.price,
-              quantity: p.quantity,
-              variant: p.variant || '',
-              ...(p.dimensions || []).reduce((r, v, idx) => ({
+          products: order.products.map((p) => ({
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
-              }), {}),
-              ...(p.metrics || []).reduce((r, v, idx) => ({
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`metric${idx}`]: v,
-              }), {}),
-            })),
+              }),
+              {}
+            ),
+          })),
         },
       },
     };
   },
 });
 
-const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
+const BasketAddProduct = (options: TSettings, basket: TDataBasket) => ({
   getContents: () => {
     const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;'
+      throw 'Facebook is configured without SDK; Please provide SDK;';
     }
     // const product = basket.lastAdded?.[0] || {};
     const Content = sdk.Content;
-    return basket.lastAdded
-      .map(product => (new Content())
+    return basket.lastAdded.map((product) =>
+      new Content()
         .setId(product.id)
         .setQuantity(product.quantity)
         .setTitle(product.title)
@@ -338,12 +384,16 @@ const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
         .setDescription(product.description)
         .setCategory(product.category)
         .setItemPrice(product.price)
-      );
+    );
   },
   getContentsStr: () => {
-    return JSON.stringify(BasketAddProduct(options, basket).getContents().map(v => v.normalize()));
+    return JSON.stringify(
+      BasketAddProduct(options, basket)
+        .getContents()
+        .map((v) => v.normalize())
+    );
   },
-  getEECDataLayer: (params?:TEECParams) => {
+  getEECDataLayer: (params?: TEECParams) => {
     const product = basket.lastAdded?.[0] || {};
     return {
       event: params?.evName || 'eec.add',
@@ -363,41 +413,46 @@ const BasketAddProduct = (options:TSettings, basket:TDataBasket) => ({
           actionField: {
             list: params?.listName || options.defaultBasketName,
           },
-          products: basket.lastAdded
-            .map(p => ({
-              id: p.id,
-              sku: p.sku,
-              name: p.title,
-              category: p.category,
-              brand: p.brand,
-              price: p.price,
-              quantity: p.quantity,
-              variant: p.variant || '',
-              ...(p.dimensions || []).reduce((r, v, idx) => ({
+          products: basket.lastAdded.map((p) => ({
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
-              }), {}),
-              ...(p.metrics || []).reduce((r, v, idx) => ({
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`metric${idx}`]: v,
-              }), {}),
-            })),
+              }),
+              {}
+            ),
+          })),
         },
       },
     };
   },
 });
 
-const BasketRemoveProduct = (options:TSettings, basket:TDataBasket) => ({
+const BasketRemoveProduct = (options: TSettings, basket: TDataBasket) => ({
   getContents: () => {
     const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;'
+      throw 'Facebook is configured without SDK; Please provide SDK;';
     }
     // const product = basket.lastRemoved?.[0] || {};
     const Content = sdk.Content;
-    return basket.lastRemoved.map(product =>
-      (new Content())
+    return basket.lastRemoved.map((product) =>
+      new Content()
         .setId(product.id)
         .setQuantity(product.quantity)
         .setTitle(product.title)
@@ -408,9 +463,13 @@ const BasketRemoveProduct = (options:TSettings, basket:TDataBasket) => ({
     );
   },
   getContentsStr: () => {
-    return JSON.stringify(BasketRemoveProduct(options, basket).getContents().map(v => v.normalize()));
+    return JSON.stringify(
+      BasketRemoveProduct(options, basket)
+        .getContents()
+        .map((v) => v.normalize())
+    );
   },
-  getEECDataLayer: (params?:TEECParams) => {
+  getEECDataLayer: (params?: TEECParams) => {
     const product = basket.lastRemoved?.[0] || {};
     return {
       event: params?.evName || 'eec.remove',
@@ -430,33 +489,38 @@ const BasketRemoveProduct = (options:TSettings, basket:TDataBasket) => ({
           actionField: {
             list: params?.listName || options.defaultBasketName,
           },
-          products: basket.lastRemoved
-            .map(p => ({
-              id: p.id,
-              sku: p.sku,
-              name: p.title,
-              category: p.category,
-              brand: p.brand,
-              price: p.price,
-              quantity: p.quantity,
-              variant: p.variant || '',
-              ...(p.dimensions || []).reduce((r, v, idx) => ({
+          products: basket.lastRemoved.map((p) => ({
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`dimension${idx}`]: v,
-              }), {}),
-              ...(p.metrics || []).reduce((r, v, idx) => ({
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
                 ...r,
                 [`metric${idx}`]: v,
-              }), {}),
-            })),
+              }),
+              {}
+            ),
+          })),
         },
       },
     };
   },
 });
 
-const Products = (options:TSettings, products:TDataProduct[]) => ({
-  getEECDataLayer: (params?:TEECParams) => {
+const Products = (options: TSettings, products: TDataProduct[]) => ({
+  getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.impressionView',
       custom: {
@@ -466,86 +530,99 @@ const Products = (options:TSettings, products:TDataProduct[]) => ({
       },
       ecommerce: {
         currencyCode: options.currency,
-        impressions: products
-          .map(p => ({
-            list: p.list || params?.listName || options.defaultCatalogName,
-            id: p.id,
-            sku: p.sku,
-            name: p.title,
-            category: p.category,
-            brand: p.brand,
-            price: p.price,
-            variant: p.variant || '',
-            ...(p.dimensions || []).reduce((r, v, idx) => ({
+        impressions: products.map((p) => ({
+          list: p.list || params?.listName || options.defaultCatalogName,
+          id: p.id,
+          sku: p.sku,
+          name: p.title,
+          category: p.category,
+          brand: p.brand,
+          price: p.price,
+          variant: p.variant || '',
+          ...(p.dimensions || []).reduce(
+            (r, v, idx) => ({
               ...r,
               [`dimension${idx}`]: v,
-            }), {}),
-            ...(p.metrics || []).reduce((r, v, idx) => ({
+            }),
+            {}
+          ),
+          ...(p.metrics || []).reduce(
+            (r, v, idx) => ({
               ...r,
               [`metric${idx}`]: v,
-            }), {}),
-          })),
+            }),
+            {}
+          ),
+        })),
       },
     };
   },
 });
 
-const PageView = (options:TSettings) => ({
+const PageView = (options: TSettings) => ({
   getContents: () => {
     const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;'
+      throw 'Facebook is configured without SDK; Please provide SDK;';
     }
     return [] as any[];
   },
   getContentsStr: () => {
-    return JSON.stringify(PageView(options).getContents().map(v => v.normalize()));
+    return JSON.stringify(
+      PageView(options)
+        .getContents()
+        .map((v) => v.normalize())
+    );
   },
-  getEECDataLayer: (params?:TEECParams) => {
+  getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.pageView',
     };
   },
 });
 
-const ProfileView = (options:TSettings) => ({
+const ProfileView = (options: TSettings) => ({
   getContents: () => {
     const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;'
+      throw 'Facebook is configured without SDK; Please provide SDK;';
     }
     return [] as any[];
   },
   getContentsStr: () => {
-    return JSON.stringify(ProfileView(options).getContents().map(v => v.normalize()));
+    return JSON.stringify(
+      ProfileView(options)
+        .getContents()
+        .map((v) => v.normalize())
+    );
   },
-  getEECDataLayer: (params?:TEECParams) => {
+  getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.profileView',
     };
   },
 });
 
-const Page = (options:TSettings) => {
+const Page = (options: TSettings) => {
   return {
     View: PageView(options),
   };
-}
+};
 
-const Profile = (options:TSettings) => {
+const Profile = (options: TSettings) => {
   return {
     View: ProfileView(options),
   };
-}
+};
 
-const Catalog = (options:TSettings, products:TDataProduct[]) => {
+const Catalog = (options: TSettings, products: TDataProduct[]) => {
   return {
     Products: Products(options, products),
     ProductDetails: ProductDetails(options, products[0]),
   };
-}
+};
 
-const Basket = (options:TSettings, basket:TDataBasket) => {
+const Basket = (options: TSettings, basket: TDataBasket) => {
   return {
     BasketAddProduct: BasketAddProduct(options, basket),
     BasketRemoveProduct: BasketRemoveProduct(options, basket),
@@ -553,7 +630,7 @@ const Basket = (options:TSettings, basket:TDataBasket) => {
   };
 };
 
-const Order = (options:TSettings, order:TDataOrder) => {
+const Order = (options: TSettings, order: TDataOrder) => {
   return {
     Purchase: Purchase(options, order),
     Refund: Refund(options, order),
@@ -575,4 +652,4 @@ export {
   Catalog,
   Page,
   Profile,
-}
+};

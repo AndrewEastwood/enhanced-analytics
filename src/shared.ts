@@ -1,11 +1,12 @@
-import { Request } from "express"
+import { Request } from 'express';
 
 export type TDataPage = {
-  id: string|number;
+  id: string | number;
   title: string;
   name: string;
   path: string;
-}
+  url?: string;
+};
 
 export type TDataAddress = {
   countryCode?: string;
@@ -22,36 +23,25 @@ export type TDataSession = {
   ip?: string;
   fbp?: string;
   agent?: string;
-  // express Request.originalUrl <= '/admin/new?sort=desc'
-  originalUrl?: string;
-  // express Request.baseUrl + Request.path
-  pagePath?: string;
-  // custom page name
-  pageName?: string;
 };
 
 export type TDataProfile = {
-  // id?: string|number;
-  // name: string;
-  // firstName: string;
-  // lastName: string;
-  // phone: null|string;
-  // email: null|string;
-  id?: string|number|null;
+  id?: string | number | null;
   firstName: string;
   lastName?: string;
   title?: string;
   isNew?: string;
-  phone: string;
+  phone?: string;
   email: string;
   address?: TDataAddress;
   organization?: string;
   avatarUrl?: string;
   extraProps?: Record<string, string>;
-}
+  url?: string;
+};
 
 export type TDataProduct = {
-  id: string|number;
+  id: string | number;
   title: string;
   description: string;
   price: number;
@@ -72,16 +62,16 @@ export type TDataProduct = {
   // basket features
   total?: number;
   quantity?: number;
-}
+};
 
 export type TDataBasket = {
   total: number;
   quantity: number;
-  coupon: null|string;
+  coupon: null | string;
   products: TDataProduct[];
   lastAdded: TDataProduct[];
   lastRemoved: TDataProduct[];
-}
+};
 
 export enum ETrackers {
   Facebook = 'fb',
@@ -92,7 +82,7 @@ export enum ETrackers {
 export type TEECParams = {
   evName?: string;
   listName?: string;
-}
+};
 
 export type TSettings = {
   affiliation: string;
@@ -106,38 +96,37 @@ export type TSettings = {
     [ETrackers.Facebook]?: {
       enabled: boolean;
       sdk: any;
-      pixelId: null|string;
-      token: null|string;
-      testCode: null|string;
-    },
+      pixelId: null | string;
+      token: null | string;
+      testCode: null | string;
+    };
     [ETrackers.Klaviyo]?: {
       enabled: boolean;
+      siteId: null | string;
+      token: null | string;
       sdk: any;
-      siteId: null|string;
-      token: null|string;
-    },
+    };
   };
   links?: {
-    resetPassword?: string,
+    resetPassword?: string;
   };
   resolvers?: {
-    session?: () => TDataSession,
-    user?: (request?:Request) => TDataProfile|null,
-    eventUUID?: (request?:Request) => string|number,
-    product?: (data?:any) => TDataProduct;
-    order?: (data?:any) => TDataOrder;
-    basket?: (data?:any) => TDataBasket;
-    profile?: (data?:any) => TDataProfile;
-    page?: (data?:any) => TDataPage;
+    session?: () => TDataSession;
+    eventUUID?: (request?: Request) => string | number;
+    product?: (data?: any) => TDataProduct[];
+    order?: (data?: any) => TDataOrder;
+    basket?: (data?: any) => TDataBasket;
+    profile?: (data?: any) => TDataProfile | null;
+    page?: (data?: any) => TDataPage;
   };
-}
+};
 
 export type TDataOrder = {
-  id: string|number;
+  id: string | number;
   revenue: number;
   tax: number;
   quantity: number;
-  coupon: null|string;
+  coupon: null | string;
   products: TDataProduct[];
   dateCreated: number;
   status: string;
@@ -145,15 +134,16 @@ export type TDataOrder = {
     cost: number;
     name: string;
     address: TDataAddress;
-  },
-  customer: TDataProfile,
+  };
+  customer: TDataProfile;
   payment: {
     type: string;
   };
+  url?: string;
 };
 
 export type TEvtType<TPayload> = {
-  when: (check:() => boolean) => TEvtType<TPayload>;
+  when: (check: () => boolean) => TEvtType<TPayload>;
   push: (w: Window & typeof globalThis) => TEvtType<TPayload>;
   value: () => TPayload;
 };
