@@ -34,6 +34,13 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       sdk: null,
     },
     testing: false,
+    evtUuid: {
+      cookieName: 'evt-uuid',
+      exposeInResponse: true,
+    },
+    userIdentification: {
+      reqBodyKey: 'email',
+    },
   },
   links: {
     ...(_store?.links || {}),
@@ -55,6 +62,29 @@ export const configureAnalytics = (_store: Partial<TSettings>): TSettings => {
   _config = defaultsDeep(_store, getDefaultParams(_store)) as TSettings;
   return _config;
 };
+
+export const analyticsMiddleware =
+  (options: Partial<TSettings>) => (req: Request, res, next) => {
+    req.app.locals.evtUuid = Date.now().toString(32);
+    req.app.locals.customer = req.body[
+      options.serverAnalytics?.userIdentification.reqBodyKey ?? '__not_set__'
+    ]
+      ? req.body
+      : req.app.locals.customer;
+    configureAnalytics({ ...options });
+    options.serverAnalytics?.evtUuid.exposeInResponse &&
+    options.serverAnalytics?.evtUuid.cookieName
+      ? res.cookie(
+          options.serverAnalytics?.evtUuid.cookieName,
+          req.app.locals.evtUuid,
+          {
+            secure: true,
+            httpOnly: true,
+          }
+        )
+      : void 0;
+    next();
+  };
 
 export const getConfig = () => {
   return _config;

@@ -93,6 +93,13 @@ export type TSettings = {
   dataLayerName: string;
   serverAnalytics?: {
     testing: boolean;
+    evtUuid: {
+      exposeInResponse: boolean;
+      cookieName: string;
+    };
+    userIdentification: {
+      reqBodyKey: string;
+    };
     [ETrackers.Facebook]?: {
       enabled: boolean;
       sdk: any;
