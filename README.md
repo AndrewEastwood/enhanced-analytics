@@ -178,11 +178,135 @@ const MyComponent = () => {
 
 ## 2 Configure (API Side)
 
+Simple snippet of configuration for Express.Js
+
+```typescript
+app.use(
+  analyticsMiddleware({
+    absoluteURL: 'https://www.your-domain.lviv.ua/',
+    serverAnalytics: {
+      testing: false,
+      klaviyo: {
+        enabled: true,
+        token: 'pk_token-goes-here',
+        sdk: require('klaviyo-api'), // npm i klaviyo-api@2.1.1
+      },
+      userIdentification: {
+        // this field is used this way: incoming request has body and we
+        // check if this field contains req.body, if so we store the whole req.body
+        // into app.locals.customer = req.body
+        reqBodyKey: 'customerPhone',
+      },
+    },
+    resolvers: (req) => ({
+      order(evtPayload: any) {
+        // in this case { order, products } (see order tracking at 2.2.KalviyoAPI below)
+        const order = evtPayload.order;
+        const orderProducts = evtPayload.products;
+        return {
+          id: order.id,
+          revenue: order.total,
+          tax: 0,
+          quantity: order.features.length,
+          coupon: order.coupon,
+          products: [],
+          dateCreated: order.dateCreated,
+          status: order.status,
+          shipping: {
+            cost: order.deliveryFee,
+            name: order.deliveryMethod,
+            address: {
+              street: order.customerAddress,
+            },
+          },
+          customer: {
+            firstName: order.customerFullName,
+            email: `john.smith@test.com`,
+          },
+          payment: {
+            type: order.paymentType,
+          },
+          url: `${req.protocol}://${req.hostname}/order/success/${order.externalId}`,
+        };
+      },
+      profile() {
+        return app.locals.customer.customerPhone
+          ? {
+              email: `john.smith@test.com`,
+              firstName: app.locals.customer.customerFullName,
+              phoneNumber: '5551234567',
+              address: {
+                country: 'United States',
+                city: 'Boston',
+                postcode: '02110',
+                region: 'MA',
+                countryCode: 'UA',
+                street: app.locals.customer.customerAddress,
+              },
+            }
+          : null;
+      },
+      eventUUID() {
+        return app.locals.evtUuid;
+      },
+      product(input: TDataList<IDataProduct>) {
+        const l = input.items.map((prodItem) => {
+          return {
+            id: prodItem.id,
+            title: prodItem.title,
+            description: prodItem.description,
+            price: prodItem.price,
+            salePrice: prodItem.price,
+            isSale: false,
+            brand: prodItem.seller,
+            category: prodItem.categoryName,
+            sku: prodItem.sku,
+            list: 'main',
+            url: `${req.protocol}://${req.hostname}/product/${prodItem.id}/${prodItem.sku}`,
+            imageUrl: prodItem.imageUrl,
+          };
+        });
+        return l;
+      },
+      page() {
+        return {
+          id: req.baseUrl,
+          name: req.baseUrl,
+          path: req.path,
+          title: 'Main Page',
+          url: `${req.protocol}://${req.hostname}${req.originalUrl}`,
+        };
+      },
+      session() {
+        return {
+          agent: req.headers['user-agent'],
+          fbp: req.cookies['_fbp'],
+          ip: req.ip,
+        };
+      },
+    }),
+  })
+);
+```
+
 ## 2.1 Use It
 
 ### 2.2.Klaviyo API
 
 ... docs are in progress
+
+Track new order:
+
+```typescript
+import useAnalytics from 'enhanced-analytics';
+
+const evtPayload = { order, products };
+// you can define your own payload
+// and handle it at your resolvers.order function
+await useAnalytics()
+  .withOrder(evtPayload)
+  .sendToServer.klaviyo.trackTransaction();
+```
 
 ### 2.2.FB Events API
 
