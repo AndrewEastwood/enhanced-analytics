@@ -63,17 +63,21 @@ export const configureAnalytics = (_store: Partial<TSettings>): TSettings => {
   return _config;
 };
 
+type TSettingsMiddleware = TSettings & {
+  resolvers: (req: Request) => TSettings['resolvers'];
+};
 export const analyticsMiddleware =
-  (options: Partial<TSettings>) => (req: Request, res, next) => {
+  (options: Partial<TSettingsMiddleware>) => (req: Request, res, next) => {
     req.app.locals.evtUuid = Date.now().toString(32);
     req.app.locals.customer = req.body[
-      options.serverAnalytics?.userIdentification.reqBodyKey ?? '__not_set__'
+      options.serverAnalytics?.userIdentification?.reqBodyKey ?? '__not_set__'
     ]
       ? req.body
       : req.app.locals.customer;
-    configureAnalytics({ ...options });
-    options.serverAnalytics?.evtUuid.exposeInResponse &&
-    options.serverAnalytics?.evtUuid.cookieName
+    const resolvers = options.resolvers?.(req);
+    configureAnalytics({ ...options, resolvers });
+    options.serverAnalytics?.evtUuid?.exposeInResponse &&
+    options.serverAnalytics?.evtUuid?.cookieName
       ? res.cookie(
           options.serverAnalytics?.evtUuid.cookieName,
           req.app.locals.evtUuid,

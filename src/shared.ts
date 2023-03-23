@@ -84,6 +84,16 @@ export type TEECParams = {
   listName?: string;
 };
 
+type TResolvers = {
+  session?: () => TDataSession;
+  eventUUID?: (request?: Request) => string | number;
+  product?: (data?: any) => TDataProduct[];
+  order?: (data?: any) => TDataOrder;
+  basket?: (data?: any) => TDataBasket;
+  profile?: (data?: any) => TDataProfile | null;
+  page?: (data?: any) => TDataPage;
+};
+
 export type TSettings = {
   affiliation: string;
   absoluteURL: string;
@@ -93,12 +103,12 @@ export type TSettings = {
   dataLayerName: string;
   serverAnalytics?: {
     testing: boolean;
-    evtUuid: {
-      exposeInResponse: boolean;
-      cookieName: string;
+    evtUuid?: {
+      exposeInResponse?: boolean;
+      cookieName?: string;
     };
-    userIdentification: {
-      reqBodyKey: string;
+    userIdentification?: {
+      reqBodyKey?: string;
     };
     [ETrackers.Facebook]?: {
       enabled: boolean;
@@ -117,15 +127,7 @@ export type TSettings = {
   links?: {
     resetPassword?: string;
   };
-  resolvers?: {
-    session?: () => TDataSession;
-    eventUUID?: (request?: Request) => string | number;
-    product?: (data?: any) => TDataProduct[];
-    order?: (data?: any) => TDataOrder;
-    basket?: (data?: any) => TDataBasket;
-    profile?: (data?: any) => TDataProfile | null;
-    page?: (data?: any) => TDataPage;
-  };
+  resolvers?: TResolvers;
 };
 
 export type TDataOrder = {
