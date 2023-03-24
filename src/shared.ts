@@ -101,7 +101,7 @@ export type TSettings = {
   defaultCatalogName: string;
   defaultBasketName: string;
   dataLayerName: string;
-  serverAnalytics?: {
+  integrations?: {
     testing: boolean;
     evtUuid?: {
       exposeInResponse?: boolean;
@@ -119,9 +119,24 @@ export type TSettings = {
     };
     [ETrackers.Klaviyo]?: {
       enabled: boolean;
-      siteId: null | string;
-      token: null | string;
-      sdk: any;
+      siteId?: null | string;
+      token?: null | string;
+      sdk: null | {
+        ConfigWrapper?: (string) => void;
+        Events: {
+          createEvent: (payload: any) => Promise<any>;
+        };
+        Profiles: {
+          getProfiles?: (filter: any) => Promise<{ body: { data: any[] } }>;
+          createProfile: (payload: any) => Promise<any>;
+        };
+      };
+      events?: {
+        onEvent?: (
+          eventPayloads: any[],
+          state: { isIdentified: boolean }
+        ) => void;
+      };
     };
   };
   links?: {

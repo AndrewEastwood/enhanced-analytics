@@ -19,7 +19,7 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
   defaultCatalogName: 'Search Results',
   defaultBasketName: 'Basket',
   dataLayerName: 'dataLayer',
-  serverAnalytics: {
+  integrations: {
     fb: {
       enabled: false,
       sdk: null,
@@ -70,16 +70,16 @@ export const analyticsMiddleware =
   (options: Partial<TSettingsMiddleware>) => (req: Request, res, next) => {
     req.app.locals.evtUuid = Date.now().toString(32);
     req.app.locals.customer = req.body[
-      options.serverAnalytics?.userIdentification?.reqBodyKey ?? '__not_set__'
+      options.integrations?.userIdentification?.reqBodyKey ?? '__not_set__'
     ]
       ? req.body
       : req.app.locals.customer;
     const resolvers = options.resolvers?.(req);
     configureAnalytics({ ...options, resolvers });
-    options.serverAnalytics?.evtUuid?.exposeInResponse &&
-    options.serverAnalytics?.evtUuid?.cookieName
+    options.integrations?.evtUuid?.exposeInResponse &&
+    options.integrations?.evtUuid?.cookieName
       ? res.cookie(
-          options.serverAnalytics?.evtUuid.cookieName,
+          options.integrations?.evtUuid.cookieName,
           req.app.locals.evtUuid,
           {
             secure: true,

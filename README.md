@@ -34,12 +34,59 @@ const MyApp = () => {
       currency: activeStore.localization.currency,
       defaultCatalogName: `${activeStore.name} Landing Products`,
       defaultBasketName: 'Shopping Cart',
-
+      integrations: {
+        testing: false,
+        klaviyo: {
+          enabled: true,
+          siteId: 'YOUR-SITE-ID',
+          sdk: {
+            Events: {
+              createEvent(body: any) {
+                window.klaviyo.track(
+                  body.data.attributes.metric.name,
+                  body.data.attributes.properties
+                );
+                return Promise.resolve();
+              },
+            },
+            Profiles: {
+              createProfile(body: any) {
+                window.klaviyo.identify(body.data.attributes);
+                return Promise.resolve();
+              },
+            },
+          },
+        },
+      },
       // you may have your own data structure
       // therefore we need it converted for the lib here
+      // This is just real use-case.
       resolvers: {
         // custom data transformation configuration
-        // @ts-ignore
+        page(input) {//  <================================|
+          //   ^^ this would be 'test'
+          return {                         //             |
+            id: '',                        //             |
+            name: document.title,          //             |
+            path: window.location.pathname,//             |
+            url: window.location.href,     //             |
+            title: document.title,         //             |
+          };                               //             |
+        },                                 //             |
+        //                                                |
+        // ^^ here, If you call useAnalytics().withPage('test').integrations.klaviyo.trackPageView();
+        //    and the same approach for the other scopes: withUser, withBasket.. etc.
+        profile(input) {
+          const st = $storeUser.getState();
+          const currUser = input || st?.userOrderForm;
+          const phone = currUser?.phone.replace(/[^0-9]/gi, '') ?? '';
+          return currUser?.userName && phone.length === 12
+            ? {
+                email: `customer_${phone}@nightburger.lviv.ua`,
+                firstName: currUser.userName,
+              }
+            : null;
+        },
         product: (p: IDataProduct, viewOrder: number) => {
           const res: EATypes.TDataProduct = {
             id: p.id,

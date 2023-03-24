@@ -10,9 +10,10 @@ import { TDataPage } from '../shared';
 
 const anonymousEvents = new Set();
 const indentifiedEmails = new Set();
+// const sessionUsers = new Set();
 
 export const klaviyoTracker = (options: TSettings) => {
-  const { absoluteURL, serverAnalytics: analytics } = options;
+  const { absoluteURL, integrations: analytics } = options;
   const bizSdk = analytics?.klaviyo?.sdk;
   const isUITracking = !analytics?.klaviyo?.token;
 
@@ -21,13 +22,18 @@ export const klaviyoTracker = (options: TSettings) => {
   }
 
   // UI requires siteId to be configured
-  if (isUITracking && !analytics.klaviyo?.siteId) {
-    throw 'Klaviyo UI is configured without siteId; Please provide siteId;';
-  }
+  // if (isUITracking && !analytics.klaviyo?.siteId) {
+  //   throw 'Klaviyo UI is configured without siteId; Please provide siteId;';
+  // }
 
   // API requires token to be set
-  if (!isUITracking && !bizSdk) {
-    throw 'Klaviyo is configured without SDK; PLease install the requried dependency: npm i klaviyo-api@2.1.1;';
+  // if (!isUITracking && !bizSdk) {
+  //   throw 'Klaviyo is configured without SDK; PLease install the requried dependency: npm i klaviyo-api@2.1.1;';
+  // }
+
+  // API requires token to be set
+  if (!bizSdk) {
+    throw 'Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
   }
 
   console.log(
@@ -36,29 +42,24 @@ export const klaviyoTracker = (options: TSettings) => {
       ' tracking mode'
   );
 
-  const { ConfigWrapper, Events, Profiles } = isUITracking
-    ? {
-        ConfigWrapper() {},
-        Events: {},
-        Profiles: {},
-      }
-    : bizSdk;
+  const { ConfigWrapper, Events, Profiles } = bizSdk;
+  // isUITracking
+  //   ? {
+  //       ConfigWrapper() {},
+  //       Events: {},
+  //       Profiles: {},
+  //     }
+  //   : bizSdk;
 
-  ConfigWrapper(analytics.klaviyo?.token);
+  if (analytics.klaviyo?.token && !ConfigWrapper) {
+    throw 'Klaviyo is configured without SDK; ConfigWrapper is missing. Please install the requried dependency: npm i klaviyo-api@2.1.1 OR make sure that SDK has ConfigWrapper function defined;';
+  }
+
+  analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
 
   const getUserObj = (profile?: TDataProfile | null) => {
-    return profile ? profile : options.resolvers?.profile?.();
-
-    // [TODO] move into app middleware >>
-    // const user = request.user || null; // session user
-    // const isAdmin = user && user.username || false;
-    // const preflightUserEmail = (request.body && request.body.email) || // preflight email submission
-    //   (request.cookies && request.cookies['preflightUserEmail']) || ''; // or from cookies
-    // return !!(user && user.email && !isAdmin)
-    //   ? JSON.parse(JSON.stringify(user))
-    //   : preflightUserEmail
-    //   ? { email: preflightUserEmail, firstName: '', surname: '' }
-    //   : null;
+    const u = profile ? profile : options.resolvers?.profile?.();
+    return u;
   };
 
   const collectEvent = (evt) => {
@@ -103,9 +104,10 @@ export const klaviyoTracker = (options: TSettings) => {
               unique_id: evt.properties?.$event_id ?? null,
             },
           };
-          return isUITracking
-            ? Promise.resolve(payload)
-            : Events.createEvent({ data: payload });
+          return Events.createEvent({ data: payload });
+          // return isUITracking
+          //   ? Promise.resolve(payload)
+          //   : Events.createEvent({ data: payload });
         })
       );
       console.debug('klaviyo:anonymousEvents released#' + anonymousEvents.size);
@@ -172,13 +174,15 @@ export const klaviyoTracker = (options: TSettings) => {
       attributes,
     };
 
-    if (user && !isUITracking) {
+    // api mode
+    if (user) {
       try {
-        const existingProfile = await Profiles.getProfiles({
-          filter: `equals(email,"${user.email}")`,
-        });
+        const existingProfile =
+          (await Profiles.getProfiles?.({
+            filter: `equals(email,"${user.email}")`,
+          })) ?? null;
         const foundProfile =
-          existingProfile.body.data[0] ||
+          existingProfile?.body.data[0] ||
           indentifiedEmails.has(user.email) ||
           null;
         const profileResp = foundProfile
@@ -194,10 +198,13 @@ export const klaviyoTracker = (options: TSettings) => {
       }
     }
 
-    if (user && isUITracking) {
-      const queuePayloads = await releaseAnonymousEvents();
-      return Promise.resolve([payload, ...(queuePayloads ?? [])]);
-    }
+    // ui mode
+    // if (user && isUITracking) {
+    //   const queuePayloads = await releaseAnonymousEvents();
+    //   const result = [payload, ...(queuePayloads ?? [])];
+    //   analytics.klaviyo?.events?.onEvent?.(result, { isIdentified: !!user });
+    //   return Promise.resolve(result);
+    // }
 
     return null;
   };
@@ -326,7 +333,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackProductRemoveFromCart = async (basket: TDataBasket) => {
-    basket.lastAdded.map((product) => {
+    basket.lastRemoved.map((product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
       // console.error('klaviyo:trackInitiateCheckout', evtName);
       // const basket = request.session.basket;

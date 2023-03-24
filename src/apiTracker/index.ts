@@ -13,7 +13,7 @@ import tKlyo from './klaviyo';
 type TTrackers = {} & Partial<Record<ETrackers, boolean>>;
 
 export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
-  const { serverAnalytics: analytics } = config;
+  const { integrations: analytics } = config;
   const useFb =
     analytics?.[ETrackers.Facebook]?.enabled && (trackers?.fb || true);
   const useKl =

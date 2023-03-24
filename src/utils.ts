@@ -61,7 +61,7 @@ const getEventNameOfNewProfile = () => {
 
 const InitCheckout = (options: TSettings, basket: TDataBasket) => ({
   getContents: () => {
-    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
       throw 'Facebook is configured without SDK; Please provide SDK;';
     }
@@ -134,7 +134,7 @@ const InitCheckout = (options: TSettings, basket: TDataBasket) => ({
 
 const ProductDetails = (options: TSettings, product: TDataProduct) => ({
   getContents: () => {
-    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
       throw 'Facebook is configured without SDK; Please provide SDK;';
     }
@@ -203,7 +203,7 @@ const ProductDetails = (options: TSettings, product: TDataProduct) => ({
 
 const Purchase = (options: TSettings, order: TDataOrder) => ({
   getContents: () => {
-    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
       throw 'Facebook is configured without SDK; Please provide SDK;';
     }
@@ -294,7 +294,7 @@ const Purchase = (options: TSettings, order: TDataOrder) => ({
 
 const Refund = (options: TSettings, order: TDataOrder) => ({
   getContents: () => {
-    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
       throw 'Facebook is configured without SDK; Please provide SDK;';
     }
@@ -369,7 +369,7 @@ const Refund = (options: TSettings, order: TDataOrder) => ({
 
 const BasketAddProduct = (options: TSettings, basket: TDataBasket) => ({
   getContents: () => {
-    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
       throw 'Facebook is configured without SDK; Please provide SDK;';
     }
@@ -445,7 +445,7 @@ const BasketAddProduct = (options: TSettings, basket: TDataBasket) => ({
 
 const BasketRemoveProduct = (options: TSettings, basket: TDataBasket) => ({
   getContents: () => {
-    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
       throw 'Facebook is configured without SDK; Please provide SDK;';
     }
@@ -561,7 +561,7 @@ const Products = (options: TSettings, products: TDataProduct[]) => ({
 
 const PageView = (options: TSettings) => ({
   getContents: () => {
-    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
       throw 'Facebook is configured without SDK; Please provide SDK;';
     }
@@ -583,7 +583,7 @@ const PageView = (options: TSettings) => ({
 
 const ProfileView = (options: TSettings) => ({
   getContents: () => {
-    const sdk = options.serverAnalytics?.[ETrackers.Facebook]?.sdk;
+    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
       throw 'Facebook is configured without SDK; Please provide SDK;';
     }

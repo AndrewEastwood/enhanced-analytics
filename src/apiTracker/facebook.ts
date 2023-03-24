@@ -9,7 +9,7 @@ import {
 import * as trackUtils from '../utils';
 
 export const fbTracker = (options: TSettings) => {
-  const { serverAnalytics: analytics, currency } = options;
+  const { integrations: analytics, currency } = options;
   const access_token = analytics?.fb?.token;
   const pixel_id = analytics?.fb?.pixelId;
   const testCode = analytics?.testing ? analytics.fb?.testCode : '';
