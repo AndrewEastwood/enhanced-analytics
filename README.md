@@ -4,8 +4,14 @@ A couple of convenient tools for populating dataLayer ecommerce event data or ev
 
 **integrated services**:\
 &nbsp;&nbsp;✅ Google Analytics\
-&nbsp;&nbsp;✅ Klaviyo <= requires `npm i -S klaviyo-api@2.11`\
-&nbsp;&nbsp;✅ Facebook <= requires `npm i -S facebook-nodejs-business-sdk@13.0.0` \
+&nbsp;&nbsp;✅ Klaviyo
+
+- Install `npm i -S klaviyo-api@2.11` when this lib is being used at NodeJs
+
+&nbsp;&nbsp;✅ Facebook
+
+- Install `npm i -S facebook-nodejs-business-sdk@13.0.0` when this lib is being used at NodeJs
+
 &nbsp;&nbsp;🚣 FullStory (soon)
 
 ---
@@ -38,41 +44,24 @@ const MyApp = () => {
         testing: false,
         klaviyo: {
           enabled: true,
-          siteId: 'YOUR-SITE-ID',
-          sdk: {
-            Events: {
-              createEvent(body: any) {
-                window.klaviyo.track(
-                  body.data.attributes.metric.name,
-                  body.data.attributes.properties
-                );
-                return Promise.resolve();
-              },
-            },
-            Profiles: {
-              createProfile(body: any) {
-                window.klaviyo.identify(body.data.attributes);
-                return Promise.resolve();
-              },
-            },
-          },
-        },
+          siteId: 'YOUR-SITE-ID'
       },
       // you may have your own data structure
       // therefore we need it converted for the lib here
       // This is just real use-case.
       resolvers: {
         // custom data transformation configuration
+        // prettier-ignore
         page(input) {//  <================================|
-          //   ^^ this would be 'test'
-          return {                         //             |
-            id: '',                        //             |
-            name: document.title,          //             |
-            path: window.location.pathname,//             |
-            url: window.location.href,     //             |
-            title: document.title,         //             |
-          };                               //             |
-        },                                 //             |
+          //   ^^ this would be 'test'                    |
+          return {                          //            |
+            id: '',                         //            |
+            name: document.title,           //            |
+            path: window.location.pathname, //            |
+            url: window.location.href,      //            |
+            title: document.title,          //            |
+          };                                //            |
+        },                                  //            |
         //                                                |
         // ^^ here, If you call useAnalytics().withPage('test').integrations.klaviyo.trackPageView();
         //    and the same approach for the other scopes: withUser, withBasket.. etc.

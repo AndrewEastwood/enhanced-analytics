@@ -31,7 +31,28 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       enabled: false,
       siteId: null,
       token: null,
-      sdk: null,
+      sdk:
+        _store.integrations?.klaviyo?.siteId &&
+        document &&
+        !_store.integrations.klaviyo.sdk
+          ? {
+              Events: {
+                createEvent(body: any) {
+                  // @ts-ignore
+                  return window.klaviyo.track(
+                    body.data.attributes.metric.name,
+                    body.data.attributes.properties
+                  );
+                },
+              },
+              Profiles: {
+                createProfile(body: any) {
+                  // @ts-ignore
+                  return window.klaviyo.identify(body.data.attributes);
+                },
+              },
+            }
+          : null,
     },
     testing: false,
     evtUuid: {

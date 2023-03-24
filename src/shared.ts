@@ -121,7 +121,7 @@ export type TSettings = {
       enabled: boolean;
       siteId?: null | string;
       token?: null | string;
-      sdk: null | {
+      sdk?: null | {
         ConfigWrapper?: (string) => void;
         Events: {
           createEvent: (payload: any) => Promise<any>;

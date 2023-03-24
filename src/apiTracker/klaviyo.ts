@@ -11,6 +11,7 @@ import { TDataPage } from '../shared';
 const anonymousEvents = new Set();
 const indentifiedEmails = new Set();
 // const sessionUsers = new Set();
+let uiLibInstalled = false;
 
 export const klaviyoTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
@@ -36,6 +37,10 @@ export const klaviyoTracker = (options: TSettings) => {
     throw 'Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
   }
 
+  if (!analytics.klaviyo?.token && !analytics.klaviyo?.siteId) {
+    throw 'Klaviyo is not configured; Please provide siteId or token;';
+  }
+
   console.log(
     'Klaviyo is running in the ' +
       (isUITracking ? 'UI' : 'API') +
@@ -43,16 +48,23 @@ export const klaviyoTracker = (options: TSettings) => {
   );
 
   const { ConfigWrapper, Events, Profiles } = bizSdk;
-  // isUITracking
-  //   ? {
-  //       ConfigWrapper() {},
-  //       Events: {},
-  //       Profiles: {},
-  //     }
-  //   : bizSdk;
 
   if (analytics.klaviyo?.token && !ConfigWrapper) {
     throw 'Klaviyo is configured without SDK; ConfigWrapper is missing. Please install the requried dependency: npm i klaviyo-api@2.1.1 OR make sure that SDK has ConfigWrapper function defined;';
+  }
+
+  if (analytics.klaviyo?.siteId && document && window && !uiLibInstalled) {
+    uiLibInstalled = true;
+    // install UI lib
+    const el = document.createElement('script');
+    el.setAttribute('async', '');
+    el.setAttribute('type', 'text/javascript');
+    el.setAttribute('data-integration-id', `eak-${analytics.klaviyo?.siteId}`);
+    el.setAttribute(
+      'src',
+      `//static.klaviyo.com/onsite/js/klaviyo.js?company_id=${analytics.klaviyo?.siteId}`
+    );
+    document.head.appendChild(el);
   }
 
   analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
@@ -105,9 +117,6 @@ export const klaviyoTracker = (options: TSettings) => {
             },
           };
           return Events.createEvent({ data: payload });
-          // return isUITracking
-          //   ? Promise.resolve(payload)
-          //   : Events.createEvent({ data: payload });
         })
       );
       console.debug('klaviyo:anonymousEvents released#' + anonymousEvents.size);
@@ -174,7 +183,6 @@ export const klaviyoTracker = (options: TSettings) => {
       attributes,
     };
 
-    // api mode
     if (user) {
       try {
         const existingProfile =
@@ -197,14 +205,6 @@ export const klaviyoTracker = (options: TSettings) => {
         console.error(error);
       }
     }
-
-    // ui mode
-    // if (user && isUITracking) {
-    //   const queuePayloads = await releaseAnonymousEvents();
-    //   const result = [payload, ...(queuePayloads ?? [])];
-    //   analytics.klaviyo?.events?.onEvent?.(result, { isIdentified: !!user });
-    //   return Promise.resolve(result);
-    // }
 
     return null;
   };
