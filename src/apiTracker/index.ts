@@ -9,6 +9,7 @@ import {
 } from '../shared';
 import tFb from './facebook';
 import tKlyo from './klaviyo';
+import tFs from './fullstory';
 
 type TTrackers = {} & Partial<Record<ETrackers, boolean>>;
 
@@ -18,11 +19,14 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     analytics?.[ETrackers.Facebook]?.enabled && (trackers?.fb || true);
   const useKl =
     analytics?.[ETrackers.Klaviyo]?.enabled && (trackers?.klaviyo || true);
+  const useFs =
+    analytics?.[ETrackers.FullStory]?.enabled && (trackers?.fullstory || true);
 
   const trackTransactionRefund = (order: TDataOrder) => async () => {
     const r = [
       useFb ? tFb(config).trackTransactionRefund : null,
       useKl ? tKlyo(config).trackTransactionRefund : null,
+      useFs ? tFs(config).trackTransactionRefund : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -33,6 +37,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackTransactionCancel : null,
       useKl ? tKlyo(config).trackTransactionCancel : null,
+      useFs ? tFs(config).trackTransactionCancel : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -43,6 +48,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackTransactionFulfill : null,
       useKl ? tKlyo(config).trackTransactionFulfill : null,
+      useFs ? tFs(config).trackTransactionFulfill : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -53,6 +59,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackTransaction : null,
       useKl ? tKlyo(config).trackTransaction : null,
+      useFs ? tFs(config).trackTransaction : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -63,6 +70,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackProductAddToCart : null,
       useKl ? tKlyo(config).trackProductAddToCart : null,
+      useFs ? tFs(config).trackProductAddToCart : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(basket));
@@ -73,6 +81,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackProductRemoveFromCart : null,
       useKl ? tKlyo(config).trackProductRemoveFromCart : null,
+      useFs ? tFs(config).trackProductRemoveFromCart : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(basket));
@@ -83,6 +92,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackProductsItemView : null,
       useKl ? tKlyo(config).trackProductsItemView : null,
+      useFs ? tFs(config).trackProductsItemView : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(products));
@@ -93,6 +103,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackProductItemView : null,
       useKl ? tKlyo(config).trackProductItemView : null,
+      useFs ? tFs(config).trackProductItemView : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(product));
@@ -103,6 +114,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackPageView : null,
       useKl ? tKlyo(config).trackPageView : null,
+      useFs ? tFs(config).trackPageView : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(page));
@@ -113,6 +125,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackInitiateCheckout : null,
       useKl ? tKlyo(config).trackInitiateCheckout : null,
+      useFs ? tFs(config).trackInitiateCheckout : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(basket));
@@ -124,6 +137,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       const r = [
         useFb ? tFb(config).trackSearch : null,
         useKl ? tKlyo(config).trackSearch : null,
+        useFs ? tFs(config).trackSearch : null,
       ]
         .filter((v) => !!v)
         .map((v) => v!(searchTerm, products));
@@ -134,6 +148,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackIdentify : null,
       useKl ? tKlyo(config).trackIdentify : null,
+      useFs ? tFs(config).trackIdentify : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(profile));
@@ -144,6 +159,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackNewProfile : null,
       useKl ? tKlyo(config).trackNewProfile : null,
+      useFs ? tFs(config).trackNewProfile : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(profile));
@@ -155,6 +171,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       const r = [
         useFb ? tFb(config).trackProfileResetPassword : null,
         useKl ? tKlyo(config).trackProfileResetPassword : null,
+        useFs ? tFs(config).trackProfileResetPassword : null,
       ]
         .filter((v) => !!v)
         .map((v) => v!(profile));
@@ -165,6 +182,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackProfileLogIn : null,
       useKl ? tKlyo(config).trackProfileLogIn : null,
+      useFs ? tFs(config).trackProfileLogIn : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(profile));
@@ -175,6 +193,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     const r = [
       useFb ? tFb(config).trackProfileLogOut : null,
       useKl ? tKlyo(config).trackProfileLogOut : null,
+      useFs ? tFs(config).trackProfileLogOut : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(profile));
@@ -186,6 +205,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       const r = [
         useFb ? tFb(config).trackProfileSubscribeNL : null,
         useKl ? tKlyo(config).trackProfileSubscribeNL : null,
+        useFs ? tFs(config).trackProfileSubscribeNL : null,
       ]
         .filter((v) => !!v)
         .map((v) => v!(profile));

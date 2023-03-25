@@ -6,6 +6,7 @@ export type TDataPage = {
   name: string;
   path: string;
   url?: string;
+  extras?: Record<string, string | number | boolean>;
 };
 
 export type TDataAddress = {
@@ -77,6 +78,7 @@ export enum ETrackers {
   Facebook = 'fb',
   Klaviyo = 'klaviyo',
   GoogleEEC = 'geec',
+  FullStory = 'fullstory',
 }
 
 export type TEECParams = {
@@ -113,6 +115,22 @@ export type TSettings = {
     [ETrackers.Facebook]?: {
       enabled: boolean;
       sdk: any;
+      pixelId: null | string;
+      token: null | string;
+      testCode: null | string;
+    };
+    [ETrackers.FullStory]?: {
+      enabled: boolean;
+      sdk: {
+        init: (setupVars?: Record<string, any>) => void;
+        identify?: (uid: string, userVars?: Record<string, any>) => void;
+        event?: (
+          eventName: string,
+          eventProperties?: Record<string, any>
+        ) => void;
+        setUserVars?: (userVars?: Record<string, any>) => void;
+        setVars?: (scope: string, pageProperties?: Record<string, any>) => void;
+      } | null;
       pixelId: null | string;
       token: null | string;
       testCode: null | string;

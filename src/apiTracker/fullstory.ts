@@ -1,3 +1,74 @@
+/*
+FullStory.event('orderCreated', {
+  orderId_int: orderItem.id,
+});
+FullStory.identify(orderItem.id.toString(), {
+  displayName: orderItem.customerFullName,
+});
+FullStory.setUserVars({
+  uid: 'explicit user id',
+  displayName: orderItem.customerFullName,
+  email: 'ddsd@sss.com',
+  orderId_int: orderItem.id,
+  orderTotal_real: orderItem.total,
+  orderDate_date: moment(orderItem.dateCreated).format(),
+});
+orderItem?.seen
+  ? void 0
+  : FullStory.event('orderSeen', {
+      orderId_int: orderItem.id,
+    });
+FullStory.setVars('page', {
+  pageName: getRuntime().PAGES.CHECKOUT.TITLE,
+  cartItems_int: cartItems.length,
+});
+FullStory.setVars('page', {
+          pageName: getRuntime().PAGES.CHECKOUT.TITLE,
+          cartItems_int: cartItems.length,
+        })
+FS.event('Product Added', {
+  cart_id_str: '130983678493',
+  product_id_str: '798ith22928347',
+  sku_str: 'L-100',
+  category_str: 'Clothing',
+  name_str: 'Button Front Cardigan',
+  brand_str: 'Bright & Bold',
+  variant_str: 'Blue',
+  price_real: 58.99,
+  quantity_real: 1,
+  coupon_str: '25OFF',
+  position_int: 3,
+  url_str: 'https://www.example.com/product/path',
+  image_url_str: 'https://www.example.com/product/path.jpg'
+});
+FS.event('Subscribed', {
+  uid_str: '750948353',
+  plan_name_str: 'Professional',
+  plan_price_real: 299,
+  plan_users_int: 10,
+  days_in_trial_int: 42,
+  feature_packs: ['MAPS', 'DEV', 'DATA'],
+});
+FS.event('Order Completed', {
+  orderId_str: '23f3er3d',
+  products: [{
+    productId_str: '9v87h4f8',
+    price_real: 20.00,
+    quantity_real: 0.75
+  }, {
+    productId_str: '4738b43z',
+    price_real: 12.87,
+    quantity_real: 6,
+  }]
+});
+FS.setVars("page", {
+ "pageName" : "Checkout", // what is the name of the page?
+ "cart_size_int" : 10, // how many items were in the cart?
+ "used_coupon_bool" : true, // was a coupon used?
+});
+
+*/
+
 import {
   TSettings,
   TDataProduct,
@@ -8,109 +79,37 @@ import {
 import * as trackUtils from '../utils';
 import { TDataPage } from '../shared';
 
-const anonymousEvents = new Set();
-const indentifiedEmails = new Set();
 let uiLibInstalled = false;
 
-export const klaviyoTracker = (options: TSettings) => {
+export const fullstoryTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
-  const bizSdk = analytics?.klaviyo?.sdk;
-  const isUITracking = !analytics?.klaviyo?.token;
+  const bizSdk = analytics?.fullstory?.sdk;
 
-  if (!analytics || !analytics.klaviyo) {
-    throw 'Klaviyo is not configured;';
+  if (!document) {
+    throw 'FullStory cannot be run out of browser;';
   }
 
   if (!bizSdk) {
-    throw 'Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
+    throw 'FullStory is not configured;';
   }
 
-  if (!analytics.klaviyo?.token && !analytics.klaviyo?.siteId) {
-    throw 'Klaviyo is not configured; Please provide siteId or token;';
-  }
+  const { init, event, identify, setUserVars, setVars } = bizSdk;
 
-  console.log(
-    'Klaviyo is running in the ' +
-      (isUITracking ? 'UI' : 'API') +
-      ' tracking mode'
-  );
+  uiLibInstalled
+    ? void 0
+    : init({
+        orgId: analytics?.fullstory?.token,
+      });
 
-  const { ConfigWrapper, Events, Profiles } = bizSdk;
-
-  if (analytics.klaviyo?.token && !ConfigWrapper) {
-    throw 'Klaviyo is configured without SDK; ConfigWrapper is missing. Please install the requried dependency: npm i klaviyo-api@2.1.1 OR make sure that SDK has ConfigWrapper function defined;';
-  }
-
-  if (analytics.klaviyo?.siteId && document && window && !uiLibInstalled) {
-    uiLibInstalled = true;
-    // install UI lib
-    const el = document.createElement('script');
-    el.crossOrigin = 'anonymous';
-    el.src = `//static.klaviyo.com/onsite/js/klaviyo.js?company_id=${analytics.klaviyo?.siteId}`;
-    el.async = true;
-    el.setAttribute('data-integration-id', `eak-${analytics.klaviyo?.siteId}`);
-    document.head.appendChild(el);
-  }
-
-  analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
+  uiLibInstalled = true;
 
   const getUserObj = (profile?: TDataProfile | null) => {
     const u = profile ? profile : options.resolvers?.profile?.();
     return u;
   };
 
-  const collectEvent = (evt) => {
-    // console.error('klaviyo:addEvent');
-    const current_timestamp = Math.floor(Date.now() / 1000);
-    const session = options.resolvers?.session?.();
-    anonymousEvents.add({
-      ...evt,
-      ipAddress: session?.ip,
-      agent: session?.agent,
-      timestamp: current_timestamp,
-      isTest: analytics.testing,
-      post: true,
-    });
-    console.debug('anonymousEvents count', anonymousEvents.size);
-    return anonymousEvents;
-  };
-
-  const releaseAnonymousEvents = async () => {
-    console.debug('klaviyo:releaseAnonymousEvents');
-    const user = getUserObj();
-    try {
-      const resp = await Promise.allSettled(
-        (user ? Array.from(anonymousEvents) : []).map((evt: any) => {
-          const payload = {
-            type: 'event',
-            attributes: {
-              profile: {
-                ...(evt.customer_properties ?? {}),
-                first_name: user!.firstName,
-                last_name: user!.lastName,
-                email: user!.email,
-              },
-              metric: {
-                name: evt.event,
-              },
-              properties: {
-                ...(evt?.properties ?? {}),
-              },
-              time: new Date().toISOString(),
-              value: evt.properties?.$value ?? null,
-              unique_id: evt.properties?.$event_id ?? null,
-            },
-          };
-          return Events.createEvent({ data: payload });
-        })
-      );
-      console.debug('klaviyo:anonymousEvents released#' + anonymousEvents.size);
-      anonymousEvents.clear();
-      return resp;
-    } catch (error) {
-      console.error(error);
-    }
-    console.debug('klaviyo:anonymousEvents#' + anonymousEvents.size);
+  const collectEvent = (payload) => {
+    event?.(payload.event, payload.properties);
   };
 
   const getProductUrl = (product: TDataProduct) => {
@@ -125,70 +124,33 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackIdentify = async (profile?: TDataProfile | null) => {
     const user = getUserObj(profile);
 
-    const attributes = {
-      email: user!.email, // 'sarah.mason@klaviyo-demo.com',
-      phone_number: user?.phone, //'+15005550006',
-      external_id: user?.id, // '63f64a2b-c6bf-40c7-b81f-bed08162edbe',
-      first_name: user?.firstName ?? '', //'Sarah',
-      last_name: user?.lastName ?? '', //'Mason',
-      organization: user?.organization, // 'Klaviyo',
-      title: user?.title, // 'Engineer',
-      image: user?.avatarUrl, // 'https://images.pexels.com/photos/3760854/pexels-photo-3760854.jpeg',
-      location: {
-        address1: user?.address?.street,
-        address2: user?.address?.state,
-        city: user?.address?.city,
-        country: user?.address?.country,
-        region: user?.address?.region,
-        zip: user?.address?.postcode,
-        timezone: user?.address?.timezone,
-        // ...(user?.address ?? {}),
-        // address1: '89 E 42nd St',
-        // address2: '1st floor',
-        // city: 'New York',
-        // country: 'United States',
-        // region: 'NY',
-        // zip: '10017',
-        // timezone: 'America/New_York'
-      },
-      properties: {
-        ...(user?.extraProps ?? {}),
-      },
-      // email: user!.email,
-      // properties: {
-      //   "$first_name": user ? user.firstName : '',
-      //   "$last_name": user ? user.lastName : '',
-      //   "$email": user ? user.email : '',
-      // },
-      // isTest: analytics.testing, //defaults to false
-      // post: true //defaults to false
-    };
-    const payload = {
-      type: 'profile',
-      attributes,
-    };
-
     if (user) {
-      try {
-        const existingProfile =
-          (await Profiles.getProfiles?.({
-            filter: `equals(email,"${user.email}")`,
-          })) ?? null;
-        const foundProfile =
-          existingProfile?.body.data[0] ||
-          indentifiedEmails.has(user.email) ||
-          null;
-        const profileResp = foundProfile
-          ? foundProfile
-          : await Profiles.createProfile({
-              data: payload,
-            });
-        indentifiedEmails.add(user.email);
-        const queueResp = await releaseAnonymousEvents();
-        return Promise.resolve([profileResp, ...(queueResp ?? [])]);
-      } catch (error) {
-        console.error(error);
-      }
+      const attributes = {
+        email: user!.email, // 'sarah.mason@klaviyo-demo.com',
+        phone_number: user?.phone, //'+15005550006',
+        external_id: user?.id, // '63f64a2b-c6bf-40c7-b81f-bed08162edbe',
+        first_name: user?.firstName ?? '', //'Sarah',
+        last_name: user?.lastName ?? '', //'Mason',
+        organization: user?.organization, // 'Klaviyo',
+        title: user?.title, // 'Engineer',
+        image: user?.avatarUrl, // 'https://images.pexels.com/photos/3760854/pexels-photo-3760854.jpeg',
+        location: {
+          address1: user?.address?.street,
+          address2: user?.address?.state,
+          city: user?.address?.city,
+          country: user?.address?.country,
+          region: user?.address?.region,
+          zip: user?.address?.postcode,
+          timezone: user?.address?.timezone,
+        },
+        ...(user?.extraProps ?? {}),
+      };
+      identify?.(attributes.external_id?.toString()!, {
+        displayName: attributes.first_name,
+        email: attributes.email,
+      });
+      setUserVars?.(attributes);
+      return Promise.resolve();
     }
 
     return null;
@@ -269,7 +231,7 @@ export const klaviyoTracker = (options: TSettings) => {
         },
       },
     });
-    return trackIdentify(); //{ ...user, });
+    return trackIdentify();
   };
 
   const trackProductAddToCart = async (basket: TDataBasket) => {
@@ -389,12 +351,10 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackPageView = async (page: TDataPage) => {
-    collectEvent({
-      event: 'Viewed Page',
-      properties: {
-        PageName: page?.name,
-        PageUrl: page?.url,
-      },
+    setVars?.('page', {
+      pageName: page?.name,
+      ...page,
+      ...(page.extras ?? {}),
     });
     return trackIdentify();
   };
@@ -545,4 +505,4 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 };
 
-export default klaviyoTracker;
+export default fullstoryTracker;
