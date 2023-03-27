@@ -46,6 +46,9 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
                 },
               },
               Profiles: {
+                getProfiles(filter: Record<string, any>) {
+                  return Promise.resolve({ body: { data: [] } });
+                },
                 createProfile(body: any) {
                   // @ts-ignore
                   return window.klaviyo.identify(body.data.attributes);

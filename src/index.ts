@@ -49,7 +49,11 @@ export const useAnalytics = () => {
             v
           ),
           any: (...trackers: ETrackers[]) => {
-            trackers.map((t) => apiTracker(store, { [t]: true }).events(v));
+            const c = trackers.reduce(
+              (r, t) => ({ ...r, [t]: true }),
+              {} as Partial<Record<ETrackers, boolean>>
+            );
+            return apiTracker(store, c).events(v);
           },
         },
         // data: trackUtils.Page(store),
@@ -72,7 +76,11 @@ export const useAnalytics = () => {
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).page(v),
           [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).page(v),
           any: (...trackers: ETrackers[]) => {
-            trackers.map((t) => apiTracker(store, { [t]: true }).page(v));
+            const c = trackers.reduce(
+              (r, t) => ({ ...r, [t]: true }),
+              {} as Partial<Record<ETrackers, boolean>>
+            );
+            return apiTracker(store, c).page(v);
           },
         },
         data: trackUtils.Page(store),
@@ -99,7 +107,11 @@ export const useAnalytics = () => {
             v
           ),
           any: (...trackers: ETrackers[]) => {
-            trackers.map((t) => apiTracker(store, { [t]: true }).profile(v));
+            const c = trackers.reduce(
+              (r, t) => ({ ...r, [t]: true }),
+              {} as Partial<Record<ETrackers, boolean>>
+            );
+            return apiTracker(store, c).profile(v);
           },
         },
         data: trackUtils.Profile(store),
@@ -126,7 +138,11 @@ export const useAnalytics = () => {
             v
           ),
           any: (...trackers: ETrackers[]) => {
-            trackers.map((t) => apiTracker(store, { [t]: true }).catalog(v));
+            const c = trackers.reduce(
+              (r, t) => ({ ...r, [t]: true }),
+              {} as Partial<Record<ETrackers, boolean>>
+            );
+            return apiTracker(store, c).catalog(v);
           },
         },
         data: trackUtils.Catalog(store, v),
@@ -151,7 +167,11 @@ export const useAnalytics = () => {
             v
           ),
           any: (...trackers: ETrackers[]) => {
-            trackers.map((t) => apiTracker(store, { [t]: true }).basket(v));
+            const c = trackers.reduce(
+              (r, t) => ({ ...r, [t]: true }),
+              {} as Partial<Record<ETrackers, boolean>>
+            );
+            return apiTracker(store, c).basket(v);
           },
         },
         data: trackUtils.Basket(store, v),
@@ -176,7 +196,11 @@ export const useAnalytics = () => {
             v
           ),
           any: (...trackers: ETrackers[]) => {
-            trackers.map((t) => apiTracker(store, { [t]: true }).order(v));
+            const c = trackers.reduce(
+              (r, t) => ({ ...r, [t]: true }),
+              {} as Partial<Record<ETrackers, boolean>>
+            );
+            return apiTracker(store, c).order(v);
           },
         },
         data: trackUtils.Order(store, v),

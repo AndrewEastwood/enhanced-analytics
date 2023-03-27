@@ -16,12 +16,14 @@ type TTrackers = {} & Partial<Record<ETrackers, boolean>>;
 
 export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   const { integrations: analytics } = config;
+  const useAll = typeof trackers === 'undefined';
   const useFb =
-    analytics?.[ETrackers.Facebook]?.enabled && (trackers?.fb || true);
+    analytics?.[ETrackers.Facebook]?.enabled && (trackers?.fb ?? useAll);
   const useKl =
-    analytics?.[ETrackers.Klaviyo]?.enabled && (trackers?.klaviyo || true);
+    analytics?.[ETrackers.Klaviyo]?.enabled && (trackers?.klaviyo ?? useAll);
   const useFs =
-    analytics?.[ETrackers.FullStory]?.enabled && (trackers?.fullstory || true);
+    analytics?.[ETrackers.FullStory]?.enabled &&
+    (trackers?.fullstory ?? useAll);
 
   const trackTransactionRefund = (order: TDataOrder) => async () => {
     const r = [
