@@ -10,6 +10,7 @@ import {
   TDataProfile,
 } from './shared';
 import * as trackUtils from './utils';
+import { TDataCustomEvent } from './shared';
 
 export * from './apiTracker';
 export * from './ecommerce';
@@ -30,6 +31,31 @@ export * from './config';
 
 export const useAnalytics = () => {
   return {
+    withEvent: (name: string, attributes?: Record<string, any>) => {
+      const store = getConfig();
+      if (store === null) {
+        throw 'Invoke configureAnalytics first and provide configuration';
+      }
+      const v: TDataCustomEvent = {
+        name,
+        attributes,
+      };
+      return {
+        sendToServer: {
+          all: apiTracker(store).events(v),
+          [ETrackers.Facebook]: apiTracker(store, { fb: true }).events(v),
+          [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).events(v),
+          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).events(
+            v
+          ),
+          any: (...trackers: ETrackers[]) => {
+            trackers.map((t) => apiTracker(store, { [t]: true }).events(v));
+          },
+        },
+        // data: trackUtils.Page(store),
+        // events: getEEC(store).groups.general(),
+      };
+    },
     withPage: (payload: TDataPage | Record<string, any> | null = null) => {
       const store = getConfig();
       if (store === null) {
@@ -44,6 +70,10 @@ export const useAnalytics = () => {
           all: apiTracker(store).page(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true }).page(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).page(v),
+          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).page(v),
+          any: (...trackers: ETrackers[]) => {
+            trackers.map((t) => apiTracker(store, { [t]: true }).page(v));
+          },
         },
         data: trackUtils.Page(store),
         events: getEEC(store).groups.general(),
@@ -65,6 +95,12 @@ export const useAnalytics = () => {
           all: apiTracker(store).profile(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true }).profile(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).profile(v),
+          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).profile(
+            v
+          ),
+          any: (...trackers: ETrackers[]) => {
+            trackers.map((t) => apiTracker(store, { [t]: true }).profile(v));
+          },
         },
         data: trackUtils.Profile(store),
         events: getEEC(store).groups.profile(),
@@ -86,6 +122,12 @@ export const useAnalytics = () => {
           all: apiTracker(store).catalog(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true }).catalog(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).catalog(v),
+          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).catalog(
+            v
+          ),
+          any: (...trackers: ETrackers[]) => {
+            trackers.map((t) => apiTracker(store, { [t]: true }).catalog(v));
+          },
         },
         data: trackUtils.Catalog(store, v),
         events: getEEC(store).groups.catalog(v),
@@ -105,6 +147,12 @@ export const useAnalytics = () => {
           all: apiTracker(store).basket(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true }).basket(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).basket(v),
+          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).basket(
+            v
+          ),
+          any: (...trackers: ETrackers[]) => {
+            trackers.map((t) => apiTracker(store, { [t]: true }).basket(v));
+          },
         },
         data: trackUtils.Basket(store, v),
         events: getEEC(store).groups.basket(v),
@@ -124,6 +172,12 @@ export const useAnalytics = () => {
           all: apiTracker(store).order(v),
           [ETrackers.Facebook]: apiTracker(store, { fb: true }).order(v),
           [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).order(v),
+          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).order(
+            v
+          ),
+          any: (...trackers: ETrackers[]) => {
+            trackers.map((t) => apiTracker(store, { [t]: true }).order(v));
+          },
         },
         data: trackUtils.Order(store, v),
         events: getEEC(store).groups.order(v),

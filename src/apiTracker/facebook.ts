@@ -1,5 +1,6 @@
 import {
   TDataBasket,
+  TDataCustomEvent,
   TDataOrder,
   TDataPage,
   TDataProduct,
@@ -310,6 +311,8 @@ export const fbTracker = (options: TSettings) => {
     }
   };
 
+  const trackCustom = async (e: TDataCustomEvent) => {};
+
   const trackInitiateCheckout = async (basket: TDataBasket) => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
     console.error('fb:trackProductItemView', evtName);
@@ -439,6 +442,7 @@ export const fbTracker = (options: TSettings) => {
     trackTransactionRefund,
     trackTransactionCancel,
     trackTransactionFulfill,
+    trackCustom,
   };
 };
 

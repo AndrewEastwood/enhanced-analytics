@@ -4,6 +4,7 @@ import {
   TDataProfile,
   TDataOrder,
   TDataBasket,
+  TDataCustomEvent,
 } from '../shared';
 import * as trackUtils from '../utils';
 import { TDataPage } from '../shared';
@@ -399,6 +400,14 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
+  const trackCustom = async (e: TDataCustomEvent) => {
+    collectEvent({
+      event: e.name,
+      properties: e.attributes ?? {},
+    });
+    return trackIdentify();
+  };
+
   const trackInitiateCheckout = async (basket: TDataBasket) => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
     const page = options.resolvers?.page?.();
@@ -542,6 +551,7 @@ export const klaviyoTracker = (options: TSettings) => {
     trackTransactionRefund,
     trackTransactionCancel,
     trackTransactionFulfill,
+    trackCustom,
   };
 };
 

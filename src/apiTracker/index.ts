@@ -10,6 +10,7 @@ import {
 import tFb from './facebook';
 import tKlyo from './klaviyo';
 import tFs from './fullstory';
+import { TDataCustomEvent } from '../shared';
 
 type TTrackers = {} & Partial<Record<ETrackers, boolean>>;
 
@@ -121,6 +122,17 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
+  const trackCustom = (event: TDataCustomEvent) => async () => {
+    const r = [
+      useFb ? tFb(config).trackCustom : null,
+      useKl ? tKlyo(config).trackCustom : null,
+      useFs ? tFs(config).trackCustom : null,
+    ]
+      .filter((v) => !!v)
+      .map((v) => v!(event));
+    return await Promise.allSettled(r);
+  };
+
   const trackInitiateCheckout = (basket: TDataBasket) => async () => {
     const r = [
       useFb ? tFb(config).trackInitiateCheckout : null,
@@ -213,6 +225,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     };
 
   return {
+    events: (event: TDataCustomEvent) => ({
+      trackCustom: trackCustom(event),
+    }),
     page: (page: TDataPage) => ({
       trackPageView: trackPageView(page),
     }),

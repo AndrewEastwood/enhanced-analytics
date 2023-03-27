@@ -1,6 +1,6 @@
 /*
 FullStory.event('orderCreated', {
-  orderId_int: orderItem.id,
+  orderId: orderItem.id,
 });
 FullStory.identify(orderItem.id.toString(), {
   displayName: orderItem.customerFullName,
@@ -9,56 +9,56 @@ FullStory.setUserVars({
   uid: 'explicit user id',
   displayName: orderItem.customerFullName,
   email: 'ddsd@sss.com',
-  orderId_int: orderItem.id,
-  orderTotal_real: orderItem.total,
+  orderId: orderItem.id,
+  orderTotal: orderItem.total,
   orderDate_date: moment(orderItem.dateCreated).format(),
 });
 orderItem?.seen
   ? void 0
   : FullStory.event('orderSeen', {
-      orderId_int: orderItem.id,
+      orderId: orderItem.id,
     });
 FullStory.setVars('page', {
   pageName: getRuntime().PAGES.CHECKOUT.TITLE,
-  cartItems_int: cartItems.length,
+  cartItems: cartItems.length,
 });
 FullStory.setVars('page', {
           pageName: getRuntime().PAGES.CHECKOUT.TITLE,
-          cartItems_int: cartItems.length,
+          cartItems: cartItems.length,
         })
 FS.event('Product Added', {
-  cart_id_str: '130983678493',
-  product_id_str: '798ith22928347',
-  sku_str: 'L-100',
-  category_str: 'Clothing',
-  name_str: 'Button Front Cardigan',
-  brand_str: 'Bright & Bold',
-  variant_str: 'Blue',
-  price_real: 58.99,
-  quantity_real: 1,
-  coupon_str: '25OFF',
-  position_int: 3,
-  url_str: 'https://www.example.com/product/path',
-  image_url_str: 'https://www.example.com/product/path.jpg'
+  cart_id: '130983678493',
+  product_id: '798ith22928347',
+  sku: 'L-100',
+  category: 'Clothing',
+  name: 'Button Front Cardigan',
+  brand: 'Bright & Bold',
+  variant: 'Blue',
+  price: 58.99,
+  quantity: 1,
+  coupon: '25OFF',
+  position: 3,
+  url: 'https://www.example.com/product/path',
+  image_url: 'https://www.example.com/product/path.jpg'
 });
 FS.event('Subscribed', {
-  uid_str: '750948353',
-  plan_name_str: 'Professional',
-  plan_price_real: 299,
-  plan_users_int: 10,
-  days_in_trial_int: 42,
+  uid: '750948353',
+  plan_name: 'Professional',
+  plan_price: 299,
+  plan_users: 10,
+  days_in_trial: 42,
   feature_packs: ['MAPS', 'DEV', 'DATA'],
 });
 FS.event('Order Completed', {
-  orderId_str: '23f3er3d',
+  orderId: '23f3er3d',
   products: [{
-    productId_str: '9v87h4f8',
-    price_real: 20.00,
-    quantity_real: 0.75
+    productId: '9v87h4f8',
+    price: 20.00,
+    quantity: 0.75
   }, {
-    productId_str: '4738b43z',
-    price_real: 12.87,
-    quantity_real: 6,
+    productId: '4738b43z',
+    price: 12.87,
+    quantity: 6,
   }]
 });
 FS.setVars("page", {
@@ -75,6 +75,7 @@ import {
   TDataProfile,
   TDataOrder,
   TDataBasket,
+  TDataCustomEvent,
 } from '../shared';
 import * as trackUtils from '../utils';
 import { TDataPage } from '../shared';
@@ -98,7 +99,7 @@ export const fullstoryTracker = (options: TSettings) => {
   uiLibInstalled
     ? void 0
     : init({
-        orgId: analytics?.fullstory?.token,
+        orgId: analytics?.fullstory?.orgId,
       });
 
   uiLibInstalled = true;
@@ -108,8 +109,41 @@ export const fullstoryTracker = (options: TSettings) => {
     return u;
   };
 
+  const fldTypeResolver = (fld: any) => {
+    const isArr = Array.isArray(fld);
+    const val = isArr ? (fld.length > 0 ? fld[0] : '') : fld;
+    const fldType =
+      typeof val === 'string'
+        ? 'str'
+        : typeof val === 'boolean'
+        ? 'bool'
+        : Number.isInteger(val)
+        ? 'int'
+        : !Number.isInteger(val)
+        ? 'real'
+        : val instanceof Date
+        ? 'date'
+        : 'str';
+    return fldType + (isArr ? 's' : '');
+  };
+
+  const normalizePayloadFieldNames = (
+    payload?: Record<string, any>
+  ): Record<string, any> =>
+    Object.entries(payload ?? {}).reduce((r, entry) => {
+      const fT = fldTypeResolver(entry[1]);
+      return {
+        ...r,
+        [entry[0] + '_' + fT]:
+          fT === 'str' ? JSON.stringify(entry[1]) : entry[1],
+      };
+    }, {});
+
   const collectEvent = (payload) => {
-    event?.(payload.event, payload.properties);
+    event?.(
+      payload.event,
+      normalizePayloadFieldNames(payload.attributes ?? {})
+    );
   };
 
   const getProductUrl = (product: TDataProduct) => {
@@ -134,7 +168,7 @@ export const fullstoryTracker = (options: TSettings) => {
         organization: user?.organization, // 'Klaviyo',
         title: user?.title, // 'Engineer',
         image: user?.avatarUrl, // 'https://images.pexels.com/photos/3760854/pexels-photo-3760854.jpeg',
-        location: {
+        location: JSON.stringify({
           address1: user?.address?.street,
           address2: user?.address?.state,
           city: user?.address?.city,
@@ -142,14 +176,14 @@ export const fullstoryTracker = (options: TSettings) => {
           region: user?.address?.region,
           zip: user?.address?.postcode,
           timezone: user?.address?.timezone,
-        },
+        }),
         ...(user?.extraProps ?? {}),
       };
-      identify?.(attributes.external_id?.toString()!, {
+      identify?.(attributes.external_id?.toString() ?? attributes.email, {
         displayName: attributes.first_name,
         email: attributes.email,
       });
-      setUserVars?.(attributes);
+      setUserVars?.(normalizePayloadFieldNames(attributes));
       return Promise.resolve();
     }
 
@@ -168,14 +202,8 @@ export const fullstoryTracker = (options: TSettings) => {
     const page = options.resolvers?.page?.();
     collectEvent({
       event: 'Placed Order',
-      customerProperties: {
-        email: order.customer.email,
-        first_name: order.customer.firstName,
-        last_name: order.customer.lastName,
-      },
       properties: {
-        $event_id: evtName,
-        // "MissingInformation": ["Shipping Address Information","Shipping Method"],
+        $event: evtName,
         $value: order.revenue,
         OrderId: order.id,
         Coupon: order.coupon || '',
@@ -187,21 +215,22 @@ export const fullstoryTracker = (options: TSettings) => {
         ),
         Brands: Object.values(order.products).map((product) => product.brand),
         DiscountCode: order.coupon, // "Free Shipping",
-        // "DiscountValue": 5,
         SuccessURL: order.url ? order.url : page?.url || '',
-        Items: order.products.map((product) => ({
-          ProductID: product.id,
-          SKU: product.sku,
-          ProductName: product.title,
-          Quantity: product.quantity,
-          ItemPrice: product.price,
-          RowTotal: parseFloat(product.total?.toFixed(2) || '0'),
-          ProductURL: getProductUrl(product),
-          ImageURL: getProductImageUrl(product),
-          Categories: [product.category],
-          Brand: product.brand,
-        })),
-        BillingAddress: {
+        Items: order.products.map((product) =>
+          JSON.stringify({
+            ProductID: product.id,
+            SKU: product.sku,
+            ProductName: product.title,
+            Quantity: product.quantity,
+            ItemPrice: product.price,
+            RowTotal: parseFloat(product.total?.toFixed(2) || '0'),
+            ProductURL: getProductUrl(product),
+            ImageURL: getProductImageUrl(product),
+            Categories: [product.category],
+            Brand: product.brand,
+          })
+        ),
+        BillingAddress: JSON.stringify({
           FirstName: order.customer.firstName,
           LastName: order.customer.lastName,
           Company: '',
@@ -214,8 +243,8 @@ export const fullstoryTracker = (options: TSettings) => {
           CountryCode: order.shipping.address.countryCode,
           Zip: order.shipping.address.postcode,
           Phone: order.shipping.address,
-        },
-        ShippingAddress: {
+        }),
+        ShippingAddress: JSON.stringify({
           FirstName: order.customer.firstName,
           LastName: order.customer.lastName,
           Company: '',
@@ -228,7 +257,7 @@ export const fullstoryTracker = (options: TSettings) => {
           CountryCode: order.shipping.address.countryCode,
           Zip: order.shipping.address.postcode,
           Phone: order.shipping.address,
-        },
+        }),
       },
     });
     return trackIdentify();
@@ -242,7 +271,7 @@ export const fullstoryTracker = (options: TSettings) => {
       collectEvent({
         event: 'Added to Cart',
         properties: {
-          $event_id: evtName, // 'add_cart_of_' + product.id,
+          $event: evtName, // 'add_cart_of_' + product.id,
           $value: parseFloat(product.price.toFixed(2)),
           AddedItemProductName: product.title,
           AddedItemProductID: product.id,
@@ -261,18 +290,20 @@ export const fullstoryTracker = (options: TSettings) => {
           Brands: Object.values(basket.products).map(
             (product) => product.brand
           ),
-          Items: Object.values(basket.products).map((product) => ({
-            ProductID: product.id,
-            SKU: product.sku,
-            ProductName: product.title,
-            Quantity: product.quantity,
-            ItemPrice: product.price,
-            RowTotal: parseFloat(product.total?.toFixed(2) || '0'),
-            ProductURL: getProductUrl(product),
-            ImageURL: getProductImageUrl(product),
-            Categories: [product.category],
-            Brand: product.brand,
-          })),
+          Items: Object.values(basket.products).map((product) =>
+            JSON.stringify({
+              ProductID: product.id,
+              SKU: product.sku,
+              ProductName: product.title,
+              Quantity: product.quantity,
+              ItemPrice: product.price,
+              RowTotal: parseFloat(product.total?.toFixed(2) || '0'),
+              ProductURL: getProductUrl(product),
+              ImageURL: getProductImageUrl(product),
+              Categories: [product.category],
+              Brand: product.brand,
+            })
+          ),
         },
       });
     });
@@ -287,7 +318,7 @@ export const fullstoryTracker = (options: TSettings) => {
       collectEvent({
         event: 'Removed form Cart',
         properties: {
-          $event_id: evtName, // 'add_cart_of_' + product.id,
+          $event: evtName, // 'add_cart_of_' + product.id,
           $value: parseFloat(product.price.toFixed(2)),
           RemovedItemProductName: product.title,
           RemovedItemProductID: product.id,
@@ -306,18 +337,20 @@ export const fullstoryTracker = (options: TSettings) => {
           Brands: Object.values(basket.products).map(
             (product) => product.brand
           ),
-          Items: Object.values(basket.products).map((product) => ({
-            ProductID: product.id,
-            SKU: product.sku,
-            ProductName: product.title,
-            Quantity: product.quantity,
-            ItemPrice: product.price,
-            RowTotal: parseFloat(product.total?.toFixed(2) || '0'),
-            ProductURL: getProductUrl(product),
-            ImageURL: getProductImageUrl(product),
-            Categories: [product.category],
-            Brand: product.brand,
-          })),
+          Items: Object.values(basket.products).map((product) =>
+            JSON.stringify({
+              ProductID: product.id,
+              SKU: product.sku,
+              ProductName: product.title,
+              Quantity: product.quantity,
+              ItemPrice: product.price,
+              RowTotal: parseFloat(product.total?.toFixed(2) || '0'),
+              ProductURL: getProductUrl(product),
+              ImageURL: getProductImageUrl(product),
+              Categories: [product.category],
+              Brand: product.brand,
+            })
+          ),
         },
       });
     });
@@ -334,7 +367,7 @@ export const fullstoryTracker = (options: TSettings) => {
     collectEvent({
       event: 'Viewed Product',
       properties: {
-        $event_id: evtName,
+        $event: evtName,
         $value: product.price,
         ProductName: product.title,
         ProductID: product.id,
@@ -353,8 +386,15 @@ export const fullstoryTracker = (options: TSettings) => {
   const trackPageView = async (page: TDataPage) => {
     setVars?.('page', {
       pageName: page?.name,
-      ...page,
-      ...(page.extras ?? {}),
+      ...normalizePayloadFieldNames(page.extras ?? {}),
+    });
+    return trackIdentify();
+  };
+
+  const trackCustom = async (e: TDataCustomEvent) => {
+    collectEvent({
+      event: e.name,
+      properties: e.attributes,
     });
     return trackIdentify();
   };
@@ -365,7 +405,7 @@ export const fullstoryTracker = (options: TSettings) => {
     collectEvent({
       event: 'Started Checkout',
       properties: {
-        $event_id: evtName,
+        $event: evtName,
         $value: basket.total.toFixed(2),
         ItemNames: Object.values(basket.products).map(
           (product) => product.title
@@ -375,18 +415,20 @@ export const fullstoryTracker = (options: TSettings) => {
         ),
         Brands: Object.values(basket.products).map((product) => product.brand),
         CheckoutURL: page?.url,
-        Items: Object.values(basket.products).map((product) => ({
-          ProductID: product.id,
-          SKU: product.sku,
-          ProductName: product.title,
-          Quantity: product.quantity,
-          ItemPrice: product.price,
-          RowTotal: parseFloat(product.total?.toFixed(2) || '0'),
-          ProductURL: getProductUrl(product),
-          ImageURL: getProductImageUrl(product),
-          Categories: [product.category],
-          Brand: product.brand,
-        })),
+        Items: Object.values(basket.products).map((product) =>
+          JSON.stringify({
+            ProductID: product.id,
+            SKU: product.sku,
+            ProductName: product.title,
+            Quantity: product.quantity,
+            ItemPrice: product.price,
+            RowTotal: parseFloat(product.total?.toFixed(2) || '0'),
+            ProductURL: getProductUrl(product),
+            ImageURL: getProductImageUrl(product),
+            Categories: [product.category],
+            Brand: product.brand,
+          })
+        ),
       },
     });
     return trackIdentify();
@@ -401,7 +443,6 @@ export const fullstoryTracker = (options: TSettings) => {
     collectEvent({
       event: 'Searched Site',
       properties: {
-        $event_id: evtName,
         SearchTerm: searchTerm,
         ReturnedResults: (matchingProducts && matchingProducts.length) || 0,
         PageUrl: page?.url,
@@ -416,10 +457,10 @@ export const fullstoryTracker = (options: TSettings) => {
     user
       ? collectEvent({
           event: 'Created Account',
-          customer_properties: {
+          properties: {
             email: user.email,
-            first_name: user.firstName,
-            last_name: user.lastName,
+            firstName: user.firstName,
+            lastName: user.lastName,
           },
         })
       : void 0;
@@ -432,10 +473,8 @@ export const fullstoryTracker = (options: TSettings) => {
     user
       ? collectEvent({
           event: 'Reset Password',
-          customer_properties: {
-            email: user.email,
-          },
           properties: {
+            email: user.email,
             PasswordResetLink:
               absoluteURL + (options.links?.resetPassword ?? ''),
           },
@@ -449,7 +488,7 @@ export const fullstoryTracker = (options: TSettings) => {
     user
       ? collectEvent({
           event: 'Custom User Login',
-          customer_properties: {
+          properties: {
             email: user.email,
           },
         })
@@ -462,7 +501,7 @@ export const fullstoryTracker = (options: TSettings) => {
     user
       ? collectEvent({
           event: 'Custom User Log Out',
-          customer_properties: {
+          properties: {
             email: user.email,
           },
         })
@@ -476,7 +515,7 @@ export const fullstoryTracker = (options: TSettings) => {
     user
       ? collectEvent({
           event: 'Custom User NL Subscribed',
-          customer_properties: {
+          properties: {
             email: user.email,
           },
         })
@@ -502,6 +541,7 @@ export const fullstoryTracker = (options: TSettings) => {
     trackTransactionRefund,
     trackTransactionCancel,
     trackTransactionFulfill,
+    trackCustom,
   };
 };
 

@@ -54,6 +54,11 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
             }
           : null,
     },
+    fullstory: {
+      enabled: false,
+      orgId: null,
+      sdk: null,
+    },
     testing: false,
     evtUuid: {
       cookieName: 'evt-uuid',

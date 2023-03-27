@@ -1,5 +1,10 @@
 import { Request } from 'express';
 
+export type TDataCustomEvent = {
+  name: string;
+  attributes?: Record<string, string>;
+};
+
 export type TDataPage = {
   id: string | number;
   title: string;
@@ -131,9 +136,7 @@ export type TSettings = {
         setUserVars?: (userVars?: Record<string, any>) => void;
         setVars?: (scope: string, pageProperties?: Record<string, any>) => void;
       } | null;
-      pixelId: null | string;
-      token: null | string;
-      testCode: null | string;
+      orgId: string | null;
     };
     [ETrackers.Klaviyo]?: {
       enabled: boolean;
