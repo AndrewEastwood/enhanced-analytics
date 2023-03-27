@@ -1,12 +1,12 @@
 import { Request } from 'express';
 import { defaultsDeep } from 'lodash';
 import {
-  TDataBasket,
-  TDataOrder,
-  TDataPage,
-  TDataProduct,
-  TDataProfile,
-  TDataSession,
+  T_EA_DataBasket,
+  T_EA_DataOrder,
+  T_EA_DataPage,
+  T_EA_DataProduct,
+  T_EA_DataProfile,
+  T_EA_DataSession,
   TSettings,
 } from './shared';
 
@@ -77,13 +77,13 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
   },
   resolvers: {
     ...(_store.resolvers || {}),
-    session: _store?.resolvers?.session || (() => ({} as TDataSession)),
+    session: _store?.resolvers?.session || (() => ({} as T_EA_DataSession)),
     eventUUID: _store.resolvers?.eventUUID ?? ((r?: Request) => Date.now()),
-    product: _store.resolvers?.product || ((p) => [p] as TDataProduct[]),
-    order: _store.resolvers?.order || ((p) => p as TDataOrder),
-    basket: _store.resolvers?.basket || ((p) => p as TDataBasket),
-    profile: _store.resolvers?.profile || ((p) => p as TDataProfile | null),
-    page: _store.resolvers?.page || ((p) => p as TDataPage),
+    product: _store.resolvers?.product || ((p) => [p] as T_EA_DataProduct[]),
+    order: _store.resolvers?.order || ((p) => p as T_EA_DataOrder),
+    basket: _store.resolvers?.basket || ((p) => p as T_EA_DataBasket),
+    profile: _store.resolvers?.profile || ((p) => p as T_EA_DataProfile | null),
+    page: _store.resolvers?.page || ((p) => p as T_EA_DataPage),
   },
 });
 

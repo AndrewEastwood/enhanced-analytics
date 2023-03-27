@@ -1,13 +1,13 @@
 import {
   TSettings,
-  TDataProduct,
-  TDataProfile,
-  TDataOrder,
-  TDataBasket,
-  TDataCustomEvent,
+  T_EA_DataProduct,
+  T_EA_DataProfile,
+  T_EA_DataOrder,
+  T_EA_DataBasket,
+  T_EA_DataCustomEvent,
 } from '../shared';
 import * as trackUtils from '../utils';
-import { TDataPage } from '../shared';
+import { T_EA_DataPage } from '../shared';
 
 const anonymousEvents = new Set();
 const indentifiedEmails = new Set();
@@ -55,7 +55,7 @@ export const klaviyoTracker = (options: TSettings) => {
 
   analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
 
-  const getUserObj = (profile?: TDataProfile | null) => {
+  const getUserObj = (profile?: T_EA_DataProfile | null) => {
     const u = profile ? profile : options.resolvers?.profile?.();
     return u;
   };
@@ -114,16 +114,16 @@ export const klaviyoTracker = (options: TSettings) => {
     console.debug('klaviyo:anonymousEvents#' + anonymousEvents.size);
   };
 
-  const getProductUrl = (product: TDataProduct) => {
+  const getProductUrl = (product: T_EA_DataProduct) => {
     return product.url;
   };
 
-  const getProductImageUrl = (product: TDataProduct) => {
+  const getProductImageUrl = (product: T_EA_DataProduct) => {
     return product.imageUrl ?? '';
   };
 
   // Identify a user - create/update a profile in Klaviyo
-  const trackIdentify = async (profile?: TDataProfile | null) => {
+  const trackIdentify = async (profile?: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
 
     const attributes = {
@@ -195,13 +195,13 @@ export const klaviyoTracker = (options: TSettings) => {
     return null;
   };
 
-  const trackTransactionRefund = async (order: TDataOrder) => {};
+  const trackTransactionRefund = async (order: T_EA_DataOrder) => {};
 
-  const trackTransactionCancel = async (order: TDataOrder) => {};
+  const trackTransactionCancel = async (order: T_EA_DataOrder) => {};
 
-  const trackTransactionFulfill = async (order: TDataOrder) => {};
+  const trackTransactionFulfill = async (order: T_EA_DataOrder) => {};
 
-  const trackTransaction = async (order: TDataOrder) => {
+  const trackTransaction = async (order: T_EA_DataOrder) => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
     // const session = options.resolvers?.session?.();
     const page = options.resolvers?.page?.();
@@ -273,7 +273,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify(); //{ ...user, });
   };
 
-  const trackProductAddToCart = async (basket: TDataBasket) => {
+  const trackProductAddToCart = async (basket: T_EA_DataBasket) => {
     basket.lastAdded.map((product) => {
       const evtName = trackUtils.getEventNameOfProductAddToCart(product);
       // console.error('klaviyo:trackInitiateCheckout', evtName);
@@ -318,7 +318,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackProductRemoveFromCart = async (basket: TDataBasket) => {
+  const trackProductRemoveFromCart = async (basket: T_EA_DataBasket) => {
     basket.lastRemoved.map((product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
       // console.error('klaviyo:trackInitiateCheckout', evtName);
@@ -363,11 +363,11 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackProductsItemView = async (products: TDataProduct[]) => {
+  const trackProductsItemView = async (products: T_EA_DataProduct[]) => {
     await Promise.allSettled(products.map((p) => trackProductItemView(p)));
   };
 
-  const trackProductItemView = async (product: TDataProduct) => {
+  const trackProductItemView = async (product: T_EA_DataProduct) => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
     // console.error('klaviyo:trackProductItemView', evtName);
     collectEvent({
@@ -389,7 +389,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackPageView = async (page: TDataPage) => {
+  const trackPageView = async (page: T_EA_DataPage) => {
     collectEvent({
       event: 'Viewed Page',
       properties: {
@@ -400,7 +400,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackCustom = async (e: TDataCustomEvent) => {
+  const trackCustom = async (e: T_EA_DataCustomEvent) => {
     collectEvent({
       event: e.name,
       properties: e.attributes ?? {},
@@ -408,7 +408,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackInitiateCheckout = async (basket: TDataBasket) => {
+  const trackInitiateCheckout = async (basket: T_EA_DataBasket) => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
     const page = options.resolvers?.page?.();
     collectEvent({
@@ -459,7 +459,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackNewProfile = async (profile: TDataProfile | null) => {
+  const trackNewProfile = async (profile: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
     // console.log('klaviyo:trackNewProfile', user);
     user
@@ -475,7 +475,9 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackProfileResetPassword = async (profile: TDataProfile | null) => {
+  const trackProfileResetPassword = async (
+    profile: T_EA_DataProfile | null
+  ) => {
     // console.error('klaviyo:trackProfileResetPassword', request.user);
     const user = getUserObj(profile);
     user
@@ -493,7 +495,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackProfileLogIn = async (profile: TDataProfile | null) => {
+  const trackProfileLogIn = async (profile: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
     user
       ? collectEvent({
@@ -506,7 +508,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackProfileLogOut = async (profile: TDataProfile | null) => {
+  const trackProfileLogOut = async (profile: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
     user
       ? collectEvent({
@@ -519,7 +521,7 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackProfileSubscribeNL = async (profile: TDataProfile | null) => {
+  const trackProfileSubscribeNL = async (profile: T_EA_DataProfile | null) => {
     // console.error('klaviyo:trackProfileSubscribeNL', request.user);
     const user = getUserObj(profile);
     user

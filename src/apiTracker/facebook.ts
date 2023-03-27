@@ -1,10 +1,10 @@
 import {
-  TDataBasket,
-  TDataCustomEvent,
-  TDataOrder,
-  TDataPage,
-  TDataProduct,
-  TDataProfile,
+  T_EA_DataBasket,
+  T_EA_DataCustomEvent,
+  T_EA_DataOrder,
+  T_EA_DataPage,
+  T_EA_DataProduct,
+  T_EA_DataProfile,
   TSettings,
 } from '../shared';
 import * as trackUtils from '../utils';
@@ -27,12 +27,12 @@ export const fbTracker = (options: TSettings) => {
   const UserData = bizSdk.UserData;
   const ServerEvent = bizSdk.ServerEvent;
 
-  const trackIdentify = (profile?: TDataProfile | null) => {
+  const trackIdentify = (profile?: T_EA_DataProfile | null) => {
     const user = profile ? profile : options.resolvers?.profile?.() || null;
     return user;
   };
 
-  const _getUserDataObject = (order?: TDataOrder) => {
+  const _getUserDataObject = (order?: T_EA_DataOrder) => {
     const user = trackIdentify();
     // const userData = (new UserData())
     //   .setExternalId(user)
@@ -66,13 +66,13 @@ export const fbTracker = (options: TSettings) => {
     return userData;
   };
 
-  const trackTransactionRefund = async (order: TDataOrder) => {};
+  const trackTransactionRefund = async (order: T_EA_DataOrder) => {};
 
-  const trackTransactionCancel = async (order: TDataOrder) => {};
+  const trackTransactionCancel = async (order: T_EA_DataOrder) => {};
 
-  const trackTransactionFulfill = async (order: TDataOrder) => {};
+  const trackTransactionFulfill = async (order: T_EA_DataOrder) => {};
 
-  const trackTransaction = async (order: TDataOrder) => {
+  const trackTransaction = async (order: T_EA_DataOrder) => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
     console.error('fb:trackTransaction', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
@@ -125,7 +125,7 @@ export const fbTracker = (options: TSettings) => {
     }
   };
 
-  const trackProductAddToCart = async (basket: TDataBasket) => {
+  const trackProductAddToCart = async (basket: T_EA_DataBasket) => {
     basket.lastAdded.forEach(async (product) => {
       const evtName = trackUtils.getEventNameOfProductAddToCart(product);
       console.error('fb:trackProductAddToCart', evtName);
@@ -167,7 +167,7 @@ export const fbTracker = (options: TSettings) => {
     });
   };
 
-  const trackProductRemoveFromCart = async (basket: TDataBasket) => {
+  const trackProductRemoveFromCart = async (basket: T_EA_DataBasket) => {
     basket.lastRemoved.forEach(async (product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
       console.error('fb:trackProductRemoveFromCart', evtName);
@@ -209,7 +209,7 @@ export const fbTracker = (options: TSettings) => {
     });
   };
 
-  const trackProductItemView = async (product: TDataProduct) => {
+  const trackProductItemView = async (product: T_EA_DataProduct) => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
     console.error('fb:trackProductItemView', evtName);
     // const user = trackIdentify();
@@ -265,7 +265,7 @@ export const fbTracker = (options: TSettings) => {
 
   const trackProductsItemView = async (products) => {};
 
-  const trackPageView = async (page: TDataPage) => {
+  const trackPageView = async (page: T_EA_DataPage) => {
     const evtName = trackUtils.getEventNameOfPageView();
     console.error('fb:trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
@@ -311,9 +311,9 @@ export const fbTracker = (options: TSettings) => {
     }
   };
 
-  const trackCustom = async (e: TDataCustomEvent) => {};
+  const trackCustom = async (e: T_EA_DataCustomEvent) => {};
 
-  const trackInitiateCheckout = async (basket: TDataBasket) => {
+  const trackInitiateCheckout = async (basket: T_EA_DataBasket) => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
     console.error('fb:trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
@@ -414,15 +414,19 @@ export const fbTracker = (options: TSettings) => {
     }
   };
 
-  const trackNewProfile = async (profile: TDataProfile | null) => {};
+  const trackNewProfile = async (profile: T_EA_DataProfile | null) => {};
 
-  const trackProfileResetPassword = async (profile: TDataProfile | null) => {};
+  const trackProfileResetPassword = async (
+    profile: T_EA_DataProfile | null
+  ) => {};
 
-  const trackProfileLogIn = async (profile: TDataProfile | null) => {};
+  const trackProfileLogIn = async (profile: T_EA_DataProfile | null) => {};
 
-  const trackProfileLogOut = async (profile: TDataProfile | null) => {};
+  const trackProfileLogOut = async (profile: T_EA_DataProfile | null) => {};
 
-  const trackProfileSubscribeNL = async (profile: TDataProfile | null) => {};
+  const trackProfileSubscribeNL = async (
+    profile: T_EA_DataProfile | null
+  ) => {};
 
   return {
     trackIdentify,

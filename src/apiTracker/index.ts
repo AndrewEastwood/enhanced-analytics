@@ -1,16 +1,16 @@
 import {
   ETrackers,
-  TDataBasket,
-  TDataOrder,
-  TDataPage,
-  TDataProduct,
-  TDataProfile,
+  T_EA_DataBasket,
+  T_EA_DataOrder,
+  T_EA_DataPage,
+  T_EA_DataProduct,
+  T_EA_DataProfile,
   TSettings,
 } from '../shared';
 import tFb from './facebook';
 import tKlyo from './klaviyo';
 import tFs from './fullstory';
-import { TDataCustomEvent } from '../shared';
+import { T_EA_DataCustomEvent } from '../shared';
 
 type TTrackers = {} & Partial<Record<ETrackers, boolean>>;
 
@@ -25,7 +25,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     analytics?.[ETrackers.FullStory]?.enabled &&
     (trackers?.fullstory ?? useAll);
 
-  const trackTransactionRefund = (order: TDataOrder) => async () => {
+  const trackTransactionRefund = (order: T_EA_DataOrder) => async () => {
     const r = [
       useFb ? tFb(config).trackTransactionRefund : null,
       useKl ? tKlyo(config).trackTransactionRefund : null,
@@ -36,7 +36,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackTransactionCancel = (order: TDataOrder) => async () => {
+  const trackTransactionCancel = (order: T_EA_DataOrder) => async () => {
     const r = [
       useFb ? tFb(config).trackTransactionCancel : null,
       useKl ? tKlyo(config).trackTransactionCancel : null,
@@ -47,7 +47,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackTransactionFulfill = (order: TDataOrder) => async () => {
+  const trackTransactionFulfill = (order: T_EA_DataOrder) => async () => {
     const r = [
       useFb ? tFb(config).trackTransactionFulfill : null,
       useKl ? tKlyo(config).trackTransactionFulfill : null,
@@ -58,7 +58,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackTransaction = (order: TDataOrder) => async () => {
+  const trackTransaction = (order: T_EA_DataOrder) => async () => {
     const r = [
       useFb ? tFb(config).trackTransaction : null,
       useKl ? tKlyo(config).trackTransaction : null,
@@ -69,7 +69,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackProductAddToCart = (basket: TDataBasket) => async () => {
+  const trackProductAddToCart = (basket: T_EA_DataBasket) => async () => {
     const r = [
       useFb ? tFb(config).trackProductAddToCart : null,
       useKl ? tKlyo(config).trackProductAddToCart : null,
@@ -80,7 +80,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackProductRemoveFromCart = (basket: TDataBasket) => async () => {
+  const trackProductRemoveFromCart = (basket: T_EA_DataBasket) => async () => {
     const r = [
       useFb ? tFb(config).trackProductRemoveFromCart : null,
       useKl ? tKlyo(config).trackProductRemoveFromCart : null,
@@ -91,7 +91,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackProductsItemView = (products: TDataProduct[]) => async () => {
+  const trackProductsItemView = (products: T_EA_DataProduct[]) => async () => {
     const r = [
       useFb ? tFb(config).trackProductsItemView : null,
       useKl ? tKlyo(config).trackProductsItemView : null,
@@ -102,7 +102,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackProductItemView = (product: TDataProduct) => async () => {
+  const trackProductItemView = (product: T_EA_DataProduct) => async () => {
     const r = [
       useFb ? tFb(config).trackProductItemView : null,
       useKl ? tKlyo(config).trackProductItemView : null,
@@ -113,7 +113,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackPageView = (page: TDataPage) => async () => {
+  const trackPageView = (page: T_EA_DataPage) => async () => {
     const r = [
       useFb ? tFb(config).trackPageView : null,
       useKl ? tKlyo(config).trackPageView : null,
@@ -124,7 +124,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackCustom = (event: TDataCustomEvent) => async () => {
+  const trackCustom = (event: T_EA_DataCustomEvent) => async () => {
     const r = [
       useFb ? tFb(config).trackCustom : null,
       useKl ? tKlyo(config).trackCustom : null,
@@ -135,7 +135,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackInitiateCheckout = (basket: TDataBasket) => async () => {
+  const trackInitiateCheckout = (basket: T_EA_DataBasket) => async () => {
     const r = [
       useFb ? tFb(config).trackInitiateCheckout : null,
       useKl ? tKlyo(config).trackInitiateCheckout : null,
@@ -147,7 +147,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   };
 
   const trackSearch =
-    (searchTerm: string, products: TDataProduct[]) => async () => {
+    (searchTerm: string, products: T_EA_DataProduct[]) => async () => {
       const r = [
         useFb ? tFb(config).trackSearch : null,
         useKl ? tKlyo(config).trackSearch : null,
@@ -158,7 +158,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       return await Promise.allSettled(r);
     };
 
-  const trackIdentify = (profile: TDataProfile | null) => async () => {
+  const trackIdentify = (profile: T_EA_DataProfile | null) => async () => {
     const r = [
       useFb ? tFb(config).trackIdentify : null,
       useKl ? tKlyo(config).trackIdentify : null,
@@ -169,7 +169,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackNewProfile = (profile: TDataProfile | null) => async () => {
+  const trackNewProfile = (profile: T_EA_DataProfile | null) => async () => {
     const r = [
       useFb ? tFb(config).trackNewProfile : null,
       useKl ? tKlyo(config).trackNewProfile : null,
@@ -181,7 +181,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   };
 
   const trackProfileResetPassword =
-    (profile: TDataProfile | null) => async () => {
+    (profile: T_EA_DataProfile | null) => async () => {
       const r = [
         useFb ? tFb(config).trackProfileResetPassword : null,
         useKl ? tKlyo(config).trackProfileResetPassword : null,
@@ -192,7 +192,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       return await Promise.allSettled(r);
     };
 
-  const trackProfileLogIn = (profile: TDataProfile | null) => async () => {
+  const trackProfileLogIn = (profile: T_EA_DataProfile | null) => async () => {
     const r = [
       useFb ? tFb(config).trackProfileLogIn : null,
       useKl ? tKlyo(config).trackProfileLogIn : null,
@@ -203,7 +203,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackProfileLogOut = (profile: TDataProfile | null) => async () => {
+  const trackProfileLogOut = (profile: T_EA_DataProfile | null) => async () => {
     const r = [
       useFb ? tFb(config).trackProfileLogOut : null,
       useKl ? tKlyo(config).trackProfileLogOut : null,
@@ -215,7 +215,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   };
 
   const trackProfileSubscribeNL =
-    (profile: TDataProfile | null) => async () => {
+    (profile: T_EA_DataProfile | null) => async () => {
       const r = [
         useFb ? tFb(config).trackProfileSubscribeNL : null,
         useKl ? tKlyo(config).trackProfileSubscribeNL : null,
@@ -227,13 +227,13 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     };
 
   return {
-    events: (event: TDataCustomEvent) => ({
+    events: (event: T_EA_DataCustomEvent) => ({
       trackCustom: trackCustom(event),
     }),
-    page: (page: TDataPage) => ({
+    page: (page: T_EA_DataPage) => ({
       trackPageView: trackPageView(page),
     }),
-    profile: (profile: TDataProfile | null) => ({
+    profile: (profile: T_EA_DataProfile | null) => ({
       trackIdentify: trackIdentify(profile),
       trackNewProfile: trackNewProfile(profile),
       trackProfileResetPassword: trackProfileResetPassword(profile),
@@ -241,17 +241,17 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       trackProfileLogOut: trackProfileLogOut(profile),
       trackProfileSubscribeNL: trackProfileSubscribeNL(profile),
     }),
-    catalog: (products: TDataProduct[], search = '') => ({
+    catalog: (products: T_EA_DataProduct[], search = '') => ({
       trackProductsItemView: trackProductsItemView(products),
       trackProductItemView: trackProductItemView(products[0]),
       trackSearch: trackSearch(search, products),
     }),
-    basket: (basket: TDataBasket) => ({
+    basket: (basket: T_EA_DataBasket) => ({
       trackProductAddToCart: trackProductAddToCart(basket),
       trackProductRemoveFromCart: trackProductRemoveFromCart(basket),
       trackInitiateCheckout: trackInitiateCheckout(basket),
     }),
-    order: (order: TDataOrder) => ({
+    order: (order: T_EA_DataOrder) => ({
       trackTransaction: trackTransaction(order),
       trackTransactionRefund: trackTransactionRefund(order),
       trackTransactionCancel: trackTransactionCancel(order),

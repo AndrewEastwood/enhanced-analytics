@@ -1,7 +1,7 @@
 import {
-  TDataBasket,
-  TDataOrder,
-  TDataProduct,
+  T_EA_DataBasket,
+  T_EA_DataOrder,
+  T_EA_DataProduct,
   TEECParams,
   TEvtType,
   TSettings,
@@ -40,7 +40,7 @@ export const getEEC = (options: TSettings) => {
   };
 
   const getEECProductDetails = (
-    products: TDataProduct[],
+    products: T_EA_DataProduct[],
     params?: TEECParams
   ) => {
     const dl = trackUtils
@@ -50,7 +50,7 @@ export const getEEC = (options: TSettings) => {
   };
 
   const getEECProductsList = (
-    products: TDataProduct[],
+    products: T_EA_DataProduct[],
     params?: TEECParams
   ) => {
     const dl = trackUtils
@@ -59,33 +59,33 @@ export const getEEC = (options: TSettings) => {
     return _evt(dl);
   };
 
-  const getEECCheckoutList = (basket: TDataBasket, params?: TEECParams) => {
+  const getEECCheckoutList = (basket: T_EA_DataBasket, params?: TEECParams) => {
     const dl = trackUtils
       .Basket(options, basket)
       .InitCheckout.getEECDataLayer(params);
     return _evt(dl);
   };
 
-  const getEECPurchased = (order: TDataOrder, params?: TEECParams) => {
+  const getEECPurchased = (order: T_EA_DataOrder, params?: TEECParams) => {
     const dl = trackUtils
       .Order(options, order)
       .Purchase.getEECDataLayer(params);
     return _evt(dl);
   };
 
-  const getEECRefund = (order: TDataOrder, params?: TEECParams) => {
+  const getEECRefund = (order: T_EA_DataOrder, params?: TEECParams) => {
     const dl = trackUtils.Order(options, order).Refund.getEECDataLayer(params);
     return _evt(dl);
   };
 
-  const getEECCartAdd = (basket: TDataBasket, params?: TEECParams) => {
+  const getEECCartAdd = (basket: T_EA_DataBasket, params?: TEECParams) => {
     const dl = trackUtils
       .Basket(options, basket)
       .BasketAddProduct.getEECDataLayer(params);
     return _evt(dl);
   };
 
-  const getEECCartRemove = (basket: TDataBasket, params?: TEECParams) => {
+  const getEECCartRemove = (basket: T_EA_DataBasket, params?: TEECParams) => {
     const dl = trackUtils
       .Basket(options, basket)
       .BasketRemoveProduct.getEECDataLayer(params);
@@ -100,18 +100,18 @@ export const getEEC = (options: TSettings) => {
       profile: () => ({
         getEECUserData: (p?: TEECParams) => getEECUserData(p),
       }),
-      catalog: (products: TDataProduct[]) => ({
+      catalog: (products: T_EA_DataProduct[]) => ({
         getEECProductsList: (p?: TEECParams) => getEECProductsList(products, p),
         getEECProductDetails: (p?: TEECParams) =>
           getEECProductDetails(products, p),
         getEECSearch: (p?: TEECParams) => getEECProductsList(products, p),
       }),
-      basket: (basket: TDataBasket) => ({
+      basket: (basket: T_EA_DataBasket) => ({
         getEECCartAdd: (p?: TEECParams) => getEECCartAdd(basket, p),
         getEECCartRemove: (p?: TEECParams) => getEECCartRemove(basket, p),
         getEECCheckoutList: (p?: TEECParams) => getEECCheckoutList(basket, p),
       }),
-      order: (order: TDataOrder) => ({
+      order: (order: T_EA_DataOrder) => ({
         getEECPurchased: (p?: TEECParams) => getEECPurchased(order, p),
         getEECRefund: (p?: TEECParams) => getEECRefund(order, p),
       }),

@@ -1,9 +1,9 @@
 import { getConfig } from './config';
 import {
   ETrackers,
-  TDataBasket,
-  TDataOrder,
-  TDataProduct,
+  T_EA_DataBasket,
+  T_EA_DataOrder,
+  T_EA_DataProduct,
   TEECParams,
   TSettings,
 } from './shared';
@@ -17,27 +17,30 @@ const getEventNameOfIdentify = () => {
   return '';
 };
 
-const getEventNameOfTransaction = (order: TDataOrder) => {
+const getEventNameOfTransaction = (order: T_EA_DataOrder) => {
   return `new_order_of_${order.id}${getEvtUUIDStr()}`;
 };
 
-const getEventNameOfProductAddToCart = (p: TDataProduct) => {
+const getEventNameOfProductAddToCart = (p: T_EA_DataProduct) => {
   // const ids = p.map(v => v.id).join('/');
   // const qqs = p.map(v => v.quantity).join('/');
   return `add_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr()}`;
 };
 
-const getEventNameOfProductRemoveFromCart = (p: TDataProduct) => {
+const getEventNameOfProductRemoveFromCart = (p: T_EA_DataProduct) => {
   // const ids = p.map(v => v.id).join('/');
   // const qqs = p.map(v => v.quantity).join('/');
   return `rem_product_of_${p.id}_q${p.quantity}${getEvtUUIDStr()}`;
 };
 
-const getEventNameOfProductItemView = (product: TDataProduct) => {
+const getEventNameOfProductItemView = (product: T_EA_DataProduct) => {
   return `view_product_of_${product.id}${getEvtUUIDStr()}`;
 };
 
-const getEventNameOfSearch = (searchTerm: string, products: TDataProduct[]) => {
+const getEventNameOfSearch = (
+  searchTerm: string,
+  products: T_EA_DataProduct[]
+) => {
   return `search_of_${searchTerm}_found${products.length}${getEvtUUIDStr()}`;
 };
 
@@ -49,7 +52,7 @@ const getEventNameOfPageView = () => {
   )}${getEvtUUIDStr()}`;
 };
 
-const getEventNameOfInitiateCheckout = (basket: TDataBasket) => {
+const getEventNameOfInitiateCheckout = (basket: T_EA_DataBasket) => {
   return `init_checkout_of_p${basket.quantity}_${basket.total.toFixed(
     2
   )}${getEvtUUIDStr()}`;
@@ -59,7 +62,7 @@ const getEventNameOfNewProfile = () => {
   return '';
 };
 
-const InitCheckout = (options: TSettings, basket: TDataBasket) => ({
+const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
   getContents: () => {
     const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
@@ -132,7 +135,7 @@ const InitCheckout = (options: TSettings, basket: TDataBasket) => ({
   },
 });
 
-const ProductDetails = (options: TSettings, product: TDataProduct) => ({
+const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
   getContents: () => {
     const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
@@ -201,7 +204,7 @@ const ProductDetails = (options: TSettings, product: TDataProduct) => ({
   },
 });
 
-const Purchase = (options: TSettings, order: TDataOrder) => ({
+const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
   getContents: () => {
     const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
@@ -292,7 +295,7 @@ const Purchase = (options: TSettings, order: TDataOrder) => ({
   },
 });
 
-const Refund = (options: TSettings, order: TDataOrder) => ({
+const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
   getContents: () => {
     const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
@@ -367,7 +370,7 @@ const Refund = (options: TSettings, order: TDataOrder) => ({
   },
 });
 
-const BasketAddProduct = (options: TSettings, basket: TDataBasket) => ({
+const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
   getContents: () => {
     const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
@@ -443,7 +446,7 @@ const BasketAddProduct = (options: TSettings, basket: TDataBasket) => ({
   },
 });
 
-const BasketRemoveProduct = (options: TSettings, basket: TDataBasket) => ({
+const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
   getContents: () => {
     const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
     if (!sdk) {
@@ -519,7 +522,7 @@ const BasketRemoveProduct = (options: TSettings, basket: TDataBasket) => ({
   },
 });
 
-const Products = (options: TSettings, products: TDataProduct[]) => ({
+const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
   getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.impressionView',
@@ -615,14 +618,14 @@ const Profile = (options: TSettings) => {
   };
 };
 
-const Catalog = (options: TSettings, products: TDataProduct[]) => {
+const Catalog = (options: TSettings, products: T_EA_DataProduct[]) => {
   return {
     Products: Products(options, products),
     ProductDetails: ProductDetails(options, products[0]),
   };
 };
 
-const Basket = (options: TSettings, basket: TDataBasket) => {
+const Basket = (options: TSettings, basket: T_EA_DataBasket) => {
   return {
     BasketAddProduct: BasketAddProduct(options, basket),
     BasketRemoveProduct: BasketRemoveProduct(options, basket),
@@ -630,7 +633,7 @@ const Basket = (options: TSettings, basket: TDataBasket) => {
   };
 };
 
-const Order = (options: TSettings, order: TDataOrder) => {
+const Order = (options: TSettings, order: T_EA_DataOrder) => {
   return {
     Purchase: Purchase(options, order),
     Refund: Refund(options, order),
