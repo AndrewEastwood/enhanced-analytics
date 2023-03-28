@@ -126,50 +126,51 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackIdentify = async (profile?: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
 
-    const attributes = {
-      email: user!.email, // 'sarah.mason@klaviyo-demo.com',
-      phone_number: user?.phone, //'+15005550006',
-      external_id: user?.id, // '63f64a2b-c6bf-40c7-b81f-bed08162edbe',
-      first_name: user?.firstName ?? '', //'Sarah',
-      last_name: user?.lastName ?? '', //'Mason',
-      organization: user?.organization, // 'Klaviyo',
-      title: user?.title, // 'Engineer',
-      image: user?.avatarUrl, // 'https://images.pexels.com/photos/3760854/pexels-photo-3760854.jpeg',
-      location: {
-        address1: user?.address?.street,
-        address2: user?.address?.state,
-        city: user?.address?.city,
-        country: user?.address?.country,
-        region: user?.address?.region,
-        zip: user?.address?.postcode,
-        timezone: user?.address?.timezone,
-        // ...(user?.address ?? {}),
-        // address1: '89 E 42nd St',
-        // address2: '1st floor',
-        // city: 'New York',
-        // country: 'United States',
-        // region: 'NY',
-        // zip: '10017',
-        // timezone: 'America/New_York'
-      },
-      properties: {
-        ...(user?.extraProps ?? {}),
-      },
-      // email: user!.email,
-      // properties: {
-      //   "$first_name": user ? user.firstName : '',
-      //   "$last_name": user ? user.lastName : '',
-      //   "$email": user ? user.email : '',
-      // },
-      // isTest: analytics.testing, //defaults to false
-      // post: true //defaults to false
-    };
-    const payload = {
-      type: 'profile',
-      attributes,
-    };
-
     if (user) {
+      const attributes = {
+        email: user?.email, // 'sarah.mason@klaviyo-demo.com',
+        phone_number: user?.phone, //'+15005550006',
+        external_id: user?.id, // '63f64a2b-c6bf-40c7-b81f-bed08162edbe',
+        first_name: user?.firstName ?? '', //'Sarah',
+        last_name: user?.lastName ?? '', //'Mason',
+        organization: user?.organization, // 'Klaviyo',
+        title: user?.title, // 'Engineer',
+        image: user?.avatarUrl, // 'https://images.pexels.com/photos/3760854/pexels-photo-3760854.jpeg',
+        location: {
+          address1: user?.address?.street,
+          address2: user?.address?.state,
+          city: user?.address?.city,
+          country: user?.address?.country,
+          region: user?.address?.region,
+          zip: user?.address?.postcode,
+          timezone: user?.address?.timezone,
+          // ...(user?.address ?? {}),
+          // address1: '89 E 42nd St',
+          // address2: '1st floor',
+          // city: 'New York',
+          // country: 'United States',
+          // region: 'NY',
+          // zip: '10017',
+          // timezone: 'America/New_York'
+        },
+        properties: {
+          ...(user?.extraProps ?? {}),
+        },
+        // email: user!.email,
+        // properties: {
+        //   "$first_name": user ? user.firstName : '',
+        //   "$last_name": user ? user.lastName : '',
+        //   "$email": user ? user.email : '',
+        // },
+        // isTest: analytics.testing, //defaults to false
+        // post: true //defaults to false
+      };
+
+      const payload = {
+        type: 'profile',
+        attributes,
+      };
+
       try {
         const existingProfile =
           (await Profiles.getProfiles?.({
