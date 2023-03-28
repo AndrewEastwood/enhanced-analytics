@@ -43,9 +43,8 @@ export const isNativePayloadShipping = (
   const shallowMatch = Object.keys(payload ?? {}).every((k) =>
     ['name', 'cost', 'address'].includes(k)
   );
-  const subMatchShippingAddress = shallowMatch
-    ? isNativePayloadAddress(payload.address)
-    : false;
+  const subMatchShippingAddress =
+    shallowMatch && payload ? isNativePayloadAddress(payload.address) : false;
   return shallowMatch && subMatchShippingAddress;
 };
 
@@ -73,18 +72,14 @@ export const isNativePayloadOrder = (
       'payment',
     ].includes(k)
   );
-  const subMatchProducts = shallowMatch
-    ? isNativePayloadProducts(payload.products)
-    : false;
-  const subMatchPayment = shallowMatch
-    ? isNativePayloadPayment(payload.payment)
-    : false;
-  const subMatchShipping = shallowMatch
-    ? isNativePayloadShipping(payload.shipping)
-    : false;
-  const subMatchCustomer = shallowMatch
-    ? isNativePayloadProfile(payload.customer)
-    : false;
+  const subMatchProducts =
+    shallowMatch && payload ? isNativePayloadProducts(payload.products) : false;
+  const subMatchPayment =
+    shallowMatch && payload ? isNativePayloadPayment(payload.payment) : false;
+  const subMatchShipping =
+    shallowMatch && payload ? isNativePayloadShipping(payload.shipping) : false;
+  const subMatchCustomer =
+    shallowMatch && payload ? isNativePayloadProfile(payload.customer) : false;
 
   return (
     shallowMatch &&
@@ -109,11 +104,12 @@ export const isNativePayloadBasket = (
     ].includes(k)
   );
 
-  const subMatch = shallowMatch
-    ? [payload.products, payload.lastAdded, payload.lastRemoved].every(
-        isNativePayloadProducts
-      )
-    : false;
+  const subMatch =
+    shallowMatch && payload
+      ? [payload.products, payload.lastAdded, payload.lastRemoved].every(
+          isNativePayloadProducts
+        )
+      : false;
 
   return shallowMatch && subMatch;
 };

@@ -37,21 +37,43 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
         !_store.integrations.klaviyo.sdk
           ? {
               Events: {
+                _unprocessed: [],
                 createEvent(body: any) {
-                  // @ts-ignore
-                  return window.klaviyo.track(
-                    body.data.attributes.metric.name,
-                    body.data.attributes.properties
+                  this._unprocessed = this._unprocessed || [];
+                  this._unprocessed.push(body);
+                  this._unprocessed = this._unprocessed
+                    .filter((b) => !(b instanceof Promise))
+                    .map((b) =>
+                      window.klaviyo
+                        ? window.klaviyo.track(
+                            body?.data?.attributes?.metric?.name,
+                            body?.data?.attributes?.properties
+                          )
+                        : b
+                    );
+                  return Promise.allSettled(
+                    this._unprocessed?.filter((v) => v instanceof Promise) ?? []
                   );
                 },
               },
               Profiles: {
+                _unprocessed: [],
                 getProfiles(filter: Record<string, any>) {
                   return Promise.resolve({ body: { data: [] } });
                 },
                 createProfile(body: any) {
-                  // @ts-ignore
-                  return window.klaviyo.identify(body.data.attributes);
+                  this._unprocessed = this._unprocessed || [];
+                  this._unprocessed.push(body);
+                  this._unprocessed = this._unprocessed
+                    .filter((b) => !(b instanceof Promise))
+                    .map((b) =>
+                      window.klaviyo
+                        ? window.klaviyo.identify(b?.data?.attributes ?? {})
+                        : b
+                    );
+                  return Promise.allSettled(
+                    this._unprocessed?.filter((v) => v instanceof Promise) ?? []
+                  );
                 },
               },
             }
@@ -126,7 +148,3 @@ export const getConfig = () => {
 export const getResolvers = () => {
   return Object.assign({}, _config?.resolvers || {});
 };
-
-// export const getMappings = () => {
-//   return Object.assign({}, _config?.map || {});
-// }

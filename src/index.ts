@@ -18,6 +18,7 @@ import {
   isNativePayloadProducts,
   isNativePayloadProfile,
 } from './guards';
+import { useState } from 'react';
 
 export * from './apiTracker';
 export * from './ecommerce';
@@ -39,6 +40,7 @@ export * from './guards';
 
 export const useAnalytics = () => {
   return {
+    config: getConfig(),
     withEvent: (name: string, attributes?: Record<string, any>) => {
       const store = getConfig();
       if (store === null) {
@@ -119,6 +121,8 @@ export const useAnalytics = () => {
       const v = isNative
         ? payload
         : store.resolvers?.profile?.(payload) ?? null;
+
+      // user can be null, which means it is anonymous
 
       return {
         sendToServer: {

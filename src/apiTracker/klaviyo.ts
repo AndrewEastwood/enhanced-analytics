@@ -11,12 +11,13 @@ import { T_EA_DataPage } from '../shared';
 
 const anonymousEvents = new Set();
 const indentifiedEmails = new Set();
-let uiLibInstalled = false;
+let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 
 export const klaviyoTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
   const bizSdk = analytics?.klaviyo?.sdk;
-  const isUITracking = !analytics?.klaviyo?.token;
+  const isUITracking =
+    !analytics?.klaviyo?.token && !!analytics?.klaviyo?.siteId;
 
   if (!analytics || !analytics.klaviyo) {
     throw 'Klaviyo is not configured;';
@@ -30,8 +31,8 @@ export const klaviyoTracker = (options: TSettings) => {
     throw 'Klaviyo is not configured; Please provide siteId or token;';
   }
 
-  console.log(
-    'Klaviyo is running in the ' +
+  console.debug(
+    '[EA:Klaviyo] running to the ' +
       (isUITracking ? 'UI' : 'API') +
       ' tracking mode'
   );
@@ -42,14 +43,22 @@ export const klaviyoTracker = (options: TSettings) => {
     throw 'Klaviyo is configured without SDK; ConfigWrapper is missing. Please install the requried dependency: npm i klaviyo-api@2.1.1 OR make sure that SDK has ConfigWrapper function defined;';
   }
 
-  if (analytics.klaviyo?.siteId && document && window && !uiLibInstalled) {
-    uiLibInstalled = true;
+  if (
+    analytics.klaviyo?.siteId &&
+    document &&
+    window &&
+    uiLibInstallStatus === 'no'
+  ) {
+    uiLibInstallStatus = 'installing';
     // install UI lib
     const el = document.createElement('script');
     el.crossOrigin = 'anonymous';
     el.src = `//static.klaviyo.com/onsite/js/klaviyo.js?company_id=${analytics.klaviyo?.siteId}`;
     el.async = true;
     el.setAttribute('data-integration-id', `eak-${analytics.klaviyo?.siteId}`);
+    new Promise((resolve) => (el.onload = resolve)).then(() => {
+      uiLibInstallStatus = 'yes';
+    });
     document.head.appendChild(el);
   }
 
@@ -61,7 +70,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const collectEvent = (evt) => {
-    // console.error('klaviyo:addEvent');
+    // console.debug('[EA:Klaviyo] addEvent');
     const current_timestamp = Math.floor(Date.now() / 1000);
     const session = options.resolvers?.session?.();
     anonymousEvents.add({
@@ -72,12 +81,12 @@ export const klaviyoTracker = (options: TSettings) => {
       isTest: analytics.testing,
       post: true,
     });
-    console.debug('anonymousEvents count', anonymousEvents.size);
+    console.debug('[EA:Klaviyo] anonymousEvents count', anonymousEvents.size);
     return anonymousEvents;
   };
 
   const releaseAnonymousEvents = async () => {
-    console.debug('klaviyo:releaseAnonymousEvents');
+    console.debug('[EA:Klaviyo] releaseAnonymousEvents');
     const user = getUserObj();
     try {
       const resp = await Promise.allSettled(
@@ -105,13 +114,15 @@ export const klaviyoTracker = (options: TSettings) => {
           return Events.createEvent({ data: payload });
         })
       );
-      console.debug('klaviyo:anonymousEvents released#' + anonymousEvents.size);
+      console.debug(
+        '[EA:Klaviyo] anonymousEvents released#' + anonymousEvents.size
+      );
       anonymousEvents.clear();
       return resp;
     } catch (error) {
       console.error(error);
     }
-    console.debug('klaviyo:anonymousEvents#' + anonymousEvents.size);
+    console.debug('[EA:Klaviyo] anonymousEvents#' + anonymousEvents.size);
   };
 
   const getProductUrl = (product: T_EA_DataProduct) => {
@@ -186,7 +197,10 @@ export const klaviyoTracker = (options: TSettings) => {
               data: payload,
             });
         indentifiedEmails.add(user.email);
-        const queueResp = await releaseAnonymousEvents();
+        const queueResp =
+          isUITracking && uiLibInstallStatus !== 'yes'
+            ? []
+            : await releaseAnonymousEvents();
         return Promise.resolve([profileResp, ...(queueResp ?? [])]);
       } catch (error) {
         console.error(error);
@@ -277,7 +291,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackProductAddToCart = async (basket: T_EA_DataBasket) => {
     basket.lastAdded.map((product) => {
       const evtName = trackUtils.getEventNameOfProductAddToCart(product);
-      // console.error('klaviyo:trackInitiateCheckout', evtName);
+      // console.debug('[EA:Klaviyo] trackInitiateCheckout', evtName);
       // const basket = request.session.basket;
       collectEvent({
         event: 'Added to Cart',
@@ -322,7 +336,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackProductRemoveFromCart = async (basket: T_EA_DataBasket) => {
     basket.lastRemoved.map((product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
-      // console.error('klaviyo:trackInitiateCheckout', evtName);
+      // console.debug('[EA:Klaviyo] trackInitiateCheckout', evtName);
       // const basket = request.session.basket;
       collectEvent({
         event: 'Removed form Cart',
@@ -370,7 +384,7 @@ export const klaviyoTracker = (options: TSettings) => {
 
   const trackProductItemView = async (product: T_EA_DataProduct) => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
-    // console.error('klaviyo:trackProductItemView', evtName);
+    // console.debug('[EA:Klaviyo] trackProductItemView', evtName);
     collectEvent({
       event: 'Viewed Product',
       properties: {
@@ -479,7 +493,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackProfileResetPassword = async (
     profile: T_EA_DataProfile | null
   ) => {
-    // console.error('klaviyo:trackProfileResetPassword', request.user);
+    // console.debug('[EA:Klaviyo] trackProfileResetPassword', request.user);
     const user = getUserObj(profile);
     user
       ? collectEvent({
@@ -523,7 +537,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackProfileSubscribeNL = async (profile: T_EA_DataProfile | null) => {
-    // console.error('klaviyo:trackProfileSubscribeNL', request.user);
+    // console.debug('[EA:Klaviyo] trackProfileSubscribeNL', request.user);
     const user = getUserObj(profile);
     user
       ? collectEvent({

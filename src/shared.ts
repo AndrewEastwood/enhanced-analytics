@@ -145,9 +145,11 @@ export type TSettings = {
       sdk?: null | {
         ConfigWrapper?: (string) => void;
         Events: {
+          _unprocessed?: any[];
           createEvent: (payload: any) => Promise<any>;
         };
         Profiles: {
+          _unprocessed?: any[];
           getProfiles?: (filter: any) => Promise<{ body: { data: any[] } }>;
           createProfile: (payload: any) => Promise<any>;
         };
