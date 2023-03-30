@@ -9,9 +9,10 @@ import {
 import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
 
-const anonymousEvents = new Set();
-const indentifiedEmails = new Set();
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
+const queuedEvents = new Set();
+const indentifiedEmails = new Set();
+const lastIdentity = new Set();
 
 export const klaviyoTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
@@ -60,20 +61,32 @@ export const klaviyoTracker = (options: TSettings) => {
       uiLibInstallStatus = 'yes';
     });
     document.head.appendChild(el);
+
+    // restore id on the UI
+    const savedId = localStorage.getItem('EA_Klaviyo_Identity');
+    lastIdentity.clear();
+    savedId ? lastIdentity.add(JSON.parse(savedId)) : void 0;
   }
 
   analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
 
   const getUserObj = (profile?: T_EA_DataProfile | null) => {
-    const u = profile ? profile : options.resolvers?.profile?.();
+    const u =
+      (profile ? profile : options.resolvers?.profile?.()) ??
+      lastIdentity.values().next().value;
+    lastIdentity.clear();
+    lastIdentity.add(u);
+    isUITracking
+      ? localStorage.setItem('EA_Klaviyo_Identity', JSON.stringify(u))
+      : void 0;
     return u;
   };
 
   const collectEvent = (evt) => {
-    // console.debug('[EA:Klaviyo] addEvent');
+    console.debug('[EA:Klaviyo] addEvent', evt);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const session = options.resolvers?.session?.();
-    anonymousEvents.add({
+    queuedEvents.add({
       ...evt,
       ipAddress: session?.ip,
       agent: session?.agent,
@@ -81,16 +94,16 @@ export const klaviyoTracker = (options: TSettings) => {
       isTest: analytics.testing,
       post: true,
     });
-    console.debug('[EA:Klaviyo] anonymousEvents count', anonymousEvents.size);
-    return anonymousEvents;
+    console.debug('[EA:Klaviyo] queuedEvents count', queuedEvents.size);
+    return queuedEvents;
   };
 
   const releaseAnonymousEvents = async () => {
-    console.debug('[EA:Klaviyo] releaseAnonymousEvents');
+    console.debug('[EA:Klaviyo] releasing queuedEvents');
     const user = getUserObj();
     try {
       const resp = await Promise.allSettled(
-        (user ? Array.from(anonymousEvents) : []).map((evt: any) => {
+        (user ? Array.from(queuedEvents) : []).map((evt: any) => {
           const payload = {
             type: 'event',
             attributes: {
@@ -115,14 +128,14 @@ export const klaviyoTracker = (options: TSettings) => {
         })
       );
       console.debug(
-        '[EA:Klaviyo] anonymousEvents released#' + anonymousEvents.size
+        '[EA:Klaviyo] queuedEvents released count:' + queuedEvents.size
       );
-      anonymousEvents.clear();
+      queuedEvents.clear();
       return resp;
     } catch (error) {
       console.error(error);
     }
-    console.debug('[EA:Klaviyo] anonymousEvents#' + anonymousEvents.size);
+    console.debug('[EA:Klaviyo] queuedEvents count:' + queuedEvents.size);
   };
 
   const getProductUrl = (product: T_EA_DataProduct) => {
@@ -487,7 +500,7 @@ export const klaviyoTracker = (options: TSettings) => {
           },
         })
       : void 0;
-    return trackIdentify();
+    return trackIdentify(profile);
   };
 
   const trackProfileResetPassword = async (
@@ -507,7 +520,7 @@ export const klaviyoTracker = (options: TSettings) => {
           },
         })
       : void 0;
-    return trackIdentify();
+    return trackIdentify(profile);
   };
 
   const trackProfileLogIn = async (profile: T_EA_DataProfile | null) => {
@@ -520,7 +533,7 @@ export const klaviyoTracker = (options: TSettings) => {
           },
         })
       : void 0;
-    return trackIdentify();
+    return trackIdentify(profile);
   };
 
   const trackProfileLogOut = async (profile: T_EA_DataProfile | null) => {
@@ -533,7 +546,7 @@ export const klaviyoTracker = (options: TSettings) => {
           },
         })
       : void 0;
-    return trackIdentify();
+    return trackIdentify(profile);
   };
 
   const trackProfileSubscribeNL = async (profile: T_EA_DataProfile | null) => {
@@ -547,7 +560,7 @@ export const klaviyoTracker = (options: TSettings) => {
           },
         })
       : void 0;
-    return trackIdentify();
+    return trackIdentify(profile);
   };
 
   return {

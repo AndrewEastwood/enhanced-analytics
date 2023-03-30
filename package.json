@@ -1,6 +1,6 @@
 {
     "name": "enhanced-analytics",
-    "version": "1.0.128",
+    "version": "1.0.135",
     "description": "Couple of convenient tools for populating dataLayer ecommerce event data.",
     "main": "index.js",
     "types": "index.d.ts",
@@ -30,9 +30,10 @@
     "homepage": "https://github.com/AndrewEastwood/enhanced-analytics#readme",
     "dependencies": {},
     "devDependencies": {
-        "typescript": "^4.1.3",
+        "@types/express": "^4.17.17",
+        "@types/facebook-nodejs-business-sdk": "^15.0.2",
         "@types/lodash": "^4.14.167",
         "@types/react": "^18.0.0",
-        "@types/express": "^4.17.17"
+        "typescript": "^4.1.3"
     }
 }

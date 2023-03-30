@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import * as fbSdk from 'facebook-nodejs-business-sdk';
 
 export type T_EA_DataCustomEvent = {
   name: string;
@@ -6,8 +7,6 @@ export type T_EA_DataCustomEvent = {
 };
 
 export type T_EA_DataPage = {
-  id: string | number;
-  title: string;
   name: string;
   path: string;
   url?: string;
@@ -119,7 +118,7 @@ export type TSettings = {
     };
     [ETrackers.Facebook]?: {
       enabled: boolean;
-      sdk: any;
+      sdk: typeof fbSdk | null;
       pixelId: null | string;
       token: null | string;
       testCode: null | string;

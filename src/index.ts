@@ -39,6 +39,8 @@ export * from './config';
 export * from './guards';
 
 export const useAnalytics = () => {
+  const [runtimeUser, setRuntimeUser] = useState<T_EA_DataProfile | null>(null);
+
   return {
     config: getConfig(),
     withEvent: (name: string, attributes?: Record<string, any>) => {
@@ -119,10 +121,11 @@ export const useAnalytics = () => {
       }
 
       const v = isNative
-        ? payload
-        : store.resolvers?.profile?.(payload) ?? null;
+        ? payload ?? runtimeUser ?? null
+        : store.resolvers?.profile?.(payload) ?? runtimeUser ?? null;
 
       // user can be null, which means it is anonymous
+      setRuntimeUser(v);
 
       return {
         sendToServer: {

@@ -62,6 +62,14 @@ const getEventNameOfNewProfile = () => {
   return '';
 };
 
+export const round = (num?: number | string, precision = 2) => {
+  return +(
+    Math.round(new Number((num ?? '0') + 'e+' + precision).valueOf()) +
+    'e-' +
+    precision
+  );
+};
+
 const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
   getContents: () => {
     const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
@@ -72,8 +80,8 @@ const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
     const DeliveryCategory = sdk.DeliveryCategory;
     return Object.values(basket.products).map((storedProduct) =>
       new Content()
-        .setId(storedProduct.id)
-        .setQuantity(storedProduct.quantity)
+        .setId(storedProduct.id.toString())
+        .setQuantity(round(storedProduct.quantity))
         .setTitle(storedProduct.title)
         .setBrand(storedProduct.brand)
         .setDescription(storedProduct.description)
@@ -143,7 +151,7 @@ const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
     }
     const Content = sdk.Content;
     return new Content()
-      .setId(product.id)
+      .setId(product.id.toString())
       .setTitle(product.title)
       .setBrand(product.brand)
       .setDescription(product.description)
@@ -214,8 +222,8 @@ const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
     const DeliveryCategory = sdk.DeliveryCategory;
     return Object.values(order.products).map((storedProduct) =>
       new Content()
-        .setId(storedProduct.id)
-        .setQuantity(storedProduct.quantity)
+        .setId(storedProduct.id.toString())
+        .setQuantity(round(storedProduct.quantity))
         .setTitle(storedProduct.title)
         .setBrand(storedProduct.brand)
         .setDescription(storedProduct.description)
@@ -305,8 +313,8 @@ const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
     const DeliveryCategory = sdk.DeliveryCategory;
     return order.products.map((storedProduct) =>
       new Content()
-        .setId(storedProduct.id)
-        .setQuantity(storedProduct.quantity)
+        .setId(storedProduct.id.toString())
+        .setQuantity(round(storedProduct.quantity))
         .setTitle(storedProduct.title)
         .setBrand(storedProduct.brand)
         .setDescription(storedProduct.description)
@@ -380,8 +388,8 @@ const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
     const Content = sdk.Content;
     return basket.lastAdded.map((product) =>
       new Content()
-        .setId(product.id)
-        .setQuantity(product.quantity)
+        .setId(product.id.toString())
+        .setQuantity(round(product.quantity))
         .setTitle(product.title)
         .setBrand(product.brand)
         .setDescription(product.description)
@@ -456,8 +464,8 @@ const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
     const Content = sdk.Content;
     return basket.lastRemoved.map((product) =>
       new Content()
-        .setId(product.id)
-        .setQuantity(product.quantity)
+        .setId(product.id.toString())
+        .setQuantity(round(product.quantity))
         .setTitle(product.title)
         .setBrand(product.brand)
         .setDescription(product.description)

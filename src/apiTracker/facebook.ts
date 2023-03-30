@@ -8,16 +8,25 @@ import {
   TSettings,
 } from '../shared';
 import * as trackUtils from '../utils';
+import { round } from '../utils';
 
 export const fbTracker = (options: TSettings) => {
   const { integrations: analytics, currency } = options;
   const access_token = analytics?.fb?.token;
   const pixel_id = analytics?.fb?.pixelId;
-  const testCode = analytics?.testing ? analytics.fb?.testCode : '';
+  const testCode = (analytics?.testing ? analytics.fb?.testCode : '') ?? '';
   const bizSdk = analytics?.fb?.sdk;
 
   if (!bizSdk) {
     throw 'Facebook is configured without SDK; Please provide SDK;';
+  }
+
+  if (!pixel_id) {
+    throw 'Facebook is configured without pixel_id; Please provide pixel_id;';
+  }
+
+  if (!access_token) {
+    throw 'Facebook is configured without access_token; Please provide access_token;';
   }
 
   // const Content = bizSdk.Content;
@@ -47,22 +56,24 @@ export const fbTracker = (options: TSettings) => {
     //   .setClientIpAddress(request.ip)
     //   .setClientUserAgent(request.headers['user-agent'])
     //   .setFbp(request.cookies['_fbp']);
+    const u = order ? order.customer : user;
     const session = options.resolvers?.session?.();
-    const userData = new UserData()
-      .setExternalId(order ? order.customer.email : user?.email)
-      .setEmail(order ? order.customer.email : user?.email)
-      .setFirstName(order ? order.customer.firstName : user?.firstName)
-      .setLastName(order ? order.customer.lastName : user?.lastName)
-      .setCountry(
-        order ? order.shipping.address.country : user?.address?.country
-      )
-      .setCity(order ? order.shipping.address.city : user?.address?.city)
-      .setZip(order ? order.shipping.address.postcode : user?.address?.postcode)
-      .setPhone(order ? order.customer.phone : user?.phone)
-      // It is recommended to send Client IP and User Agent for Conversions API Events.
-      .setClientIpAddress(session?.ip)
-      .setClientUserAgent(session?.agent) // request.headers['user-agent'])
-      .setFbp(session?.fbp); // request.cookies['_fbp']);
+    const userData =
+      u && session
+        ? new UserData()
+            .setExternalId(u.email)
+            .setEmail(u.email)
+            .setFirstName(u.firstName)
+            .setLastName(u.lastName ?? '')
+            .setCountry(u.address?.country ?? '')
+            .setCity(u.address?.city ?? '')
+            .setZip(u.address?.postcode ?? '')
+            .setPhone(u.phone ?? '')
+            // It is recommended to send Client IP and User Agent for Conversions API Events.
+            .setClientIpAddress(session.ip ?? '')
+            .setClientUserAgent(session.agent ?? '') // request.headers['user-agent'])
+            .setFbp(session.fbp ?? '')
+        : null; // request.cookies['_fbp']);
     return userData;
   };
 
@@ -74,9 +85,13 @@ export const fbTracker = (options: TSettings) => {
 
   const trackTransaction = async (order: T_EA_DataOrder) => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
-    console.error('fb:trackTransaction', evtName);
+    console.error('[EA:Facebook] trackTransaction', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject(order);
+
+    if (!userData) {
+      return Promise.reject({ message: 'UserData is null' });
+    }
     // const userData = (new UserData())
     //                 .setExternalId(order.customer.email)
     //                 .setEmail(order.customer.email)
@@ -96,7 +111,7 @@ export const fbTracker = (options: TSettings) => {
     const customData = new CustomData()
       .setContents(contents)
       .setCurrency(currency)
-      .setOrderId(order.id)
+      .setOrderId(order.id.toString())
       .setStatus(order.status)
       .setNumItems(order.quantity)
       .setValue(order.revenue);
@@ -108,7 +123,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventTime(current_timestamp)
       .setUserData(userData)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url)
+      .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -118,27 +133,36 @@ export const fbTracker = (options: TSettings) => {
 
     try {
       var response = await eventRequest.execute();
-      console.log('Response: ', response);
-      return response;
+      console.log('[EA:Facebook] eventRequest=>Response: ', response);
+      return {
+        payload: eventsData.map((se) => se.normalize()),
+        response,
+      };
     } catch (err) {
-      console.error('Error: ', err);
+      console.error('[EA:Facebook] eventRequest=>Error: ', err);
+      return err;
     }
   };
 
   const trackProductAddToCart = async (basket: T_EA_DataBasket) => {
-    basket.lastAdded.forEach(async (product) => {
+    const userData = _getUserDataObject();
+
+    if (!userData) {
+      return Promise.reject({ message: 'UserData is null' });
+    }
+
+    const eventsData = basket.lastAdded.map((product) => {
       const evtName = trackUtils.getEventNameOfProductAddToCart(product);
-      console.error('fb:trackProductAddToCart', evtName);
+      console.error('[EA:Facebook] trackProductAddToCart', evtName);
       const current_timestamp = Math.floor(Date.now() / 1000);
 
-      const userData = _getUserDataObject();
       const contents = trackUtils
         .Basket(options, basket)
         .BasketAddProduct.getContents();
 
       const customData = new CustomData()
-        .setValue(product.quantity)
-        .setContents([contents])
+        .setValue(round(product.quantity))
+        .setContents(contents)
         .setContentName(product.title)
         .setCurrency(currency);
 
@@ -149,38 +173,48 @@ export const fbTracker = (options: TSettings) => {
         .setEventTime(current_timestamp)
         .setUserData(userData)
         .setCustomData(customData)
-        .setEventSourceUrl(page?.url)
+        .setEventSourceUrl(page?.url ?? '')
         .setActionSource('website');
 
-      const eventsData = [serverEvent];
-      const eventRequest = new EventRequest(access_token, pixel_id)
-        .setTestEventCode(testCode)
-        .setEvents(eventsData);
-
-      try {
-        var response = await eventRequest.execute();
-        console.log('Response: ', response);
-        return response;
-      } catch (err) {
-        console.error('Error: ', err);
-      }
+      return serverEvent;
     });
+
+    const eventRequest = new EventRequest(access_token, pixel_id)
+      .setTestEventCode(testCode)
+      .setEvents(eventsData);
+
+    try {
+      var response = await eventRequest.execute();
+      console.debug('[EA:Facebook] eventRequest=>Response: ', response);
+      return {
+        payload: eventsData.map((se) => se.normalize()),
+        response,
+      };
+    } catch (err) {
+      console.error('[EA:Facebook] eventRequest=>Error: ', err);
+      return err;
+    }
   };
 
   const trackProductRemoveFromCart = async (basket: T_EA_DataBasket) => {
-    basket.lastRemoved.forEach(async (product) => {
+    const userData = _getUserDataObject();
+
+    if (!userData) {
+      return Promise.reject({ message: 'UserData is null' });
+    }
+
+    const eventsData = basket.lastRemoved.map((product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
-      console.error('fb:trackProductRemoveFromCart', evtName);
+      console.error('[EA:Facebook] trackProductRemoveFromCart', evtName);
       const current_timestamp = Math.floor(Date.now() / 1000);
 
-      const userData = _getUserDataObject();
       const contents = trackUtils
         .Basket(options, basket)
         .BasketRemoveProduct.getContents();
 
       const customData = new CustomData()
-        .setValue(product.quantity)
-        .setContents([contents])
+        .setValue(round(product.quantity))
+        .setContents(contents)
         .setContentName(product.title)
         .setCurrency(currency);
 
@@ -191,27 +225,31 @@ export const fbTracker = (options: TSettings) => {
         .setEventTime(current_timestamp)
         .setUserData(userData)
         .setCustomData(customData)
-        .setEventSourceUrl(page?.url)
+        .setEventSourceUrl(page?.url ?? '')
         .setActionSource('website');
-
-      const eventsData = [serverEvent];
-      const eventRequest = new EventRequest(access_token, pixel_id)
-        .setTestEventCode(testCode)
-        .setEvents(eventsData);
-
-      try {
-        var response = await eventRequest.execute();
-        console.log('Response: ', response);
-        return response;
-      } catch (err) {
-        console.error('Error: ', err);
-      }
+      return serverEvent;
     });
+
+    const eventRequest = new EventRequest(access_token, pixel_id)
+      .setTestEventCode(testCode)
+      .setEvents(eventsData);
+
+    try {
+      var response = await eventRequest.execute();
+      console.debug('[EA:Facebook] eventRequest=>Response: ', response);
+      return {
+        payload: eventsData.map((se) => se.normalize()),
+        response,
+      };
+    } catch (err) {
+      console.error('[EA:Facebook] eventRequest=>Error: ', err);
+      return err;
+    }
   };
 
   const trackProductItemView = async (product: T_EA_DataProduct) => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
-    console.error('fb:trackProductItemView', evtName);
+    console.error('[EA:Facebook] trackProductItemView', evtName);
     // const user = trackIdentify();
     const current_timestamp = Math.floor(Date.now() / 1000);
     // const userData = (new UserData())
@@ -229,6 +267,11 @@ export const fbTracker = (options: TSettings) => {
     //                 .setFbp(request.cookies['_fbp'])
 
     const userData = _getUserDataObject();
+
+    if (!userData) {
+      return Promise.reject({ message: 'UserData is null' });
+    }
+
     const contents = trackUtils
       .Catalog(options, [product])
       .ProductDetails.getContents();
@@ -246,7 +289,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventTime(current_timestamp)
       .setUserData(userData)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url)
+      .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -256,10 +299,14 @@ export const fbTracker = (options: TSettings) => {
 
     try {
       var response = await eventRequest.execute();
-      console.log('Response: ', response);
-      return response;
+      console.debug('[EA:Facebook] eventRequest=>Response: ', response);
+      return {
+        payload: eventsData.map((se) => se.normalize()),
+        response,
+      };
     } catch (err) {
-      console.error('Error: ', err);
+      console.error('[EA:Facebook] eventRequest=>Error: ', err);
+      return err;
     }
   };
 
@@ -267,7 +314,7 @@ export const fbTracker = (options: TSettings) => {
 
   const trackPageView = async (page: T_EA_DataPage) => {
     const evtName = trackUtils.getEventNameOfPageView();
-    console.error('fb:trackProductItemView', evtName);
+    console.error('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     // const userData = (new UserData())
     //                 .setExternalId(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
@@ -286,7 +333,12 @@ export const fbTracker = (options: TSettings) => {
     const contents = trackUtils.Page(options).View.getContents();
 
     const userData = _getUserDataObject();
-    const customData = new CustomData().setContents([contents]);
+
+    if (!userData) {
+      return Promise.reject({ message: 'UserData is null' });
+    }
+
+    const customData = new CustomData().setContents(contents);
 
     const serverEvent = new ServerEvent()
       .setEventId(evtName)
@@ -294,7 +346,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventTime(current_timestamp)
       .setUserData(userData)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url)
+      .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -304,10 +356,14 @@ export const fbTracker = (options: TSettings) => {
 
     try {
       var response = await eventRequest.execute();
-      console.log('Response: ', response);
-      return response;
+      console.debug('[EA:Facebook] eventRequest=>Response: ', response);
+      return {
+        payload: eventsData.map((se) => se.normalize()),
+        response,
+      };
     } catch (err) {
-      console.error('Error: ', err);
+      console.error('[EA:Facebook] eventRequest=>Error: ', err);
+      return err;
     }
   };
 
@@ -315,7 +371,7 @@ export const fbTracker = (options: TSettings) => {
 
   const trackInitiateCheckout = async (basket: T_EA_DataBasket) => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
-    console.error('fb:trackProductItemView', evtName);
+    console.error('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     // const userData = (new UserData())
     //                 .setExternalId(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
@@ -332,12 +388,17 @@ export const fbTracker = (options: TSettings) => {
     //                 .setFbp(request.cookies['_fbp'])
 
     const userData = _getUserDataObject();
+
+    if (!userData) {
+      return Promise.reject({ message: 'UserData is null' });
+    }
+
     const contents = trackUtils
       .Basket(options, basket)
       .InitCheckout.getContents();
 
     const customData = new CustomData()
-      .setValue(basket.total.toFixed(2))
+      .setValue(round(basket.total))
       .setContents(contents)
       .setCurrency(currency)
       .setNumItems(basket.quantity);
@@ -349,7 +410,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventTime(current_timestamp)
       .setUserData(userData)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url)
+      .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -359,10 +420,14 @@ export const fbTracker = (options: TSettings) => {
 
     try {
       var response = await eventRequest.execute();
-      console.log('Response: ', response);
-      return response;
+      console.debug('[EA:Facebook] eventRequest=>Response: ', response);
+      return {
+        payload: eventsData.map((se) => se.normalize()),
+        response,
+      };
     } catch (err) {
-      console.error('Error: ', err);
+      console.error('[EA:Facebook] eventRequest=>Error: ', err);
+      return err;
     }
   };
 
@@ -371,7 +436,7 @@ export const fbTracker = (options: TSettings) => {
       searchTerm,
       matchingProducts
     );
-    console.error('fb:trackProductItemView', evtName);
+    console.error('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     // const userData = (new UserData())
     //                 .setExternalId(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
@@ -388,6 +453,11 @@ export const fbTracker = (options: TSettings) => {
     //                 .setFbp(request.cookies['_fbp'])
 
     const userData = _getUserDataObject();
+
+    if (!userData) {
+      return Promise.reject({ message: 'UserData is null' });
+    }
+
     const customData = new CustomData().setSearchString(searchTerm);
 
     const page = options.resolvers?.page?.();
@@ -397,7 +467,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventTime(current_timestamp)
       .setUserData(userData)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url)
+      .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
 
     const eventsData = [serverEvent];
@@ -407,10 +477,14 @@ export const fbTracker = (options: TSettings) => {
 
     try {
       var response = await eventRequest.execute();
-      console.log('Response: ', response);
-      return response;
+      console.debug('[EA:Facebook] eventRequest=>Response: ', response);
+      return {
+        payload: eventsData.map((se) => se.normalize()),
+        response,
+      };
     } catch (err) {
-      console.error('Error: ', err);
+      console.error('[EA:Facebook] eventRequest=>Error: ', err);
+      return err;
     }
   };
 
