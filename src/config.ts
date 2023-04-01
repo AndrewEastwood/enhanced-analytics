@@ -82,7 +82,6 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
     fullstory: {
       enabled: false,
       orgId: null,
-      sdk: null,
     },
     ga: {
       enabled: false,

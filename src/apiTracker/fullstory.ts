@@ -10,35 +10,170 @@ import {
 import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
 
-let uiLibInstalled = false;
+// let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
+// let uiLibInstalled = false;
+
+const isBroserMode = typeof globalThis.window !== 'undefined';
+
+const installFS = (orgId: string) => {
+  return isBroserMode
+    ? (() => {
+        // uiLibInstallStatus = 'installing';
+        globalThis.window['_fs_host'] = 'fullstory.com';
+        globalThis.window['_fs_script'] = 'edge.fullstory.com/s/fs.js';
+        globalThis.window['_fs_org'] = orgId;
+        globalThis.window['_fs_namespace'] = 'FS';
+        (function (m, n, e, t, l, o, g, y) {
+          if (e in m) {
+            if (m.console && m.console.log) {
+              m.console.log(
+                'FullStory namespace conflict. Please set window["_fs_namespace"].'
+              );
+            }
+            return;
+          }
+          // @ts-ignore
+          g = m[e] = function (a, b, s) {
+            // @ts-ignore
+            g.q ? g.q.push([a, b, s]) : g._api(a, b, s);
+          };
+          // @ts-ignore
+          g.q = [];
+          // @ts-ignore
+          o = n.createElement(t);
+          // @ts-ignore
+          o.async = 1;
+          // @ts-ignore
+          o.crossOrigin = 'anonymous';
+          // @ts-ignore
+          o.src = 'https://' + _fs_script;
+          // @ts-ignore
+          o = n.createElement(t);
+          // // @ts-ignore
+          // o.onload = () => {
+          //   uiLibInstallStatus = 'yes';
+          // };
+          // // @ts-ignore
+          // o.onerror = () => {
+          //   uiLibInstallStatus = 'no';
+          // };
+          // @ts-ignore
+          y = n.getElementsByTagName(t)[0];
+          // @ts-ignore
+          y.parentNode.insertBefore(o, y);
+          // @ts-ignore
+          g.identify = function (i, v, s) {
+            // @ts-ignore
+            g(l, { uid: i }, s);
+            // @ts-ignore
+            if (v) g(l, v, s);
+          };
+          // @ts-ignore
+          g.setUserVars = function (v, s) {
+            // @ts-ignore
+            g(l, v, s);
+          };
+          // @ts-ignore
+          g.event = function (i, v, s) {
+            // @ts-ignore
+            g('event', { n: i, p: v }, s);
+          };
+          // @ts-ignore
+          g.anonymize = function () {
+            // @ts-ignore
+            g.identify(!!0);
+          };
+          // @ts-ignore
+          g.shutdown = function () {
+            // @ts-ignore
+            g('rec', !1);
+          };
+          // @ts-ignore
+          g.restart = function () {
+            // @ts-ignore
+            g('rec', !0);
+          };
+          // @ts-ignore
+          g.log = function (a, b) {
+            // @ts-ignore
+            g('log', [a, b]);
+          };
+          // @ts-ignore
+          g.consent = function (a) {
+            // @ts-ignore
+            g('consent', !arguments.length || a);
+          };
+          // @ts-ignore
+          g.identifyAccount = function (i, v) {
+            // @ts-ignore
+            o = 'account';
+            v = v || {};
+            v.acctId = i;
+            // @ts-ignore
+            g(o, v);
+          };
+          // @ts-ignore
+          g.clearUserCookie = function () {};
+          // @ts-ignore
+          g.setVars = function (n, p) {
+            // @ts-ignore
+            g('setVars', [n, p]);
+          };
+          // @ts-ignore
+          g._w = {};
+          // @ts-ignore
+          y = 'XMLHttpRequest';
+          // @ts-ignore
+          g._w[y] = m[y];
+          // @ts-ignore
+          y = 'fetch';
+          // @ts-ignore
+          g._w[y] = m[y];
+          // @ts-ignore
+          if (m[y])
+            // @ts-ignore
+            m[y] = function () {
+              // @ts-ignore
+              return g._w[y].apply(this, arguments);
+            };
+          // @ts-ignore
+          g._v = '1.3.0';
+        })(
+          globalThis.window,
+          globalThis.document,
+          globalThis.window['_fs_namespace'],
+          'script',
+          'user'
+        );
+        return globalThis.window.FS;
+      })()
+    : null;
+};
 
 // Is designed to run in browsers only.
 
 export const fullstoryTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
-  const bizSdk = analytics?.fullstory?.sdk;
+  // const bizSdk = analytics?.fullstory?.sdk;
 
   if (!globalThis.window) {
     throw '[EA] FullStory can be run in a browser only';
   }
 
-  if (!bizSdk) {
-    throw '[EA] FullStory is not configured; Please install required sdk: npm i @fullstory/browser';
-  }
+  // if (!bizSdk) {
+  //   throw '[EA] FullStory is not configured; Please install required sdk: npm i @fullstory/browser';
+  // }
 
   if (!analytics?.fullstory?.orgId) {
     throw '[EA] FullStory is not configured properly; orgId is not defined';
   }
 
-  const { init, event, identify, setUserVars, setVars } = bizSdk;
+  // const { init, event, identify, setUserVars, setVars } = bizSdk;
 
-  uiLibInstalled
-    ? void 0
-    : init({
-        orgId: analytics?.fullstory?.orgId,
-      });
+  // uiLibInstalled ? void 0 : ;
 
-  uiLibInstalled = true;
+  const { event, identify, setUserVars, setVars } =
+    globalThis.window.FS ?? installFS(analytics?.fullstory?.orgId);
 
   const getUserObj = (profile?: T_EA_DataProfile | null) => {
     const u = profile ? profile : options.resolvers?.profile?.();

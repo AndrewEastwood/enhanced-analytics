@@ -8,7 +8,7 @@ import {
 } from './shared';
 
 export const isNativePayloadPage = (payload: any): payload is T_EA_DataPage => {
-  return Object.keys(payload ?? {}).every((k) =>
+  return Object.keys(payload ?? { ___: false }).every((k) =>
     ['id', 'title', 'name', 'path'].includes(k)
   );
 };
@@ -16,7 +16,7 @@ export const isNativePayloadPage = (payload: any): payload is T_EA_DataPage => {
 export const isNativePayloadProfile = (
   payload: any
 ): payload is T_EA_DataProfile => {
-  return Object.keys(payload ?? {}).every((k) =>
+  return Object.keys(payload ?? { ___: false }).every((k) =>
     ['firstName', 'email'].includes(k)
   );
 };
@@ -24,7 +24,7 @@ export const isNativePayloadProfile = (
 export const isNativePayloadAddress = (
   payload: any
 ): payload is T_EA_DataAddress => {
-  return Object.keys(payload ?? {}).every((k) =>
+  return Object.keys(payload ?? { ___: false }).every((k) =>
     [
       'countryCode',
       'country',
@@ -40,7 +40,7 @@ export const isNativePayloadAddress = (
 export const isNativePayloadShipping = (
   payload: any
 ): payload is T_EA_Shipping => {
-  const shallowMatch = Object.keys(payload ?? {}).every((k) =>
+  const shallowMatch = Object.keys(payload ?? { ___: false }).every((k) =>
     ['name', 'cost', 'address'].includes(k)
   );
   const subMatchShippingAddress =
@@ -51,13 +51,15 @@ export const isNativePayloadShipping = (
 export const isNativePayloadPayment = (
   payload: any
 ): payload is T_EA_Payment => {
-  return Object.keys(payload ?? {}).every((k) => ['type'].includes(k));
+  return Object.keys(payload ?? { ___: false }).every((k) =>
+    ['type'].includes(k)
+  );
 };
 
 export const isNativePayloadOrder = (
   payload: any
 ): payload is T_EA_DataOrder => {
-  const shallowMatch = Object.keys(payload ?? {}).every((k) =>
+  const shallowMatch = Object.keys(payload ?? { ___: false }).every((k) =>
     [
       'id',
       'revenue',
@@ -93,7 +95,7 @@ export const isNativePayloadOrder = (
 export const isNativePayloadBasket = (
   payload: any
 ): payload is T_EA_DataBasket => {
-  const shallowMatch = Object.keys(payload ?? {}).every((k) =>
+  const shallowMatch = Object.keys(payload ?? { ___: false }).every((k) =>
     [
       'total',
       'quantity',
@@ -117,7 +119,7 @@ export const isNativePayloadBasket = (
 export const isNativePayloadProduct = (
   payload: any
 ): payload is T_EA_DataProduct => {
-  return Object.keys(payload ?? {}).every((k) =>
+  return Object.keys(payload ?? { ___: false }).every((k) =>
     [
       'id',
       'title',

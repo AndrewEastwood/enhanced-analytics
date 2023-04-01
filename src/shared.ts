@@ -130,16 +130,16 @@ export type TSettings = {
     };
     [ETrackers.FullStory]?: {
       enabled: boolean;
-      sdk: {
-        init: (setupVars?: Record<string, any>) => void;
-        identify?: (uid: string, userVars?: Record<string, any>) => void;
-        event?: (
-          eventName: string,
-          eventProperties?: Record<string, any>
-        ) => void;
-        setUserVars?: (userVars?: Record<string, any>) => void;
-        setVars?: (scope: string, pageProperties?: Record<string, any>) => void;
-      } | null;
+      // sdk: {
+      //   init: (setupVars?: Record<string, any>) => void;
+      //   identify?: (uid: string, userVars?: Record<string, any>) => void;
+      //   event?: (
+      //     eventName: string,
+      //     eventProperties?: Record<string, any>
+      //   ) => void;
+      //   setUserVars?: (userVars?: Record<string, any>) => void;
+      //   setVars?: (scope: string, pageProperties?: Record<string, any>) => void;
+      // } | null;
       orgId: string | null;
     };
     [ETrackers.Klaviyo]?: {

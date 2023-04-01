@@ -20,12 +20,18 @@ export * from './ga';
 
 export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   const { integrations: analytics } = config;
-  const useFb =
-    analytics?.[ETrackers.Facebook]?.enabled && (trackers?.fb ?? true);
-  const useKl =
-    analytics?.[ETrackers.Klaviyo]?.enabled && (trackers?.klaviyo ?? true);
-  const useFs =
-    analytics?.[ETrackers.FullStory]?.enabled && (trackers?.fullstory ?? true);
+  const specificTracker = Object.values(ETrackers).some(
+    (tk) => typeof trackers?.[tk] === 'boolean'
+  );
+  const useFb = specificTracker
+    ? trackers?.fb && analytics?.[ETrackers.Facebook]?.enabled
+    : true;
+  const useKl = specificTracker
+    ? trackers?.klaviyo && analytics?.[ETrackers.Klaviyo]?.enabled
+    : true;
+  const useFs = specificTracker
+    ? trackers?.fullstory && analytics?.[ETrackers.FullStory]?.enabled
+    : true;
 
   if (trackers?.server && globalThis.window) {
     throw '[EA:Server] Trackers cannot be run in a browser. globalThis.window is detected.';
