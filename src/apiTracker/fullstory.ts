@@ -1,74 +1,3 @@
-/*
-FullStory.event('orderCreated', {
-  orderId: orderItem.id,
-});
-FullStory.identify(orderItem.id.toString(), {
-  displayName: orderItem.customerFullName,
-});
-FullStory.setUserVars({
-  uid: 'explicit user id',
-  displayName: orderItem.customerFullName,
-  email: 'ddsd@sss.com',
-  orderId: orderItem.id,
-  orderTotal: orderItem.total,
-  orderDate_date: moment(orderItem.dateCreated).format(),
-});
-orderItem?.seen
-  ? void 0
-  : FullStory.event('orderSeen', {
-      orderId: orderItem.id,
-    });
-FullStory.setVars('page', {
-  pageName: getRuntime().PAGES.CHECKOUT.TITLE,
-  cartItems: cartItems.length,
-});
-FullStory.setVars('page', {
-          pageName: getRuntime().PAGES.CHECKOUT.TITLE,
-          cartItems: cartItems.length,
-        })
-FS.event('Product Added', {
-  cart_id: '130983678493',
-  product_id: '798ith22928347',
-  sku: 'L-100',
-  category: 'Clothing',
-  name: 'Button Front Cardigan',
-  brand: 'Bright & Bold',
-  variant: 'Blue',
-  price: 58.99,
-  quantity: 1,
-  coupon: '25OFF',
-  position: 3,
-  url: 'https://www.example.com/product/path',
-  image_url: 'https://www.example.com/product/path.jpg'
-});
-FS.event('Subscribed', {
-  uid: '750948353',
-  plan_name: 'Professional',
-  plan_price: 299,
-  plan_users: 10,
-  days_in_trial: 42,
-  feature_packs: ['MAPS', 'DEV', 'DATA'],
-});
-FS.event('Order Completed', {
-  orderId: '23f3er3d',
-  products: [{
-    productId: '9v87h4f8',
-    price: 20.00,
-    quantity: 0.75
-  }, {
-    productId: '4738b43z',
-    price: 12.87,
-    quantity: 6,
-  }]
-});
-FS.setVars("page", {
- "pageName" : "Checkout", // what is the name of the page?
- "cart_size_int" : 10, // how many items were in the cart?
- "used_coupon_bool" : true, // was a coupon used?
-});
-
-*/
-
 import {
   TSettings,
   T_EA_DataProduct,
@@ -76,22 +5,29 @@ import {
   T_EA_DataOrder,
   T_EA_DataBasket,
   T_EA_DataCustomEvent,
+  TServerEventResponse,
 } from '../shared';
 import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
 
 let uiLibInstalled = false;
 
+// Is designed to run in browsers only.
+
 export const fullstoryTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
   const bizSdk = analytics?.fullstory?.sdk;
 
-  if (!document) {
-    throw 'FullStory cannot be run out of browser;';
+  if (!globalThis.window) {
+    throw '[EA] FullStory can be run in a browser only';
   }
 
   if (!bizSdk) {
-    throw 'FullStory is not configured;';
+    throw '[EA] FullStory is not configured; Please install required sdk: npm i @fullstory/browser';
+  }
+
+  if (!analytics?.fullstory?.orgId) {
+    throw '[EA] FullStory is not configured properly; orgId is not defined';
   }
 
   const { init, event, identify, setUserVars, setVars } = bizSdk;
@@ -155,19 +91,21 @@ export const fullstoryTracker = (options: TSettings) => {
   };
 
   // Identify a user - create/update a profile in Klaviyo
-  const trackIdentify = async (profile?: T_EA_DataProfile | null) => {
+  const trackIdentify = async (
+    profile?: T_EA_DataProfile | null
+  ): Promise<TServerEventResponse> => {
     const user = getUserObj(profile);
 
     if (user) {
       const attributes = {
-        email: user!.email, // 'sarah.mason@klaviyo-demo.com',
-        phone_number: user?.phone, //'+15005550006',
-        external_id: user?.id, // '63f64a2b-c6bf-40c7-b81f-bed08162edbe',
-        first_name: user?.firstName ?? '', //'Sarah',
-        last_name: user?.lastName ?? '', //'Mason',
-        organization: user?.organization, // 'Klaviyo',
-        title: user?.title, // 'Engineer',
-        image: user?.avatarUrl, // 'https://images.pexels.com/photos/3760854/pexels-photo-3760854.jpeg',
+        email: user!.email,
+        phone_number: user?.phone,
+        external_id: user?.id,
+        first_name: user?.firstName ?? '',
+        last_name: user?.lastName ?? '',
+        organization: user?.organization,
+        title: user?.title,
+        image: user?.avatarUrl,
         location: JSON.stringify({
           address1: user?.address?.street,
           address2: user?.address?.state,
@@ -184,10 +122,18 @@ export const fullstoryTracker = (options: TSettings) => {
         email: attributes.email,
       });
       setUserVars?.(normalizePayloadFieldNames(attributes));
-      return Promise.resolve();
+      return Promise.resolve({
+        message: null,
+        payload: [normalizePayloadFieldNames(attributes)],
+        response: true,
+      });
     }
 
-    return null;
+    return {
+      message: 'User is not defined yet',
+      payload: [user],
+      response: null,
+    };
   };
 
   const trackTransactionRefund = async (order: T_EA_DataOrder) => {};

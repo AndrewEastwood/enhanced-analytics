@@ -1,6 +1,5 @@
 import { getConfig } from './config';
-import apiTracker from './apiTracker';
-import { getEEC } from './ecommerce';
+import apiTracker, { getEEC } from './apiTracker';
 import {
   ETrackers,
   T_EA_DataBasket,
@@ -10,7 +9,6 @@ import {
   T_EA_DataProfile,
   T_EA_DataCustomEvent,
 } from './shared';
-import * as trackUtils from './utils';
 import {
   isNativePayloadBasket,
   isNativePayloadOrder,
@@ -18,10 +16,8 @@ import {
   isNativePayloadProducts,
   isNativePayloadProfile,
 } from './guards';
-import { useState } from 'react';
 
 export * from './apiTracker';
-export * from './ecommerce';
 export * from './utils';
 export {
   TSettings,
@@ -38,12 +34,12 @@ export {
 export * from './config';
 export * from './guards';
 
-export const useAnalytics = () => {
-  const [runtimeUser, setRuntimeUser] = useState<T_EA_DataProfile | null>(null);
+let runtimeUser: T_EA_DataProfile | null = null;
 
+export const useAnalytics = () => {
   return {
     config: getConfig(),
-    withEvent: (name: string, attributes?: Record<string, any>) => {
+    withMisc: (name: string, attributes?: Record<string, any>) => {
       const store = getConfig();
       if (store === null) {
         throw 'Invoke configureAnalytics first and provide configuration';
@@ -53,23 +49,32 @@ export const useAnalytics = () => {
         attributes,
       };
       return {
-        sendToServer: {
-          all: apiTracker(store).events(v),
-          [ETrackers.Facebook]: apiTracker(store, { fb: true }).events(v),
-          [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).events(v),
-          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).events(
-            v
-          ),
+        s2s: {
+          all: () => apiTracker(store, { server: true }).misc(v),
+          [ETrackers.Facebook]: () =>
+            apiTracker(store, {
+              fb: true,
+              server: true,
+            }).misc(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, {
+              klaviyo: true,
+              server: true,
+            }).misc(v),
           any: (...trackers: ETrackers[]) => {
-            const c = trackers.reduce(
-              (r, t) => ({ ...r, [t]: true }),
-              {} as Partial<Record<ETrackers, boolean>>
-            );
-            return apiTracker(store, c).events(v);
+            const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
+              server: true,
+            } as Partial<Record<ETrackers, boolean>>);
+            return apiTracker(store, c).misc(v);
           },
         },
-        // data: trackUtils.Page(store),
-        // events: getEEC(store).groups.general(),
+        events: {
+          [ETrackers.GoogleAnalytics]: () => getEEC(store).misc(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, { klaviyo: true }).misc(v),
+          [ETrackers.FullStory]: () =>
+            apiTracker(store, { fullstory: true }).misc(v),
+        },
       };
     },
     withPage: (payload: T_EA_DataPage | Record<string, any> | null = null) => {
@@ -90,21 +95,32 @@ export const useAnalytics = () => {
       }
 
       return {
-        sendToServer: {
-          all: apiTracker(store).page(v),
-          [ETrackers.Facebook]: apiTracker(store, { fb: true }).page(v),
-          [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).page(v),
-          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).page(v),
+        s2s: {
+          all: () => apiTracker(store, { server: true }).page(v),
+          [ETrackers.Facebook]: () =>
+            apiTracker(store, {
+              fb: true,
+              server: true,
+            }).page(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, {
+              klaviyo: true,
+              server: true,
+            }).page(v),
           any: (...trackers: ETrackers[]) => {
-            const c = trackers.reduce(
-              (r, t) => ({ ...r, [t]: true }),
-              {} as Partial<Record<ETrackers, boolean>>
-            );
+            const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
+              server: true,
+            } as Partial<Record<ETrackers, boolean>>);
             return apiTracker(store, c).page(v);
           },
         },
-        data: trackUtils.Page(store),
-        events: getEEC(store).groups.general(),
+        events: {
+          [ETrackers.GoogleAnalytics]: () => getEEC(store).page(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, { klaviyo: true }).page(v),
+          [ETrackers.FullStory]: () =>
+            apiTracker(store, { fullstory: true }).page(v),
+        },
       };
     },
     withProfile: (
@@ -125,26 +141,35 @@ export const useAnalytics = () => {
         : store.resolvers?.profile?.(payload) ?? runtimeUser ?? null;
 
       // user can be null, which means it is anonymous
-      setRuntimeUser(v);
+      runtimeUser = v;
 
       return {
-        sendToServer: {
-          all: apiTracker(store).profile(v),
-          [ETrackers.Facebook]: apiTracker(store, { fb: true }).profile(v),
-          [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).profile(v),
-          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).profile(
-            v
-          ),
+        s2s: {
+          all: () => apiTracker(store, { server: true }).profile(v),
+          [ETrackers.Facebook]: () =>
+            apiTracker(store, {
+              fb: true,
+              server: true,
+            }).profile(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, {
+              klaviyo: true,
+              server: true,
+            }).profile(v),
           any: (...trackers: ETrackers[]) => {
-            const c = trackers.reduce(
-              (r, t) => ({ ...r, [t]: true }),
-              {} as Partial<Record<ETrackers, boolean>>
-            );
+            const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
+              server: true,
+            } as Partial<Record<ETrackers, boolean>>);
             return apiTracker(store, c).profile(v);
           },
         },
-        data: trackUtils.Profile(store),
-        events: getEEC(store).groups.profile(),
+        events: {
+          [ETrackers.GoogleAnalytics]: () => getEEC(store).profile(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, { klaviyo: true }).profile(v),
+          [ETrackers.FullStory]: () =>
+            apiTracker(store, { fullstory: true }).profile(v),
+        },
       };
     },
     withCatalog: (
@@ -154,9 +179,6 @@ export const useAnalytics = () => {
       if (store === null) {
         throw 'Invoke configureAnalytics first and provide configuration';
       }
-      // if (!store.resolvers?.product) {
-      //   throw '[store.resolvers.product] is not defined';
-      // }
 
       const isNative = isNativePayloadProducts(payload);
       if (!isNative && !store.resolvers?.product) {
@@ -170,25 +192,34 @@ export const useAnalytics = () => {
       if (!v) {
         throw 'Product data is not defined';
       }
-      // const v = payload?.flatMap(store.resolvers?.product) ?? [];
+
       return {
-        sendToServer: {
-          all: apiTracker(store).catalog(v),
-          [ETrackers.Facebook]: apiTracker(store, { fb: true }).catalog(v),
-          [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).catalog(v),
-          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).catalog(
-            v
-          ),
+        s2s: {
+          all: () => apiTracker(store, { server: true }).catalog(v),
+          [ETrackers.Facebook]: () =>
+            apiTracker(store, {
+              fb: true,
+              server: true,
+            }).catalog(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, {
+              klaviyo: true,
+              server: true,
+            }).catalog(v),
           any: (...trackers: ETrackers[]) => {
-            const c = trackers.reduce(
-              (r, t) => ({ ...r, [t]: true }),
-              {} as Partial<Record<ETrackers, boolean>>
-            );
+            const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
+              server: true,
+            } as Partial<Record<ETrackers, boolean>>);
             return apiTracker(store, c).catalog(v);
           },
         },
-        data: trackUtils.Catalog(store, v),
-        events: getEEC(store).groups.catalog(v),
+        events: {
+          [ETrackers.GoogleAnalytics]: () => getEEC(store).catalog(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, { klaviyo: true }).catalog(v),
+          [ETrackers.FullStory]: () =>
+            apiTracker(store, { fullstory: true }).catalog(v),
+        },
       };
     },
     withBasket: (
@@ -201,7 +232,7 @@ export const useAnalytics = () => {
       if (!store.resolvers?.basket) {
         throw '[store.resolvers.basket] is not defined';
       }
-      // const v = store.resolvers?.basket(payload);
+
       const isNative = isNativePayloadBasket(payload);
       if (!isNative && !store.resolvers?.basket) {
         throw '[store.resolvers.basket] is not defined';
@@ -213,34 +244,43 @@ export const useAnalytics = () => {
       }
 
       return {
-        sendToServer: {
-          all: apiTracker(store).basket(v),
-          [ETrackers.Facebook]: apiTracker(store, { fb: true }).basket(v),
-          [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).basket(v),
-          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).basket(
-            v
-          ),
+        s2s: {
+          all: () => apiTracker(store, { server: true }).basket(v),
+          [ETrackers.Facebook]: () =>
+            apiTracker(store, {
+              fb: true,
+              server: true,
+            }).basket(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, {
+              klaviyo: true,
+              server: true,
+            }).basket(v),
           any: (...trackers: ETrackers[]) => {
-            const c = trackers.reduce(
-              (r, t) => ({ ...r, [t]: true }),
-              {} as Partial<Record<ETrackers, boolean>>
-            );
+            const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
+              server: true,
+            } as Partial<Record<ETrackers, boolean>>);
             return apiTracker(store, c).basket(v);
           },
         },
-        data: trackUtils.Basket(store, v),
-        events: getEEC(store).groups.basket(v),
+        events: {
+          [ETrackers.GoogleAnalytics]: () => getEEC(store).basket(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, { klaviyo: true }).basket(v),
+          [ETrackers.FullStory]: () =>
+            apiTracker(store, { fullstory: true }).basket(v),
+        },
       };
     },
-    withOrder: (payload: T_EA_DataOrder | Record<string, any> | null) => {
+    withOrder: (
+      payload: T_EA_DataOrder | Record<string, any> | null = null
+    ) => {
       const store = getConfig();
+
       if (store === null) {
         throw 'Invoke configureAnalytics first and provide configuration';
       }
-      // if (!store.resolvers?.order) {
-      //   throw '[store.resolvers.order] is not defined';
-      // }
-      // const v = store.resolvers?.order(payload);
+
       const isNative = isNativePayloadOrder(payload);
       if (!isNative && !store.resolvers?.order) {
         throw '[store.resolvers.order] is not defined';
@@ -251,26 +291,37 @@ export const useAnalytics = () => {
         throw 'Order data is not defined';
       }
       return {
-        sendToServer: {
-          all: apiTracker(store).order(v),
-          [ETrackers.Facebook]: apiTracker(store, { fb: true }).order(v),
-          [ETrackers.Klaviyo]: apiTracker(store, { klaviyo: true }).order(v),
-          [ETrackers.FullStory]: apiTracker(store, { fullstory: true }).order(
-            v
-          ),
+        s2s: {
+          all: () => apiTracker(store, { server: true }).order(v),
+          [ETrackers.Facebook]: () =>
+            apiTracker(store, {
+              fb: true,
+              server: true,
+            }).order(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, {
+              klaviyo: true,
+              server: true,
+            }).order(v),
           any: (...trackers: ETrackers[]) => {
-            const c = trackers.reduce(
-              (r, t) => ({ ...r, [t]: true }),
-              {} as Partial<Record<ETrackers, boolean>>
-            );
+            const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
+              server: true,
+            } as Partial<Record<ETrackers, boolean>>);
             return apiTracker(store, c).order(v);
           },
         },
-        data: trackUtils.Order(store, v),
-        events: getEEC(store).groups.order(v),
+        events: {
+          [ETrackers.GoogleAnalytics]: () => getEEC(store).order(v),
+          [ETrackers.Klaviyo]: () =>
+            apiTracker(store, { klaviyo: true }).order(v),
+          [ETrackers.FullStory]: () =>
+            apiTracker(store, { fullstory: true }).order(v),
+        },
       };
     },
   };
 };
 
 export default useAnalytics;
+
+// useAnalytics().withOrder().events.fullstory().trackTransaction();

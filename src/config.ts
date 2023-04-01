@@ -84,6 +84,10 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       orgId: null,
       sdk: null,
     },
+    ga: {
+      enabled: false,
+      trackId: null,
+    },
     testing: false,
     evtUuid: {
       cookieName: 'evt-uuid',
@@ -101,7 +105,9 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
     ...(_store.resolvers || {}),
     session: _store?.resolvers?.session || (() => ({} as T_EA_DataSession)),
     eventUUID: _store.resolvers?.eventUUID ?? ((r?: Request) => Date.now()),
-    product: _store.resolvers?.product || ((p) => [p] as T_EA_DataProduct[]),
+    product:
+      _store.resolvers?.product ||
+      ((p) => (Array.isArray(p) ? p : [p]) as T_EA_DataProduct[]),
     order: _store.resolvers?.order || ((p) => p as T_EA_DataOrder),
     basket: _store.resolvers?.basket || ((p) => p as T_EA_DataBasket),
     profile: _store.resolvers?.profile || ((p) => p as T_EA_DataProfile | null),

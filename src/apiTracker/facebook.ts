@@ -6,9 +6,15 @@ import {
   T_EA_DataProduct,
   T_EA_DataProfile,
   TSettings,
+  TServerEventResponse,
 } from '../shared';
 import * as trackUtils from '../utils';
 import { round } from '../utils';
+import { EventResponse } from 'facebook-nodejs-business-sdk';
+
+type TFbServerEventResponse = TServerEventResponse<EventResponse>;
+
+// Is designed to run at server side only.
 
 export const fbTracker = (options: TSettings) => {
   const { integrations: analytics, currency } = options;
@@ -17,21 +23,23 @@ export const fbTracker = (options: TSettings) => {
   const testCode = (analytics?.testing ? analytics.fb?.testCode : '') ?? '';
   const bizSdk = analytics?.fb?.sdk;
 
+  if (globalThis.window) {
+    throw '[EA] Facebook cannot run in the UI mode. Use this tracker at your server side only.';
+  }
+
   if (!bizSdk) {
-    throw 'Facebook is configured without SDK; Please provide SDK;';
+    throw '[EA] Facebook is configured without SDK; Please provide SDK;';
   }
 
   if (!pixel_id) {
-    throw 'Facebook is configured without pixel_id; Please provide pixel_id;';
+    throw '[EA] Facebook is configured without pixel_id; Please provide pixel_id;';
   }
 
   if (!access_token) {
-    throw 'Facebook is configured without access_token; Please provide access_token;';
+    throw '[EA] Facebook is configured without access_token; Please provide access_token;';
   }
 
-  // const Content = bizSdk.Content;
   const CustomData = bizSdk.CustomData;
-  // const DeliveryCategory = bizSdk.DeliveryCategory;
   const EventRequest = bizSdk.EventRequest;
   const UserData = bizSdk.UserData;
   const ServerEvent = bizSdk.ServerEvent;
@@ -43,19 +51,6 @@ export const fbTracker = (options: TSettings) => {
 
   const _getUserDataObject = (order?: T_EA_DataOrder) => {
     const user = trackIdentify();
-    // const userData = (new UserData())
-    //   .setExternalId(user)
-    //   .setEmail(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //   .setFirstName(request.user ? request.user.firstName : '')
-    //   .setLastName(request.user ? request.user.surname : '')
-    //   .setCountry(request.user && request.user.address ? request.user.address.country.toLowerCase() : '')
-    //   .setCity(request.user && request.user.address ? request.user.address.town : '')
-    //   .setZip(request.user && request.user.address ? request.user.address.postcode : '')
-    //   .setPhone(request.user && request.user.address ? request.user.address.phone : '')
-    //   // It is recommended to send Client IP and User Agent for Conversions API Events.
-    //   .setClientIpAddress(request.ip)
-    //   .setClientUserAgent(request.headers['user-agent'])
-    //   .setFbp(request.cookies['_fbp']);
     const u = order ? order.customer : user;
     const session = options.resolvers?.session?.();
     const userData =
@@ -71,9 +66,9 @@ export const fbTracker = (options: TSettings) => {
             .setPhone(u.phone ?? '')
             // It is recommended to send Client IP and User Agent for Conversions API Events.
             .setClientIpAddress(session.ip ?? '')
-            .setClientUserAgent(session.agent ?? '') // request.headers['user-agent'])
+            .setClientUserAgent(session.agent ?? '')
             .setFbp(session.fbp ?? '')
-        : null; // request.cookies['_fbp']);
+        : null;
     return userData;
   };
 
@@ -83,30 +78,21 @@ export const fbTracker = (options: TSettings) => {
 
   const trackTransactionFulfill = async (order: T_EA_DataOrder) => {};
 
-  const trackTransaction = async (order: T_EA_DataOrder) => {
+  const trackTransaction = async (
+    order: T_EA_DataOrder
+  ): Promise<TFbServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
     console.error('[EA:Facebook] trackTransaction', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject(order);
 
     if (!userData) {
-      return Promise.reject({ message: 'UserData is null' });
+      return { message: 'UserData is null', payload: [], response: null };
     }
-    // const userData = (new UserData())
-    //                 .setExternalId(order.customer.email)
-    //                 .setEmail(order.customer.email)
-    //                 .setFirstName(order.customer.firstName)
-    //                 .setLastName(order.customer.lastName)
-    //                 .setCountry(order.shipping.address.country)
-    //                 .setCity(order.shipping.address.city)
-    //                 .setZip(order.shipping.address.postcode)
-    //                 .setPhone(order.customer.phone)
-    //                 // It is recommended to send Client IP and User Agent for Conversions API Events.
-    //                 .setClientIpAddress(request.ip)
-    //                 .setClientUserAgent(request.headers['user-agent'])
-    //                 .setFbp(request.cookies['_fbp']);
 
-    const contents = trackUtils.Order(options, order).Purchase.getContents();
+    const contents = trackUtils
+      .Order(options, order)
+      .Purchase.getFbEventContents();
 
     const customData = new CustomData()
       .setContents(contents)
@@ -135,20 +121,27 @@ export const fbTracker = (options: TSettings) => {
       var response = await eventRequest.execute();
       console.log('[EA:Facebook] eventRequest=>Response: ', response);
       return {
+        message: null,
         payload: eventsData.map((se) => se.normalize()),
         response,
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('[EA:Facebook] eventRequest=>Error: ', err);
-      return err;
+      return {
+        message: 'Cannot process your request',
+        response: err,
+        payload: eventsData.map((se) => se.normalize()),
+      };
     }
   };
 
-  const trackProductAddToCart = async (basket: T_EA_DataBasket) => {
+  const trackProductAddToCart = async (
+    basket: T_EA_DataBasket
+  ): Promise<TFbServerEventResponse> => {
     const userData = _getUserDataObject();
 
     if (!userData) {
-      return Promise.reject({ message: 'UserData is null' });
+      return { message: 'UserData is null', payload: [], response: null };
     }
 
     const eventsData = basket.lastAdded.map((product) => {
@@ -158,7 +151,7 @@ export const fbTracker = (options: TSettings) => {
 
       const contents = trackUtils
         .Basket(options, basket)
-        .BasketAddProduct.getContents();
+        .BasketAddProduct.getFbEventContents();
 
       const customData = new CustomData()
         .setValue(round(product.quantity))
@@ -187,20 +180,27 @@ export const fbTracker = (options: TSettings) => {
       var response = await eventRequest.execute();
       console.debug('[EA:Facebook] eventRequest=>Response: ', response);
       return {
+        message: null,
         payload: eventsData.map((se) => se.normalize()),
         response,
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('[EA:Facebook] eventRequest=>Error: ', err);
-      return err;
+      return {
+        message: 'Cannot process your request',
+        response: err,
+        payload: eventsData.map((se) => se.normalize()),
+      };
     }
   };
 
-  const trackProductRemoveFromCart = async (basket: T_EA_DataBasket) => {
+  const trackProductRemoveFromCart = async (
+    basket: T_EA_DataBasket
+  ): Promise<TFbServerEventResponse> => {
     const userData = _getUserDataObject();
 
     if (!userData) {
-      return Promise.reject({ message: 'UserData is null' });
+      return { message: 'UserData is null', payload: [], response: null };
     }
 
     const eventsData = basket.lastRemoved.map((product) => {
@@ -210,7 +210,7 @@ export const fbTracker = (options: TSettings) => {
 
       const contents = trackUtils
         .Basket(options, basket)
-        .BasketRemoveProduct.getContents();
+        .BasketRemoveProduct.getFbEventContents();
 
       const customData = new CustomData()
         .setValue(round(product.quantity))
@@ -238,43 +238,37 @@ export const fbTracker = (options: TSettings) => {
       var response = await eventRequest.execute();
       console.debug('[EA:Facebook] eventRequest=>Response: ', response);
       return {
+        message: null,
         payload: eventsData.map((se) => se.normalize()),
         response,
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('[EA:Facebook] eventRequest=>Error: ', err);
-      return err;
+      return {
+        message: 'Cannot process your request',
+        response: err,
+        payload: eventsData.map((se) => se.normalize()),
+      };
     }
   };
 
-  const trackProductItemView = async (product: T_EA_DataProduct) => {
+  const trackProductItemView = async (
+    product: T_EA_DataProduct
+  ): Promise<TFbServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
     console.error('[EA:Facebook] trackProductItemView', evtName);
-    // const user = trackIdentify();
+
     const current_timestamp = Math.floor(Date.now() / 1000);
-    // const userData = (new UserData())
-    //                 .setExternalId(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //                 .setEmail(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //                 .setFirstName(request.user ? request.user.firstName : '')
-    //                 .setLastName(request.user ? request.user.surname : '')
-    //                 .setCountry(request.user && request.user.address ? request.user.address.country.toLowerCase() : '')
-    //                 .setCity(request.user && request.user.address ? request.user.address.town : '')
-    //                 .setZip(request.user && request.user.address ? request.user.address.postcode : '')
-    //                 .setPhone(request.user && request.user.address ? request.user.address.phone : '')
-    //                 // It is recommended to send Client IP and User Agent for Conversions API Events.
-    //                 .setClientIpAddress(request.ip)
-    //                 .setClientUserAgent(request.headers['user-agent'])
-    //                 .setFbp(request.cookies['_fbp'])
 
     const userData = _getUserDataObject();
 
     if (!userData) {
-      return Promise.reject({ message: 'UserData is null' });
+      return { message: 'UserData is null', payload: [], response: null };
     }
 
     const contents = trackUtils
       .Catalog(options, [product])
-      .ProductDetails.getContents();
+      .ProductDetails.getFbEventContents();
 
     const customData = new CustomData()
       .setValue(product.price)
@@ -301,41 +295,35 @@ export const fbTracker = (options: TSettings) => {
       var response = await eventRequest.execute();
       console.debug('[EA:Facebook] eventRequest=>Response: ', response);
       return {
+        message: null,
         payload: eventsData.map((se) => se.normalize()),
         response,
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('[EA:Facebook] eventRequest=>Error: ', err);
-      return err;
+      return {
+        message: 'Cannot process your request',
+        response: err,
+        payload: eventsData.map((se) => se.normalize()),
+      };
     }
   };
 
   const trackProductsItemView = async (products) => {};
 
-  const trackPageView = async (page: T_EA_DataPage) => {
+  const trackPageView = async (
+    page: T_EA_DataPage
+  ): Promise<TFbServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfPageView();
     console.error('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
-    // const userData = (new UserData())
-    //                 .setExternalId(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //                 .setEmail(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //                 .setFirstName(request.user ? request.user.firstName : '')
-    //                 .setLastName(request.user ? request.user.surname : '')
-    //                 .setCountry(request.user && request.user.address ? request.user.address.country.toLowerCase() : '')
-    //                 .setCity(request.user && request.user.address ? request.user.address.town : '')
-    //                 .setZip(request.user && request.user.address ? request.user.address.postcode : '')
-    //                 .setPhone(request.user && request.user.address ? request.user.address.phone : '')
-    //                 // It is recommended to send Client IP and User Agent for Conversions API Events.
-    //                 .setClientIpAddress(request.ip)
-    //                 .setClientUserAgent(request.headers['user-agent'])
-    //                 .setFbp(request.cookies['_fbp'])
 
-    const contents = trackUtils.Page(options).View.getContents();
+    const contents = trackUtils.Page(options).View.getFbEventContents();
 
     const userData = _getUserDataObject();
 
     if (!userData) {
-      return Promise.reject({ message: 'UserData is null' });
+      return { message: 'UserData is null', payload: [], response: null };
     }
 
     const customData = new CustomData().setContents(contents);
@@ -358,44 +346,37 @@ export const fbTracker = (options: TSettings) => {
       var response = await eventRequest.execute();
       console.debug('[EA:Facebook] eventRequest=>Response: ', response);
       return {
+        message: null,
         payload: eventsData.map((se) => se.normalize()),
         response,
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('[EA:Facebook] eventRequest=>Error: ', err);
-      return err;
+      return {
+        message: 'Cannot process your request',
+        response: err,
+        payload: eventsData.map((se) => se.normalize()),
+      };
     }
   };
 
   const trackCustom = async (e: T_EA_DataCustomEvent) => {};
 
-  const trackInitiateCheckout = async (basket: T_EA_DataBasket) => {
+  const trackInitiateCheckout = async (
+    basket: T_EA_DataBasket
+  ): Promise<TFbServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
     console.error('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
-    // const userData = (new UserData())
-    //                 .setExternalId(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //                 .setEmail(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //                 .setFirstName(request.user ? request.user.firstName : '')
-    //                 .setLastName(request.user ? request.user.surname : '')
-    //                 .setCountry(request.user && request.user.address ? request.user.address.country.toLowerCase() : '')
-    //                 .setCity(request.user && request.user.address ? request.user.address.town : '')
-    //                 .setZip(request.user && request.user.address ? request.user.address.postcode : '')
-    //                 .setPhone(request.user && request.user.address ? request.user.address.phone : '')
-    //                 // It is recommended to send Client IP and User Agent for Conversions API Events.
-    //                 .setClientIpAddress(request.ip)
-    //                 .setClientUserAgent(request.headers['user-agent'])
-    //                 .setFbp(request.cookies['_fbp'])
-
     const userData = _getUserDataObject();
 
     if (!userData) {
-      return Promise.reject({ message: 'UserData is null' });
+      return { message: 'UserData is null', payload: [], response: null };
     }
 
     const contents = trackUtils
       .Basket(options, basket)
-      .InitCheckout.getContents();
+      .InitCheckout.getFbEventContents();
 
     const customData = new CustomData()
       .setValue(round(basket.total))
@@ -422,40 +403,34 @@ export const fbTracker = (options: TSettings) => {
       var response = await eventRequest.execute();
       console.debug('[EA:Facebook] eventRequest=>Response: ', response);
       return {
+        message: null,
         payload: eventsData.map((se) => se.normalize()),
         response,
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('[EA:Facebook] eventRequest=>Error: ', err);
-      return err;
+      return {
+        message: 'Cannot process your request',
+        response: err,
+        payload: eventsData.map((se) => se.normalize()),
+      };
     }
   };
 
-  const trackSearch = async (searchTerm, matchingProducts) => {
+  const trackSearch = async (
+    searchTerm,
+    matchingProducts
+  ): Promise<TFbServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfSearch(
       searchTerm,
       matchingProducts
     );
     console.error('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
-    // const userData = (new UserData())
-    //                 .setExternalId(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //                 .setEmail(request.user ? request.user.email : request.cookies['preflightUserEmail'] || '')
-    //                 .setFirstName(request.user ? request.user.firstName : '')
-    //                 .setLastName(request.user ? request.user.surname : '')
-    //                 .setCountry(request.user && request.user.address ? request.user.address.country.toLowerCase() : '')
-    //                 .setCity(request.user && request.user.address ? request.user.address.town : '')
-    //                 .setZip(request.user && request.user.address ? request.user.address.postcode : '')
-    //                 .setPhone(request.user && request.user.address ? request.user.address.phone : '')
-    //                 // It is recommended to send Client IP and User Agent for Conversions API Events.
-    //                 .setClientIpAddress(request.ip)
-    //                 .setClientUserAgent(request.headers['user-agent'])
-    //                 .setFbp(request.cookies['_fbp'])
-
     const userData = _getUserDataObject();
 
     if (!userData) {
-      return Promise.reject({ message: 'UserData is null' });
+      return { message: 'UserData is null', payload: [], response: null };
     }
 
     const customData = new CustomData().setSearchString(searchTerm);
@@ -479,12 +454,17 @@ export const fbTracker = (options: TSettings) => {
       var response = await eventRequest.execute();
       console.debug('[EA:Facebook] eventRequest=>Response: ', response);
       return {
+        message: null,
         payload: eventsData.map((se) => se.normalize()),
         response,
       };
-    } catch (err) {
+    } catch (err: any) {
       console.error('[EA:Facebook] eventRequest=>Error: ', err);
-      return err;
+      return {
+        message: 'Cannot process your request',
+        response: err,
+        payload: eventsData.map((se) => se.normalize()),
+      };
     }
   };
 

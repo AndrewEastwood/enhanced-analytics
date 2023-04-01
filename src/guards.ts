@@ -131,7 +131,7 @@ export const isNativePayloadProduct = (
   );
 };
 export const isNativePayloadProducts = (
-  payload: any
-): payload is T_EA_DataProduct[] => {
-  return (payload ?? []).every(isNativePayloadProduct);
+  payloads: any[] | null
+): payloads is T_EA_DataProduct[] => {
+  return (payloads ?? []).every(isNativePayloadProduct);
 };

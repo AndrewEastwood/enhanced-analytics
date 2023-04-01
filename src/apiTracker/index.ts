@@ -12,18 +12,28 @@ import tKlyo from './klaviyo';
 import tFs from './fullstory';
 import { T_EA_DataCustomEvent } from '../shared';
 
-type TTrackers = {} & Partial<Record<ETrackers, boolean>>;
+type TTrackers = {
+  server?: boolean;
+} & Partial<Record<ETrackers, boolean>>;
+
+export * from './ga';
 
 export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   const { integrations: analytics } = config;
-  const useAll = typeof trackers === 'undefined';
   const useFb =
-    analytics?.[ETrackers.Facebook]?.enabled && (trackers?.fb ?? useAll);
+    analytics?.[ETrackers.Facebook]?.enabled && (trackers?.fb ?? true);
   const useKl =
-    analytics?.[ETrackers.Klaviyo]?.enabled && (trackers?.klaviyo ?? useAll);
+    analytics?.[ETrackers.Klaviyo]?.enabled && (trackers?.klaviyo ?? true);
   const useFs =
-    analytics?.[ETrackers.FullStory]?.enabled &&
-    (trackers?.fullstory ?? useAll);
+    analytics?.[ETrackers.FullStory]?.enabled && (trackers?.fullstory ?? true);
+
+  if (trackers?.server && globalThis.window) {
+    throw '[EA:Server] Trackers cannot be run in a browser. globalThis.window is detected.';
+  }
+
+  if (!trackers?.server && !globalThis.window) {
+    throw '[EA:Browser] Trackers cannot be run at server side. globalThis.window is not accessible.';
+  }
 
   const trackTransactionRefund = (order: T_EA_DataOrder) => async () => {
     const r = [
@@ -227,7 +237,7 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     };
 
   return {
-    events: (event: T_EA_DataCustomEvent) => ({
+    misc: (event: T_EA_DataCustomEvent) => ({
       trackCustom: trackCustom(event),
     }),
     page: (page: T_EA_DataPage) => ({

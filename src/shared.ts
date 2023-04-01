@@ -1,6 +1,10 @@
 import { Request } from 'express';
 import * as fbSdk from 'facebook-nodejs-business-sdk';
 
+export type TTrackerRunMode = {
+  server?: boolean;
+};
+
 export type T_EA_DataCustomEvent = {
   name: string;
   attributes?: Record<string, string>;
@@ -83,6 +87,7 @@ export enum ETrackers {
   Klaviyo = 'klaviyo',
   GoogleEEC = 'geec',
   FullStory = 'fullstory',
+  GoogleAnalytics = 'ga',
 }
 
 export type TEECParams = {
@@ -160,6 +165,10 @@ export type TSettings = {
         ) => void;
       };
     };
+    [ETrackers.GoogleAnalytics]?: {
+      enabled: boolean;
+      trackId?: null | string;
+    };
   };
   links?: {
     resetPassword?: string;
@@ -192,8 +201,15 @@ export type T_EA_DataOrder = {
   url?: string;
 };
 
+export type TServerEventResponse<T = any> = {
+  message: null | string;
+  payload: (Record<string, any> | null | void)[];
+  response: null | T;
+};
+
 export type TEvtType<TPayload> = {
   when: (check: () => boolean) => TEvtType<TPayload>;
-  push: (w: Window & typeof globalThis) => TEvtType<TPayload>;
+  push: () => TEvtType<TPayload>;
   value: () => TPayload;
+  collected: () => TPayload[];
 };

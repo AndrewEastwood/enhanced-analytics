@@ -5,51 +5,37 @@ import {
   T_EA_DataOrder,
   T_EA_DataBasket,
   T_EA_DataCustomEvent,
+  TServerEventResponse,
 } from '../shared';
 import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
-const queuedEvents = new Set();
+const queuedEvents = new Set<any>();
 const indentifiedEmails = new Set();
 const lastIdentity = new Set();
+
+// Is desgned to run in both: browsers and server sides.
 
 export const klaviyoTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
   const bizSdk = analytics?.klaviyo?.sdk;
-  const isUITracking =
-    !analytics?.klaviyo?.token && !!analytics?.klaviyo?.siteId;
-
-  if (!analytics || !analytics.klaviyo) {
-    throw 'Klaviyo is not configured;';
-  }
+  const isUITracking = !!globalThis.window;
+  const { ConfigWrapper, Events, Profiles } = bizSdk || {};
 
   if (!bizSdk) {
-    throw 'Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
+    throw '[EA] Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
   }
 
-  if (!analytics.klaviyo?.token && !analytics.klaviyo?.siteId) {
-    throw 'Klaviyo is not configured; Please provide siteId or token;';
+  if (isUITracking && !analytics?.klaviyo?.siteId) {
+    throw '[EA] Klaviyo is not configured properly; Please provide siteId to run in the UI mode;';
   }
 
-  console.debug(
-    '[EA:Klaviyo] running to the ' +
-      (isUITracking ? 'UI' : 'API') +
-      ' tracking mode'
-  );
-
-  const { ConfigWrapper, Events, Profiles } = bizSdk;
-
-  if (analytics.klaviyo?.token && !ConfigWrapper) {
-    throw 'Klaviyo is configured without SDK; ConfigWrapper is missing. Please install the requried dependency: npm i klaviyo-api@2.1.1 OR make sure that SDK has ConfigWrapper function defined;';
+  if (!isUITracking && !analytics?.klaviyo?.token) {
+    throw '[EA] Klaviyo is not configured properly; Please provide token to run in the server mode;';
   }
 
-  if (
-    analytics.klaviyo?.siteId &&
-    document &&
-    window &&
-    uiLibInstallStatus === 'no'
-  ) {
+  if (isUITracking && uiLibInstallStatus === 'no') {
     uiLibInstallStatus = 'installing';
     // install UI lib
     const el = document.createElement('script');
@@ -92,13 +78,12 @@ export const klaviyoTracker = (options: TSettings) => {
       agent: session?.agent,
       timestamp: current_timestamp,
       isTest: analytics.testing,
-      post: true,
     });
     console.debug('[EA:Klaviyo] queuedEvents count', queuedEvents.size);
     return queuedEvents;
   };
 
-  const releaseAnonymousEvents = async () => {
+  const releaseAnonymousEvents = async (): Promise<TServerEventResponse[]> => {
     console.debug('[EA:Klaviyo] releasing queuedEvents');
     const user = getUserObj();
     try {
@@ -124,18 +109,23 @@ export const klaviyoTracker = (options: TSettings) => {
               unique_id: evt.properties?.$event_id ?? null,
             },
           };
-          return Events.createEvent({ data: payload });
+          return Events?.createEvent({ data: payload });
         })
       );
       console.debug(
         '[EA:Klaviyo] queuedEvents released count:' + queuedEvents.size
       );
       queuedEvents.clear();
-      return resp;
+      return Array.from(queuedEvents).map((evt, idx) => ({
+        message: resp[idx].status,
+        payload: [evt],
+        response: resp[idx],
+      }));
     } catch (error) {
       console.error(error);
     }
     console.debug('[EA:Klaviyo] queuedEvents count:' + queuedEvents.size);
+    return [];
   };
 
   const getProductUrl = (product: T_EA_DataProduct) => {
@@ -147,19 +137,21 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   // Identify a user - create/update a profile in Klaviyo
-  const trackIdentify = async (profile?: T_EA_DataProfile | null) => {
+  const trackIdentify = async (
+    profile?: T_EA_DataProfile | null
+  ): Promise<TServerEventResponse[]> => {
     const user = getUserObj(profile);
 
     if (user) {
       const attributes = {
-        email: user?.email, // 'sarah.mason@klaviyo-demo.com',
-        phone_number: user?.phone, //'+15005550006',
-        external_id: user?.id, // '63f64a2b-c6bf-40c7-b81f-bed08162edbe',
-        first_name: user?.firstName ?? '', //'Sarah',
-        last_name: user?.lastName ?? '', //'Mason',
-        organization: user?.organization, // 'Klaviyo',
-        title: user?.title, // 'Engineer',
-        image: user?.avatarUrl, // 'https://images.pexels.com/photos/3760854/pexels-photo-3760854.jpeg',
+        email: user?.email,
+        phone_number: user?.phone,
+        external_id: user?.id,
+        first_name: user?.firstName ?? '',
+        last_name: user?.lastName ?? '',
+        organization: user?.organization,
+        title: user?.title,
+        image: user?.avatarUrl,
         location: {
           address1: user?.address?.street,
           address2: user?.address?.state,
@@ -168,26 +160,10 @@ export const klaviyoTracker = (options: TSettings) => {
           region: user?.address?.region,
           zip: user?.address?.postcode,
           timezone: user?.address?.timezone,
-          // ...(user?.address ?? {}),
-          // address1: '89 E 42nd St',
-          // address2: '1st floor',
-          // city: 'New York',
-          // country: 'United States',
-          // region: 'NY',
-          // zip: '10017',
-          // timezone: 'America/New_York'
         },
         properties: {
           ...(user?.extraProps ?? {}),
         },
-        // email: user!.email,
-        // properties: {
-        //   "$first_name": user ? user.firstName : '',
-        //   "$last_name": user ? user.lastName : '',
-        //   "$email": user ? user.email : '',
-        // },
-        // isTest: analytics.testing, //defaults to false
-        // post: true //defaults to false
       };
 
       const payload = {
@@ -197,7 +173,7 @@ export const klaviyoTracker = (options: TSettings) => {
 
       try {
         const existingProfile =
-          (await Profiles.getProfiles?.({
+          (await Profiles?.getProfiles?.({
             filter: `equals(email,"${user.email}")`,
           })) ?? null;
         const foundProfile =
@@ -206,7 +182,7 @@ export const klaviyoTracker = (options: TSettings) => {
           null;
         const profileResp = foundProfile
           ? foundProfile
-          : await Profiles.createProfile({
+          : await Profiles?.createProfile({
               data: payload,
             });
         indentifiedEmails.add(user.email);
@@ -214,13 +190,28 @@ export const klaviyoTracker = (options: TSettings) => {
           isUITracking && uiLibInstallStatus !== 'yes'
             ? []
             : await releaseAnonymousEvents();
-        return Promise.resolve([profileResp, ...(queueResp ?? [])]);
+        return [
+          foundProfile
+            ? void 0
+            : {
+                message: 'fullfilled',
+                response: profileResp,
+                payload: [payload],
+              },
+          ...(queueResp ?? []),
+        ].filter((v): v is TServerEventResponse => !!v);
       } catch (error) {
         console.error(error);
       }
     }
 
-    return null;
+    return [
+      {
+        message: 'User is not defined yet',
+        payload: [user],
+        response: null,
+      },
+    ];
   };
 
   const trackTransactionRefund = async (order: T_EA_DataOrder) => {};

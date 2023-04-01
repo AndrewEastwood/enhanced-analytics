@@ -3,22 +3,25 @@
 A couple of convenient tools for populating dataLayer ecommerce event data or even more.
 
 **integrated services**:\
-&nbsp;&nbsp;✅ Google Analytics\
-&nbsp;&nbsp;✅ Klaviyo
+&nbsp;&nbsp;✅ Google Analytics / Tag Manager (Browser Only)\
+&nbsp;&nbsp;✅ Klaviyo (Server+Browser) https://www.klaviyo.com/
 
 - Install `npm i -S klaviyo-api@2.11` when this lib is being used at NodeJs
+- This will auto-install js when runnig it in a broswer.
 
-&nbsp;&nbsp;✅ Facebook
+&nbsp;&nbsp;✅ Facebook (NodeJs Side Only)
 
-- Install `npm i -S facebook-nodejs-business-sdk@13.0.0` when this lib is being used at NodeJs
+- Install `npm i -S facebook-nodejs-business-sdk@13.0.0`
 
-&nbsp;&nbsp;🚣 FullStory (soon)
+&nbsp;&nbsp;✅ FullStory (Broswer Only) https://www.fullstory.com/
+
+- Install `npm i @fullstory/browser` when this lib is being used at NodeJs
 
 ---
 
 ## 1 Configure (UI Side)
 
-```typescript
+```tsx
 import { useEffect } from 'react';
 import { configureAnalytics, useAnalytics } from 'enhanced-analytics';
 import * as EATypes from 'enhanced-analytics';
@@ -42,9 +45,23 @@ const MyApp = () => {
       defaultBasketName: 'Shopping Cart',
       integrations: {
         testing: false,
+        // Klaviyo
         klaviyo: {
           enabled: true,
-          siteId: 'YOUR-SITE-ID'
+          siteId: 'YOUR-SITE-ID',
+        },
+        // Google Analytics (TagManager)
+        ga: {
+          enabled: true,
+          trackId: 'GTM-XXXXXXX',
+        },
+        // FullStory
+        fullstory: {
+          enabled: true,
+          orgId: 'YOUR-ORG-ID',
+          // @ts-ignore
+          sdk: FullStory, // <-- this requires: npm i @fullstory/browser
+        },
       },
       // you may have your own data structure
       // therefore we need it converted for the lib here
@@ -61,7 +78,7 @@ const MyApp = () => {
             url: window.location.href,      //            |
             title: document.title,          //            |
           };                                //            |
-        },                                  //            |
+        }, //            |
         //                                                |
         // ^^ here, If you call useAnalytics().withPage('test').integrations.klaviyo.trackPageView();
         //    and the same approach for the other scopes: withUser, withBasket.. etc.
@@ -76,8 +93,8 @@ const MyApp = () => {
               }
             : null;
         },
-        product: (p: IDataProduct, viewOrder: number) => {
-          const res: EATypes.TDataProduct = {
+        product: (p: any, viewOrder: number) => {
+          const res: EATypes.T_EA_DataProduct = {
             id: p.id,
             brand: p.seller,
             category:
@@ -106,8 +123,8 @@ const MyApp = () => {
           };
           return res;
         },
-        order: (p: IDataOrderWithTransaction) => {
-          const res: EATypes.TDataOrder = {
+        order: (p: any) => {
+          const res: EATypes.T_EA_DataOrder = {
             id: p.id,
             coupon: p.coupon,
             dateCreated: p.dateCreated,
@@ -151,11 +168,9 @@ const MyApp = () => {
 
 ## 1.2 Use It
 
-### 1.2.GoogleAnalytics
-
 ... somewhere in components:
 
-```typescript
+```tsx
 import useAnalytics from 'enhanced-analytics';
 
 const MyComponent = () => {
@@ -169,19 +184,32 @@ const MyComponent = () => {
     //
     analytics
       .withBasket(/* TDataBasket|Record<any>|null */) // <- this can be empty or TDataBasket AND resolver.basket is being invoked as well
-      .events.getEECCheckoutList()
+      .events.ga()
+      .getEECCheckoutList()
       .when(() => true /* or your condition */)
-      .push(window); // <- inject event into the dataLayer (config dataLayerName default is 'dataLayer');
+      .push(); // <- inject event into the dataLayer (config dataLayerName default is 'dataLayer');
 
     //
     // Google Analytics: track search/on-page product items
     //
     analytics
-      .withCatalog(/* your array of goods; any custom data[] or TDataProduct[] */)
+      .withCatalog(/* your array of goods; any custom data[] or T_EA_DataProduct[] */)
       // ^ the resolver.product is being invoked over the each item in the given collection
-      .events.getEECProductsList()
+      .events.ga()
+      .getEECProductsList()
       .when(() => myProductItems.length > 0)
-      .push(window);
+      .push();
+
+    //
+    // Google Analytics: track product details
+    //
+    analytics
+      .withCatalog(/* array with just one product data [T_EA_DataProduct] */)
+      // ^ the resolver.product is being invoked over the each item in the given collection
+      .events.ga()
+      .getEECProductDetails()
+      .when(() => /* producItem is loaded */)
+      .push();
 
     //
     // Google Analytics: track order creation
@@ -189,28 +217,69 @@ const MyComponent = () => {
     analytics
       .withOrder(/* TDataOrder or any custom object */)
       // ^ invokes resolver.order
-      .events.getEECPurchased()
+      .events.ga()
+      .getEECPurchased()
       .when(() => !thisOrderWasSeen) // why not, implement your logic, that prevents duplicated events
-      .push(window);
-
-    // and few more things like:
-    analytics.withPage();
-
-    // and
-    analytics.withProfile();
+      .push();
   }, []);
 
   return <></>;
 };
 ```
 
-### 1.2.Klaviyo UI
+### 1.2.Klaviyo UI / FullStory UI
 
-... docs are in progress
+```tsx
+import useAnalytics from 'enhanced-analytics';
 
-### 1.2.FB Events UI
+const MyComponent = () => {
+  const analytics = useAnalytics();
+  const order = useOrder();
 
-... docs are in progress
+  // Track PageView
+  useEffect(() => {
+    // page tracking
+    const evtPageView = analytics.withPage().events;
+
+    evtPageView.fullstory().trackPageView();
+    evtPageView.klaviyo().trackPageView();
+  }, []);
+
+  // Track User Indetify
+  useEffect(() => {
+    // page tracking
+    const evtPageView = analytics.withPage().events;
+    evtProfile.fullstory().trackIdentify();
+    evtProfile.klaviyo().trackIdentify();
+  }, []);
+
+  // Track Order Complete + Custom event "OrderSeen"
+  useEffect(() => {
+    const evtOrder = analytics.withOrder(order).events;
+    const evtProfile = analytics.withProfile({
+      userName: order.customerFullName,
+      phone: order.customerPhone,
+    }).events;
+    // the custom event. This is going to track 'orderSeen' event
+    const evtCustom = analytics.withMisc('orderSeen', {
+      orderId: order.id,
+      orderDate: moment(order.dateCreated).format(),
+      orderTotal: order.total,
+    }).events;
+
+    // push the 'eec.purchase' evet along with order details
+    evtOrder.ga().getEECPurchased().push();
+
+    // indetify current session (this will link anonymous events to this user by email)
+    evtProfile.fullstory().trackIdentify();
+    evtProfile.klaviyo().trackIdentify();
+
+    // any other custom events
+    evtCustom.fullstory().trackCustom();
+    evtCustom.klaviyo().trackCustom();
+  }, []);
+};
+```
 
 ## 2 Configure (API Side)
 
@@ -339,9 +408,7 @@ import useAnalytics from 'enhanced-analytics';
 const evtPayload = { order, products };
 // you can define your own payload
 // and handle it at your resolvers.order function
-await useAnalytics()
-  .withOrder(evtPayload)
-  .sendToServer.klaviyo.trackTransaction();
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackTransaction();
 ```
 
 ### 2.2.FB Events API
