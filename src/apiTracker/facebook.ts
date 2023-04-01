@@ -86,10 +86,6 @@ export const fbTracker = (options: TSettings) => {
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject(order);
 
-    if (!userData) {
-      return { message: 'UserData is null', payload: [], response: null };
-    }
-
     const contents = trackUtils
       .Order(options, order)
       .Purchase.getFbEventContents();
@@ -107,10 +103,11 @@ export const fbTracker = (options: TSettings) => {
       .setEventId(evtName)
       .setEventName('Purchase')
       .setEventTime(current_timestamp)
-      .setUserData(userData)
       .setCustomData(customData)
       .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
 
     const eventsData = [serverEvent];
     const eventRequest = new EventRequest(access_token, pixel_id)
@@ -140,10 +137,6 @@ export const fbTracker = (options: TSettings) => {
   ): Promise<TFbServerEventResponse> => {
     const userData = _getUserDataObject();
 
-    if (!userData) {
-      return { message: 'UserData is null', payload: [], response: null };
-    }
-
     const eventsData = basket.lastAdded.map((product) => {
       const evtName = trackUtils.getEventNameOfProductAddToCart(product);
       console.error('[EA:Facebook] trackProductAddToCart', evtName);
@@ -164,10 +157,11 @@ export const fbTracker = (options: TSettings) => {
         .setEventId(evtName)
         .setEventName('AddToCart')
         .setEventTime(current_timestamp)
-        .setUserData(userData)
         .setCustomData(customData)
         .setEventSourceUrl(page?.url ?? '')
         .setActionSource('website');
+
+      userData ? serverEvent.setUserData(userData) : void 0;
 
       return serverEvent;
     });
@@ -199,10 +193,6 @@ export const fbTracker = (options: TSettings) => {
   ): Promise<TFbServerEventResponse> => {
     const userData = _getUserDataObject();
 
-    if (!userData) {
-      return { message: 'UserData is null', payload: [], response: null };
-    }
-
     const eventsData = basket.lastRemoved.map((product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
       console.error('[EA:Facebook] trackProductRemoveFromCart', evtName);
@@ -223,10 +213,12 @@ export const fbTracker = (options: TSettings) => {
         .setEventId(evtName)
         .setEventName('RemoveFromCart')
         .setEventTime(current_timestamp)
-        .setUserData(userData)
         .setCustomData(customData)
         .setEventSourceUrl(page?.url ?? '')
         .setActionSource('website');
+
+      userData ? serverEvent.setUserData(userData) : void 0;
+
       return serverEvent;
     });
 
@@ -257,14 +249,8 @@ export const fbTracker = (options: TSettings) => {
   ): Promise<TFbServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
     console.error('[EA:Facebook] trackProductItemView', evtName);
-
     const current_timestamp = Math.floor(Date.now() / 1000);
-
     const userData = _getUserDataObject();
-
-    if (!userData) {
-      return { message: 'UserData is null', payload: [], response: null };
-    }
 
     const contents = trackUtils
       .Catalog(options, [product])
@@ -281,10 +267,11 @@ export const fbTracker = (options: TSettings) => {
       .setEventId(evtName)
       .setEventName('ViewContent')
       .setEventTime(current_timestamp)
-      .setUserData(userData)
       .setCustomData(customData)
       .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
 
     const eventsData = [serverEvent];
     const eventRequest = new EventRequest(access_token, pixel_id)
@@ -317,14 +304,8 @@ export const fbTracker = (options: TSettings) => {
     const evtName = trackUtils.getEventNameOfPageView();
     console.error('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
-
     const contents = trackUtils.Page(options).View.getFbEventContents();
-
     const userData = _getUserDataObject();
-
-    if (!userData) {
-      return { message: 'UserData is null', payload: [], response: null };
-    }
 
     const customData = new CustomData().setContents(contents);
 
@@ -332,10 +313,11 @@ export const fbTracker = (options: TSettings) => {
       .setEventId(evtName)
       .setEventName('PageView')
       .setEventTime(current_timestamp)
-      .setUserData(userData)
       .setCustomData(customData)
       .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
 
     const eventsData = [serverEvent];
     const eventRequest = new EventRequest(access_token, pixel_id)
@@ -370,10 +352,6 @@ export const fbTracker = (options: TSettings) => {
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
 
-    if (!userData) {
-      return { message: 'UserData is null', payload: [], response: null };
-    }
-
     const contents = trackUtils
       .Basket(options, basket)
       .InitCheckout.getFbEventContents();
@@ -389,10 +367,11 @@ export const fbTracker = (options: TSettings) => {
       .setEventId(evtName)
       .setEventName('InitiateCheckout')
       .setEventTime(current_timestamp)
-      .setUserData(userData)
       .setCustomData(customData)
       .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
 
     const eventsData = [serverEvent];
     const eventRequest = new EventRequest(access_token, pixel_id)
@@ -429,10 +408,6 @@ export const fbTracker = (options: TSettings) => {
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
 
-    if (!userData) {
-      return { message: 'UserData is null', payload: [], response: null };
-    }
-
     const customData = new CustomData().setSearchString(searchTerm);
 
     const page = options.resolvers?.page?.();
@@ -440,10 +415,11 @@ export const fbTracker = (options: TSettings) => {
       .setEventId(evtName)
       .setEventName('Search')
       .setEventTime(current_timestamp)
-      .setUserData(userData)
       .setCustomData(customData)
       .setEventSourceUrl(page?.url ?? '')
       .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
 
     const eventsData = [serverEvent];
     const eventRequest = new EventRequest(access_token, pixel_id)

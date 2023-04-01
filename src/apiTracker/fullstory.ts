@@ -9,14 +9,12 @@ import {
 } from '../shared';
 import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
+import { resolveUser } from './identity';
 
-// let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
-// let uiLibInstalled = false;
-
-const isBroserMode = typeof globalThis.window !== 'undefined';
+// const lastIdentity = new Set();
 
 const installFS = (orgId: string) => {
-  return isBroserMode
+  return trackUtils.isBrowserMode
     ? (() => {
         // uiLibInstallStatus = 'installing';
         globalThis.window['_fs_host'] = 'fullstory.com';
@@ -47,8 +45,6 @@ const installFS = (orgId: string) => {
           o.crossOrigin = 'anonymous';
           // @ts-ignore
           o.src = 'https://' + _fs_script;
-          // @ts-ignore
-          o = n.createElement(t);
           // // @ts-ignore
           // o.onload = () => {
           //   uiLibInstallStatus = 'yes';
@@ -154,30 +150,34 @@ const installFS = (orgId: string) => {
 
 export const fullstoryTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
-  // const bizSdk = analytics?.fullstory?.sdk;
 
   if (!globalThis.window) {
     throw '[EA] FullStory can be run in a browser only';
   }
 
-  // if (!bizSdk) {
-  //   throw '[EA] FullStory is not configured; Please install required sdk: npm i @fullstory/browser';
-  // }
-
   if (!analytics?.fullstory?.orgId) {
     throw '[EA] FullStory is not configured properly; orgId is not defined';
   }
 
-  // const { init, event, identify, setUserVars, setVars } = bizSdk;
-
-  // uiLibInstalled ? void 0 : ;
-
   const { event, identify, setUserVars, setVars } =
     globalThis.window.FS ?? installFS(analytics?.fullstory?.orgId);
 
+  // restore id on the UI
+  // const savedId = localStorage.getItem('EA_FullStory_Identity');
+  // lastIdentity.clear();
+  // savedId ? lastIdentity.add(JSON.parse(savedId)) : void 0;
+
   const getUserObj = (profile?: T_EA_DataProfile | null) => {
-    const u = profile ? profile : options.resolvers?.profile?.();
-    return u;
+    // const u = profile
+    //   ? profile
+    //   : options.resolvers?.profile?.() ?? lastIdentity.values().next().value;
+    // lastIdentity.clear();
+    // u ? lastIdentity.add(u) : void 0;
+    // trackUtils.isBrowserMode && u
+    //   ? localStorage.setItem('EA_FullStory_Identity', JSON.stringify(u))
+    //   : void 0;
+    return resolveUser(profile, options.resolvers?.profile);
+    // return u;
   };
 
   const fldTypeResolver = (fld: any) => {
@@ -213,7 +213,11 @@ export const fullstoryTracker = (options: TSettings) => {
   const collectEvent = (payload) => {
     event?.(
       payload.event,
-      normalizePayloadFieldNames(payload.attributes ?? {})
+      normalizePayloadFieldNames(payload.properties ?? {})
+    );
+    console.debug(
+      `[EA:FullStory] collecting event ${payload.event}`,
+      payload.properties
     );
   };
 

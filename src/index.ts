@@ -187,7 +187,9 @@ export const useAnalytics = () => {
 
       const v = isNative
         ? payload
-        : store.resolvers?.product?.(payload) ?? null;
+        : payload
+            ?.map((p) => store.resolvers?.product?.(p))
+            .filter((v): v is T_EA_DataProduct => !!v) ?? null;
 
       if (!v) {
         throw 'Product data is not defined';

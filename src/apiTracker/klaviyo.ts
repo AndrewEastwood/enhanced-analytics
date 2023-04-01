@@ -9,33 +9,32 @@ import {
 } from '../shared';
 import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
+import { resolveUser } from './identity';
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 const queuedEvents = new Set<any>();
 const indentifiedEmails = new Set();
-const lastIdentity = new Set();
 
 // Is desgned to run in both: browsers and server sides.
 
 export const klaviyoTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
   const bizSdk = analytics?.klaviyo?.sdk;
-  const isUITracking = !!globalThis.window;
   const { ConfigWrapper, Events, Profiles } = bizSdk || {};
 
   if (!bizSdk) {
     throw '[EA] Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
   }
 
-  if (isUITracking && !analytics?.klaviyo?.siteId) {
+  if (trackUtils.isBrowserMode && !analytics?.klaviyo?.siteId) {
     throw '[EA] Klaviyo is not configured properly; Please provide siteId to run in the UI mode;';
   }
 
-  if (!isUITracking && !analytics?.klaviyo?.token) {
+  if (!trackUtils.isBrowserMode && !analytics?.klaviyo?.token) {
     throw '[EA] Klaviyo is not configured properly; Please provide token to run in the server mode;';
   }
 
-  if (isUITracking && uiLibInstallStatus === 'no') {
+  if (trackUtils.isBrowserMode && uiLibInstallStatus === 'no') {
     uiLibInstallStatus = 'installing';
     // install UI lib
     const el = document.createElement('script');
@@ -47,25 +46,12 @@ export const klaviyoTracker = (options: TSettings) => {
       uiLibInstallStatus = 'yes';
     });
     document.head.appendChild(el);
-
-    // restore id on the UI
-    const savedId = localStorage.getItem('EA_Klaviyo_Identity');
-    lastIdentity.clear();
-    savedId ? lastIdentity.add(JSON.parse(savedId)) : void 0;
   }
 
   analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
 
   const getUserObj = (profile?: T_EA_DataProfile | null) => {
-    const u =
-      (profile ? profile : options.resolvers?.profile?.()) ??
-      lastIdentity.values().next().value;
-    lastIdentity.clear();
-    lastIdentity.add(u);
-    isUITracking
-      ? localStorage.setItem('EA_Klaviyo_Identity', JSON.stringify(u))
-      : void 0;
-    return u;
+    return resolveUser(profile, options.resolvers?.profile);
   };
 
   const collectEvent = (evt) => {
@@ -187,7 +173,7 @@ export const klaviyoTracker = (options: TSettings) => {
             });
         indentifiedEmails.add(user.email);
         const queueResp =
-          isUITracking && uiLibInstallStatus !== 'yes'
+          trackUtils.isBrowserMode && uiLibInstallStatus !== 'yes'
             ? []
             : await releaseAnonymousEvents();
         return [

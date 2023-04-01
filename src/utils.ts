@@ -8,6 +8,8 @@ import {
   TSettings,
 } from './shared';
 
+export const isBrowserMode = typeof globalThis.window !== 'undefined';
+
 const getEvtUUIDStr = () => {
   const c = getConfig();
   return `_uuid_${c?.resolvers?.eventUUID?.()}`;
