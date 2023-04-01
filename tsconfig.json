@@ -9,7 +9,8 @@
     "strict": true,
     "baseUrl": "./src",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "jsx": "preserve"
   },
   "include": ["globals.d.ts", "src"]
 }

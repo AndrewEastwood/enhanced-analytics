@@ -11,8 +11,6 @@ import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
 import { resolveUser } from './identity';
 
-// const lastIdentity = new Set();
-
 const installFS = (orgId: string) => {
   return trackUtils.isBrowserMode
     ? (() => {

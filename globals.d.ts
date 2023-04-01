@@ -15,4 +15,6 @@ interface Window {
     setUserVars: Function;
     event: Function;
   };
+  fbq?(fn: string, event: string, attr?: any, modif?: { eventID: string });
+  _fbq?(fn: string, event: string, attr?: any, modif?: { eventID: string });
 }

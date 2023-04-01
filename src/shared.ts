@@ -201,9 +201,12 @@ export type T_EA_DataOrder = {
   url?: string;
 };
 
-export type TServerEventResponse<T = any> = {
+export type TServerEventResponse<
+  T = any,
+  P = Record<string, any> | null | void
+> = {
   message: null | string;
-  payload: (Record<string, any> | null | void)[];
+  payload: P[];
   response: null | T;
 };
 

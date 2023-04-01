@@ -12,9 +12,82 @@ import * as trackUtils from '../utils';
 import { round } from '../utils';
 import { EventResponse } from 'facebook-nodejs-business-sdk';
 
-type TFbServerEventResponse = TServerEventResponse<EventResponse>;
+export type TFbServerPayload = {
+  event_name: string;
+  event_time: number;
+  user_data: Object[];
+  custom_data: Object[];
+  action_source: string;
+  event_id: string;
+};
+
+export type TFbServerEventResponse = TServerEventResponse<EventResponse>;
 
 // Is designed to run at server side only.
+
+const installFB = (pixelId: string) => {
+  return trackUtils.isBrowserMode
+    ? (() => {
+        // @ts-ignore
+        !(function (f, b, e, v, n, t, s) {
+          if (f.fbq) return;
+          // @ts-ignore
+          n = f.fbq = function () {
+            // @ts-ignore
+            n.callMethod
+              ? // @ts-ignore
+                n.callMethod.apply(n, arguments)
+              : // @ts-ignore
+                n.queue.push(arguments);
+          };
+          if (!f._fbq) f._fbq = n;
+          // @ts-ignore
+          n.push = n;
+          // @ts-ignore
+          n.loaded = !0;
+          // @ts-ignore
+          n.version = '2.0';
+          // @ts-ignore
+          n.queue = [];
+          // @ts-ignore
+          t = b.createElement(e);
+          // @ts-ignore
+          t.async = !0;
+          // @ts-ignore
+          t.src = v;
+          // @ts-ignore
+          s = b.getElementsByTagName(e)[0];
+          // @ts-ignore
+          s.parentNode.insertBefore(t, s);
+        })(
+          window,
+          document,
+          'script',
+          'https://connect.facebook.net/en_US/fbevents.js'
+        );
+        globalThis.window.fbq?.('init', pixelId);
+      })()
+    : null;
+};
+
+export const EA_FB_Event: React.FC<{
+  serverResponse: TServerEventResponse<EventResponse, TFbServerPayload>;
+}> = (props) => {
+  const { serverResponse } = props;
+
+  const getEvents = (events: TFbServerPayload[]) =>
+    events.map((p) => (
+      <span
+        key={p.event_id}
+        id={`_ea_fb_event_${p.event_name}`}
+        data-fb-event={JSON.stringify(p)}
+      ></span>
+    ));
+
+  return serverResponse.payload ? (
+    <>{getEvents(serverResponse.payload)}</>
+  ) : null;
+};
 
 export const fbTracker = (options: TSettings) => {
   const { integrations: analytics, currency } = options;
@@ -40,7 +113,18 @@ export const fbTracker = (options: TSettings) => {
   }
 
   const CustomData = bizSdk.CustomData;
-  const EventRequest = bizSdk.EventRequest;
+  const EventRequest =
+    bizSdk.EventRequest ??
+    class {
+      setTestEventCode() {}
+      setEvents() {}
+      execute() {
+        globalThis.window.fbq?.('track', 'Purchase', {
+          currency: 'USD',
+          value: 30.0,
+        });
+      }
+    };
   const UserData = bizSdk.UserData;
   const ServerEvent = bizSdk.ServerEvent;
 
