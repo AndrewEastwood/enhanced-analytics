@@ -1,6 +1,5 @@
 import { getConfig } from './config';
 import {
-  ETrackers,
   T_EA_DataBasket,
   T_EA_DataOrder,
   T_EA_DataProduct,
@@ -69,25 +68,6 @@ export const round = (num?: number | string, precision = 2) => {
 };
 
 const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
-  getFbEventContents: () => {
-    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
-    if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;';
-    }
-    const Content = sdk.Content;
-    const DeliveryCategory = sdk.DeliveryCategory;
-    return Object.values(basket.products).map((storedProduct) =>
-      new Content()
-        .setId(storedProduct.id.toString())
-        .setQuantity(round(storedProduct.quantity))
-        .setTitle(storedProduct.title)
-        .setBrand(storedProduct.brand)
-        .setDescription(storedProduct.description)
-        .setCategory(storedProduct.category)
-        .setItemPrice(storedProduct.price)
-        .setDeliveryCategory(DeliveryCategory.HOME_DELIVERY)
-    );
-  },
   getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.checkout',
@@ -135,21 +115,6 @@ const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
 });
 
 const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
-  getFbEventContents: () => {
-    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
-    if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;';
-    }
-    const Content = sdk.Content;
-    return new Content()
-      .setId(product.id.toString())
-      .setTitle(product.title)
-      .setBrand(product.brand)
-      .setDescription(product.description)
-      .setCategory(product.category)
-      .setItemPrice(product.price);
-  },
-
   getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.detail',
@@ -200,25 +165,6 @@ const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
 });
 
 const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
-  getFbEventContents: () => {
-    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
-    if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;';
-    }
-    const Content = sdk.Content;
-    const DeliveryCategory = sdk.DeliveryCategory;
-    return Object.values(order.products).map((storedProduct) =>
-      new Content()
-        .setId(storedProduct.id.toString())
-        .setQuantity(round(storedProduct.quantity))
-        .setTitle(storedProduct.title)
-        .setBrand(storedProduct.brand)
-        .setDescription(storedProduct.description)
-        .setCategory(storedProduct.category)
-        .setItemPrice(storedProduct.price)
-        .setDeliveryCategory(DeliveryCategory.HOME_DELIVERY)
-    );
-  },
   getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.purchase',
@@ -284,25 +230,6 @@ const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
 });
 
 const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
-  getFbEventContents: () => {
-    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
-    if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;';
-    }
-    const Content = sdk.Content;
-    const DeliveryCategory = sdk.DeliveryCategory;
-    return order.products.map((storedProduct) =>
-      new Content()
-        .setId(storedProduct.id.toString())
-        .setQuantity(round(storedProduct.quantity))
-        .setTitle(storedProduct.title)
-        .setBrand(storedProduct.brand)
-        .setDescription(storedProduct.description)
-        .setCategory(storedProduct.category)
-        .setItemPrice(storedProduct.price)
-        .setDeliveryCategory(DeliveryCategory.HOME_DELIVERY)
-    );
-  },
   getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.purchase',
@@ -352,23 +279,6 @@ const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
 });
 
 const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
-  getFbEventContents: () => {
-    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
-    if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;';
-    }
-    const Content = sdk.Content;
-    return basket.lastAdded.map((product) =>
-      new Content()
-        .setId(product.id.toString())
-        .setQuantity(round(product.quantity))
-        .setTitle(product.title)
-        .setBrand(product.brand)
-        .setDescription(product.description)
-        .setCategory(product.category)
-        .setItemPrice(product.price)
-    );
-  },
   getEECDataLayer: (params?: TEECParams) => {
     const product = basket.lastAdded?.[0] || {};
     return {
@@ -420,23 +330,6 @@ const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
 });
 
 const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
-  getFbEventContents: () => {
-    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
-    if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;';
-    }
-    const Content = sdk.Content;
-    return basket.lastRemoved.map((product) =>
-      new Content()
-        .setId(product.id.toString())
-        .setQuantity(round(product.quantity))
-        .setTitle(product.title)
-        .setBrand(product.brand)
-        .setDescription(product.description)
-        .setCategory(product.category)
-        .setItemPrice(product.price)
-    );
-  },
   getEECDataLayer: (params?: TEECParams) => {
     const product = basket.lastRemoved?.[0] || {};
     return {
@@ -528,13 +421,6 @@ const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
 });
 
 const PageView = (options: TSettings) => ({
-  getFbEventContents: () => {
-    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
-    if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;';
-    }
-    return [] as any[];
-  },
   getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.pageView',
@@ -543,13 +429,6 @@ const PageView = (options: TSettings) => ({
 });
 
 const ProfileView = (options: TSettings) => ({
-  getFbEventContents: () => {
-    const sdk = options.integrations?.[ETrackers.Facebook]?.sdk;
-    if (!sdk) {
-      throw 'Facebook is configured without SDK; Please provide SDK;';
-    }
-    return [] as any[];
-  },
   getEECDataLayer: (params?: TEECParams) => {
     return {
       event: params?.evName || 'eec.profileView',

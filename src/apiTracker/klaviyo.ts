@@ -446,7 +446,10 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackSearch = async (searchTerm, matchingProducts) => {
+  const trackSearch = async (
+    searchTerm: string,
+    matchingProducts: T_EA_DataProduct[]
+  ) => {
     const evtName = trackUtils.getEventNameOfSearch(
       searchTerm,
       matchingProducts

@@ -208,6 +208,7 @@ export type TServerEventResponse<
   message: null | string;
   payload: P[];
   response: null | T;
+  browserData?: string;
 };
 
 export type TEvtType<TPayload> = {

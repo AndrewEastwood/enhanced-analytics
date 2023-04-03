@@ -74,6 +74,7 @@ export const useAnalytics = () => {
             apiTracker(store, { klaviyo: true }).misc(v),
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).misc(v),
+          [ETrackers.Facebook]: () => apiTracker(store, { fb: true }).misc(v),
         },
       };
     },
@@ -120,6 +121,7 @@ export const useAnalytics = () => {
             apiTracker(store, { klaviyo: true }).page(v),
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).page(v),
+          [ETrackers.Facebook]: () => apiTracker(store, { fb: true }).page(v),
         },
       };
     },
@@ -169,6 +171,8 @@ export const useAnalytics = () => {
             apiTracker(store, { klaviyo: true }).profile(v),
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).profile(v),
+          [ETrackers.Facebook]: () =>
+            apiTracker(store, { fb: true }).profile(v),
         },
       };
     },
@@ -221,6 +225,8 @@ export const useAnalytics = () => {
             apiTracker(store, { klaviyo: true }).catalog(v),
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).catalog(v),
+          [ETrackers.Facebook]: () =>
+            apiTracker(store, { fb: true }).catalog(v),
         },
       };
     },
@@ -271,6 +277,7 @@ export const useAnalytics = () => {
             apiTracker(store, { klaviyo: true }).basket(v),
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).basket(v),
+          [ETrackers.Facebook]: () => apiTracker(store, { fb: true }).basket(v),
         },
       };
     },
@@ -318,6 +325,7 @@ export const useAnalytics = () => {
             apiTracker(store, { klaviyo: true }).order(v),
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).order(v),
+          [ETrackers.Facebook]: () => apiTracker(store, { fb: true }).order(v),
         },
       };
     },
@@ -326,4 +334,4 @@ export const useAnalytics = () => {
 
 export default useAnalytics;
 
-// useAnalytics().withOrder().events.fullstory().trackTransaction();
+useAnalytics().withOrder().events.fb().trackTransaction();
