@@ -1,5 +1,4 @@
 import { Request } from 'express';
-import * as fbSdk from 'facebook-nodejs-business-sdk';
 
 export type TTrackerRunMode = {
   server?: boolean;
@@ -123,23 +122,13 @@ export type TSettings = {
     };
     [ETrackers.Facebook]?: {
       enabled: boolean;
-      sdk: typeof fbSdk | null;
+      sdk?: any;
       pixelId: null | string;
-      token: null | string;
-      testCode: null | string;
+      token?: null | string;
+      testCode?: null | string;
     };
     [ETrackers.FullStory]?: {
       enabled: boolean;
-      // sdk: {
-      //   init: (setupVars?: Record<string, any>) => void;
-      //   identify?: (uid: string, userVars?: Record<string, any>) => void;
-      //   event?: (
-      //     eventName: string,
-      //     eventProperties?: Record<string, any>
-      //   ) => void;
-      //   setUserVars?: (userVars?: Record<string, any>) => void;
-      //   setVars?: (scope: string, pageProperties?: Record<string, any>) => void;
-      // } | null;
       orgId: string | null;
     };
     [ETrackers.Klaviyo]?: {

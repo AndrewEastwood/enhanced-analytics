@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "ES5",
     "lib": ["ESNext", "DOM"],
-    "module": "CommonJS",
     "declaration": true,
     "outDir": "./dist",
     "noImplicitAny": false,
@@ -10,7 +9,7 @@
     "baseUrl": "./src",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "jsx": "react"
+    "jsx": "react",
   },
   "include": ["globals.d.ts", "src"],
   "exclude": ["dist"]

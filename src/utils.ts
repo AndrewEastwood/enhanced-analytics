@@ -18,8 +18,20 @@ const getEventNameOfIdentify = () => {
   return '';
 };
 
+const getEventNameOfCustom = (e: string) => {
+  return `new_custom_of_${e}${getEvtUUIDStr()}`;
+};
+
 const getEventNameOfTransaction = (order: T_EA_DataOrder) => {
   return `new_order_of_${order.id}${getEvtUUIDStr()}`;
+};
+
+const getEventNameOfSubscription = (email: string) => {
+  return `new_sub_of_${email}${getEvtUUIDStr()}`;
+};
+
+const getEventNameOfLead = (modifier: string) => {
+  return `new_lead_of_${modifier}${getEvtUUIDStr()}`;
 };
 
 const getEventNameOfProductAddToCart = (p: T_EA_DataProduct) => {
@@ -471,6 +483,7 @@ const Order = (options: TSettings, order: T_EA_DataOrder) => {
 };
 
 export {
+  getEventNameOfCustom,
   getEventNameOfIdentify,
   getEventNameOfTransaction,
   getEventNameOfProductAddToCart,
@@ -480,6 +493,8 @@ export {
   getEventNameOfPageView,
   getEventNameOfInitiateCheckout,
   getEventNameOfNewProfile,
+  getEventNameOfSubscription,
+  getEventNameOfLead,
   Basket,
   Order,
   Catalog,

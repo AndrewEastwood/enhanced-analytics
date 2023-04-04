@@ -11,11 +11,317 @@ import {
 } from '../shared';
 import * as trackUtils from '../utils';
 import { round, isBrowserMode } from '../utils';
-import * as fbBiz from 'facebook-nodejs-business-sdk';
 import { resolveUser } from './identity';
 
+const DeliveryCategory = {
+  IN_STORE: 'in_store',
+  CURBSIDE: 'curbside',
+  HOME_DELIVERY: 'home_delivery',
+};
+
+let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
+  class Content {
+    _id;
+    _quantity;
+    _title;
+    _brand;
+    _description;
+    _category;
+    _item_price;
+    _delivery_category;
+    setId(_id: string) {
+      this._id = _id;
+      return this;
+    }
+    setQuantity(_quantity: number) {
+      this._quantity = _quantity;
+      return this;
+    }
+    setTitle(_title: string) {
+      this._title = _title;
+      return this;
+    }
+    setBrand(_brand: string) {
+      this._brand = _brand;
+      return this;
+    }
+    setDescription(_description: string) {
+      this._description = _description;
+      return this;
+    }
+    setCategory(_category: string) {
+      this._category = _category;
+      return this;
+    }
+    setItemPrice(_item_price: number) {
+      this._item_price = _item_price;
+      return this;
+    }
+    setDeliveryCategory(_delivery_category: string) {
+      this._delivery_category = _delivery_category;
+      return this;
+    }
+    normalize(): Record<string, any> {
+      return {
+        id: this._id,
+        quantity: this._quantity,
+        title: this._title,
+        brand: this._brand,
+        description: this._description,
+        category: this._category,
+        item_price: this._item_price,
+        delivery_category: this._delivery_category,
+      };
+    }
+  }
+  class CustomData {
+    _contents;
+    _currency;
+    _order_id;
+    _status;
+    _num_items;
+    _value;
+    _content_name;
+    _content_category;
+    _search_string;
+    _content_type;
+    setContents(_contents: Content[]) {
+      this._contents = _contents;
+      return this;
+    }
+    setCurrency(_currency: string) {
+      this._currency = _currency;
+      return this;
+    }
+    setOrderId(_order_id: string) {
+      this._order_id = _order_id;
+      return this;
+    }
+    setStatus(_status: string) {
+      this._status = _status;
+      return this;
+    }
+    setNumItems(_num_items: number) {
+      this._num_items = _num_items;
+      return this;
+    }
+    setValue(_value: number) {
+      this._value = _value;
+      return this;
+    }
+    setContentName(_content_name: string) {
+      this._content_name = _content_name;
+      return this;
+    }
+    setContentType(_content_type: string) {
+      this._content_type = _content_type;
+      return this;
+    }
+    setContentCategory(_content_category: string) {
+      this._content_category = _content_category;
+      return this;
+    }
+    setSearchString(_search_string: string) {
+      this._search_string = _search_string;
+      return this;
+    }
+    normalize(): Record<string, any> {
+      return {
+        contents: this._contents?.map((c) => c.normalize()) ?? [],
+        currency: this._currency,
+        order_id: this._order_id,
+        status: this._status,
+        num_items: this._num_items,
+        value: this._value,
+        content_name: this._content_name,
+        content_category: this._content_category,
+        search_string: this._search_string,
+      };
+    }
+  }
+  class UserData {
+    _external_ids;
+    _emails;
+    _first_names;
+    _last_names;
+    _countries;
+    _cities;
+    _zips;
+    _phones;
+    _client_ip_address;
+    _client_user_agent;
+    _fbp;
+    setExternalId(a: string) {
+      this._external_ids = [a];
+      return this;
+    }
+    setEmail(a: string) {
+      this._emails = [a];
+      return this;
+    }
+    setFirstName(a: string) {
+      this._first_names = [a];
+      return this;
+    }
+    setLastName(a: string) {
+      this._last_names = [a];
+      return this;
+    }
+    setCountry(a: string) {
+      this._countries = [a];
+      return this;
+    }
+    setCity(a: string) {
+      this._cities = [a];
+      return this;
+    }
+    setZip(a: string) {
+      this._zips = [a];
+      return this;
+    }
+    setPhone(a: string) {
+      this._phones = [a];
+      return this;
+    }
+    setClientIpAddress(a: string) {
+      this._client_ip_address = a;
+      return this;
+    }
+    setClientUserAgent(a: string) {
+      this._client_user_agent = a;
+      return this;
+    }
+    setFbp(a: string) {
+      this._fbp = a;
+      return this;
+    }
+    normalize(): Record<string, any> {
+      return {
+        em: this._emails,
+        ph: this._phones,
+        fn: this._first_names,
+        ln: this._last_names,
+        ct: this._cities,
+        zp: this._zips,
+        country: this._countries,
+        external_id: this._external_ids,
+        client_ip_address: this._client_ip_address,
+        client_user_agent: this._client_user_agent,
+      };
+    }
+  }
+  class ServerEvent {
+    _event_id;
+    _event_name;
+    _event_time;
+    _custom_data;
+    _event_source_url;
+    _action_source;
+    _user_data;
+    get user_data(): UserData {
+      return this._user_data;
+    }
+    setEventId(_event_id: string) {
+      this._event_id = _event_id;
+      return this;
+    }
+    setEventName(_event_name: string) {
+      this._event_name = _event_name;
+      return this;
+    }
+    setEventTime(_event_time: number) {
+      this._event_time = _event_time;
+      return this;
+    }
+    setCustomData(_custom_data: CustomData) {
+      this._custom_data = _custom_data;
+      return this;
+    }
+    setEventSourceUrl(_event_source_url: string) {
+      this._event_source_url = _event_source_url;
+      return this;
+    }
+    setActionSource(_action_source: string) {
+      this._action_source = _action_source;
+      return this;
+    }
+    setUserData(_user_data: UserData) {
+      this._user_data = _user_data;
+      return this;
+    }
+    normalize(): Record<string, any> {
+      return {
+        event_id: this._event_id,
+        event_name: this._event_name,
+        event_time: this._event_time,
+        custom_data: this._custom_data?.normalize() ?? {},
+        event_source_url: this._event_source_url,
+        action_source: this._action_source,
+        user_data: this._user_data?.normalize() ?? {},
+      };
+    }
+  }
+  class EventRequest {
+    _test_event_code;
+    _events;
+    _pixel_id;
+    _access_token;
+    constructor(at: string, pxId: string) {
+      this._access_token = at;
+      this._pixel_id = pxId;
+    }
+    get events(): ServerEvent[] {
+      return this._events;
+    }
+    get pixel(): string {
+      return this._pixel_id;
+    }
+    setTestEventCode(_test_event_code: string) {
+      this._test_event_code = _test_event_code;
+      return this;
+    }
+    setEvents(_events: ServerEvent[]) {
+      this._events = _events;
+      return this;
+    }
+    async execute() {
+      isBrowserMode
+        ? this._events
+            .filter((evt) => !!evt._user_data)
+            .map((evt) => {
+              globalThis.window.fbq?.('init', this._pixel_id, {
+                ...evt._user_data.normalize(),
+              });
+              globalThis.window.fbq?.(
+                'track',
+                evt._event_name,
+                getFbqObjectByNormalizedData(evt.normalize()),
+                {
+                  eventID: evt._event_id,
+                }
+              );
+            })
+        : null;
+      return Promise.reject({
+        data: {
+          message:
+            'Wrong SDK used. Server side requires the official Facebook-NodeJs-SDK to be installed',
+        },
+      });
+    }
+  }
+
+  return {
+    Content,
+    CustomData,
+    UserData,
+    ServerEvent,
+    EventRequest,
+  };
+})();
+
 export type TFbNormalizedEventPayload = {
-  pixelId: string;
+  pixel: string;
   event_name: string;
   event_time: number;
   event_source_url?: string;
@@ -66,9 +372,10 @@ export type TFbNormalizedEventPayload = {
   action_source?: string;
 };
 
-export type TFbServerEventResponse = TServerEventResponse<fbBiz.EventResponse>;
-
-const installFB = (pixelId: string, user?: T_EA_DataProfile | null) => {
+const installFB = (
+  pixelId: string,
+  user?: TFbNormalizedEventPayload['user_data'] | null
+) => {
   return trackUtils.isBrowserMode
     ? (() => {
         // @ts-ignore
@@ -108,14 +415,9 @@ const installFB = (pixelId: string, user?: T_EA_DataProfile | null) => {
           'script',
           'https://connect.facebook.net/en_US/fbevents.js'
         );
-        // try to idetify
+        // try to identify
         user
-          ? globalThis.window.fbq?.('init', pixelId, {
-              em: [user.email],
-              fn: [user.firstName],
-              ln: [user.lastName],
-              external_id: [user.email],
-            })
+          ? globalThis.window.fbq?.('init', pixelId, user)
           : globalThis.window.fbq?.('init', pixelId);
       })()
     : null;
@@ -127,7 +429,33 @@ export const getFbqObjectByNormalizedData = (
   return {
     value: p.custom_data?.value ?? 0,
     currency: p.custom_data?.currency ?? 'USD',
+    // AddToCart: [content_ids, content_name, content_type, contents, currency, value
+    // Optional.
+    // Required for Advantage+ catalog ads: content_type and contents]
+    ...(p.event_name === 'AddToCart'
+      ? {
+          content_type: p.custom_data?.content_type,
+          content_name: p.custom_data?.content_name, // 'Auto Insurance',
+          content_category: p.custom_data?.content_category, //'Product Search',
+          contents: p.custom_data?.contents ?? [],
+          num_items: p.custom_data?.num_items ?? 0,
+        }
+      : {}),
+    // RemoveFromCart: [content_ids, content_name, content_type, contents, currency, value
+    // Optional.
+    // Required for Advantage+ catalog ads: content_type and contents]
+    ...(p.event_name === 'RemoveFromCart'
+      ? {
+          content_type: p.custom_data?.content_type,
+          content_name: p.custom_data?.content_name, // 'Auto Insurance',
+          content_category: p.custom_data?.content_category, //'Product Search',
+          contents: p.custom_data?.contents ?? [],
+          num_items: p.custom_data?.num_items ?? 0,
+        }
+      : {}),
+
     // Lead: [content_category, content_name, currency, value]
+    // When a sign up is completed. A person clicks on pricing.
     ...(p.event_name === 'Lead'
       ? {
           content_name: p.custom_data?.content_name, // 'Auto Insurance',
@@ -175,15 +503,15 @@ export const getFbqObjectByNormalizedData = (
 };
 
 export const EA_FB_Events: React.FC<{
-  errorMessage: string;
-  payloads: TFbNormalizedEventPayload[];
+  errorMessage?: string;
+  payloads?: TFbNormalizedEventPayload[];
 }> = (props) => {
   const { errorMessage, payloads } = props;
 
   useEffect(() => {
-    payloads.map((p) => {
-      p.user_data
-        ? globalThis.window.fbq?.('init', p.pixelId, p.user_data)
+    payloads?.map((p) => {
+      !globalThis.window.fbq && p.pixel
+        ? installFB(p.pixel, p.user_data)
         : void 0;
       globalThis.window.fbq?.(
         'track',
@@ -211,284 +539,58 @@ export const fbTracker = (options: TSettings) => {
   const access_token = analytics?.fb?.token ?? '';
   const pixel_id = analytics?.fb?.pixelId;
   const testCode = (analytics?.testing ? analytics.fb?.testCode : '') ?? '';
-  const bizSdk = analytics?.fb?.sdk ?? {
-    Content: class Content extends fbBiz.Content {
-      setId(_id: string) {
-        this._id = _id;
-        return this;
-      }
-      setQuantity(_quantity: number) {
-        this._quantity = _quantity;
-        return this;
-      }
-      setTitle(_title: string) {
-        this._title = _title;
-        return this;
-      }
-      setBrand(_brand: string) {
-        this._brand = _brand;
-        return this;
-      }
-      setDescription(_description: string) {
-        this._description = _description;
-        return this;
-      }
-      setCategory(_category: string) {
-        this._category = _category;
-        return this;
-      }
-      setItemPrice(_item_price: number) {
-        this._item_price = _item_price;
-        return this;
-      }
-      setDeliveryCategory(_delivery_category: string) {
-        this._delivery_category = _delivery_category;
-        return this;
-      }
-      normalize(): Record<string, any> {
-        return {
-          id: this._id,
-          quantity: this._quantity,
-          title: this._title,
-          brand: this._brand,
-          description: this._description,
-          category: this._category,
-          item_price: this._item_price,
-          delivery_category: this._delivery_category,
-        };
-      }
-    },
-    CustomData: class CustomData extends fbBiz.CustomData {
-      setContents(_contents: fbBiz.Content[]) {
-        this._contents = _contents;
-        return this;
-      }
-      setCurrency(_currency: string) {
-        this._currency = _currency;
-        return this;
-      }
-      setOrderId(_order_id: string) {
-        this._order_id = _order_id;
-        return this;
-      }
-      setStatus(_status: string) {
-        this._status = _status;
-        return this;
-      }
-      setNumItems(_num_items: number) {
-        this._num_items = _num_items;
-        return this;
-      }
-      setValue(_value: number) {
-        this._value = _value;
-        return this;
-      }
-      setContentName(_content_name: string) {
-        this._content_name = _content_name;
-        return this;
-      }
-      setContentCategory(_content_category: string) {
-        this._content_category = _content_category;
-        return this;
-      }
-      setSearchString(_search_string: string) {
-        this._search_string = _search_string;
-        return this;
-      }
-      normalize(): Record<string, any> {
-        return {
-          contents: this._contents?.map((c) => c.normalize()) ?? [],
-          currency: this._currency,
-          order_id: this._order_id,
-          status: this._status,
-          num_items: this._num_items,
-          value: this._value,
-          content_name: this._content_name,
-          content_category: this._content_category,
-          search_string: this._search_string,
-        };
-      }
-    },
-    UserData: class UserData extends fbBiz.UserData {
-      setExternalId(a: string) {
-        this._external_ids = [a];
-        return this;
-      }
-      setEmail(a: string) {
-        this._emails = [a];
-        return this;
-      }
-      setFirstName(a: string) {
-        this._first_names = [a];
-        return this;
-      }
-      setLastName(a: string) {
-        this._last_names = [a];
-        return this;
-      }
-      setCountry(a: string) {
-        this._countries = [a];
-        return this;
-      }
-      setCity(a: string) {
-        this._cities = [a];
-        return this;
-      }
-      setZip(a: string) {
-        this._zips = [a];
-        return this;
-      }
-      setPhone(a: string) {
-        this._phones = [a];
-        return this;
-      }
-      setClientIpAddress(a: string) {
-        this._client_ip_address = a;
-        return this;
-      }
-      setClientUserAgent(a: string) {
-        this._client_user_agent = a;
-        return this;
-      }
-      setFbp(a: string) {
-        this._fbp = a;
-        return this;
-      }
-      normalize(): Record<string, any> {
-        return {
-          em: this._emails,
-          ph: this._phones,
-          fn: this._first_names,
-          ln: this._last_names,
-          ct: this._cities,
-          zp: this._zips,
-          country: this._countries,
-          external_id: this._external_ids,
-          client_ip_address: this._client_ip_address,
-          client_user_agent: this._client_user_agent,
-        };
-      }
-    },
-    ServerEvent: class ServerEvent extends fbBiz.ServerEvent {
-      setEventId(_event_id: string) {
-        this._event_id = _event_id;
-        return this;
-      }
-      setEventName(_event_name: string) {
-        this._event_name = _event_name;
-        return this;
-      }
-      setEventTime(_event_time: number) {
-        this._event_time = _event_time;
-        return this;
-      }
-      setCustomData(_custom_data: fbBiz.CustomData) {
-        this._custom_data = _custom_data;
-        return this;
-      }
-      setEventSourceUrl(_event_source_url: string) {
-        this._event_source_url = _event_source_url;
-        return this;
-      }
-      setActionSource(_action_source: string) {
-        this._action_source = _action_source;
-        return this;
-      }
-      setUserData(_user_data: fbBiz.UserData) {
-        this._user_data = _user_data;
-        return this;
-      }
-      normalize(): TFbNormalizedEventPayload {
-        return {
-          pixelId: pixel_id ?? '',
-          event_id: this._event_id,
-          event_name: this._event_name,
-          event_time: this._event_time,
-          custom_data: this._custom_data?.normalize() ?? {},
-          event_source_url: this._event_source_url,
-          action_source: this._action_source,
-          user_data: this._user_data?.normalize() ?? {},
-        };
-      }
-    },
-    DeliveryCategory: {
-      IN_STORE: 'in_store',
-      CURBSIDE: 'curbside',
-      HOME_DELIVERY: 'home_delivery',
-    },
-    EventRequest: class EventRequest extends fbBiz.EventRequest {
-      setTestEventCode(_test_event_code: string) {
-        this._test_event_code = _test_event_code;
-        return this;
-      }
-      setEvents(_events: fbBiz.ServerEvent[]) {
-        this._events = _events;
-        return this;
-      }
-      async execute() {
-        isBrowserMode
-          ? this._events
-              .filter((evt) => !!evt._user_data)
-              .map((evt) => {
-                globalThis.window.fbq?.('init', this.pixel_id, {
-                  ...evt._user_data.normalize(),
-                });
-                globalThis.window.fbq?.(
-                  'track',
-                  evt._event_name,
-                  getFbqObjectByNormalizedData(evt.normalize()),
-                  {
-                    eventID: evt._event_id,
-                  }
-                );
-              })
-          : null;
-        return Promise.reject({
-          data: {
-            message:
-              'Wrong SDK used. Server side requires the official Facebook-NodeJs-SDK to be installed',
-          },
-        });
-      }
-    },
-  };
+  const bizSdk = analytics?.fb?.sdk ?? {};
 
   if (!pixel_id) {
     throw '[EA] Facebook is configured without pixel_id; Please provide pixel_id;';
   }
 
   if (isBrowserMode) {
-    installFB(pixel_id, resolveUser(null, options.resolvers?.profile));
+    const initUser = resolveUser(null, options.resolvers?.profile);
+    installFB(
+      pixel_id,
+      initUser && initUser.email
+        ? {
+            em: [initUser.email].filter((v): v is string => !!v),
+            fn: [initUser.firstName].filter((v): v is string => !!v),
+            ln: [initUser.lastName].filter((v): v is string => !!v),
+            external_id: [initUser.email].filter((v): v is string => !!v),
+          }
+        : void 0
+    );
   } else {
     if (!access_token) {
       throw '[EA] Facebook is configured without access_token; Please provide access_token;';
     }
     if (!bizSdk) {
-      throw '[EA] Facebook is configured without SDK; Please provide SDK;';
+      throw '[EA] Facebook is configured without SDK; Please provide SDK; npm i facebook-nodejs-business-sdk@13 -S';
     }
+
+    // override browser sdk to nodejs
+    Content = bizSdk.Content;
+    CustomData = bizSdk.CustomData;
+    UserData = bizSdk.UserData;
+    ServerEvent = bizSdk.ServerEvent;
+    EventRequest = bizSdk.EventRequest;
   }
 
-  const CustomData = bizSdk.CustomData;
-  const EventRequest = bizSdk.EventRequest;
-  const UserData = bizSdk.UserData;
-  const ServerEvent = bizSdk.ServerEvent;
-  const Content = bizSdk.Content;
-  const DeliveryCategory = bizSdk.DeliveryCategory;
-
-  const publish = async (event = new EventRequest('', '')) => {
+  const publish = async (req = new EventRequest('', '')) => {
     try {
       var response = isBrowserMode
-        ? await event.execute()
-        : !!event.events[0].user_data
-        ? await event.execute()
+        ? await req.execute()
+        : !!req.events[0].user_data
+        ? await req.execute()
         : await Promise.reject('UserData is not set');
       console.debug('[EA:Facebook] eventRequest=>Response: ', response);
       return {
         message: null,
-        payload: event.events.map((se) => ({
-          pixel_id: event._pixel_id,
-          ...se.normalize(),
-        })),
+        payload: req.events.map(
+          (se) =>
+            ({
+              ...se.normalize(),
+              pixel: req.pixel,
+            } as TFbNormalizedEventPayload)
+        ),
         response,
       };
     } catch (err: any) {
@@ -564,7 +666,7 @@ export const fbTracker = (options: TSettings) => {
    */
   const trackTransaction = async (
     order: T_EA_DataOrder
-  ): Promise<TFbServerEventResponse> => {
+  ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
     console.debug('[EA:Facebook] trackTransaction', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
@@ -589,8 +691,8 @@ export const fbTracker = (options: TSettings) => {
       .setCurrency(currency)
       .setOrderId(order.id.toString())
       .setStatus(order.status)
-      .setNumItems(order.quantity)
-      .setValue(order.revenue);
+      .setNumItems(round(order.quantity))
+      .setValue(round(order.revenue));
 
     const serverEvent = new ServerEvent()
       .setEventId(evtName)
@@ -626,7 +728,7 @@ export const fbTracker = (options: TSettings) => {
    */
   const trackProductAddToCart = async (
     basket: T_EA_DataBasket
-  ): Promise<TFbServerEventResponse> => {
+  ): Promise<TServerEventResponse> => {
     const userData = _getUserDataObject();
 
     const eventsData = basket.lastAdded.map((product) => {
@@ -646,12 +748,13 @@ export const fbTracker = (options: TSettings) => {
       );
 
       const customData = new CustomData()
-        .setValue(round(product.quantity))
+        .setValue(round(product.price))
         .setContents(contents)
         .setContentName(product.title)
         .setContentType('product')
         .setContentCategory(product.category)
-        .setCurrency(currency);
+        .setCurrency(currency)
+        .setNumItems(round(product.quantity));
 
       const page = options.resolvers?.page?.();
       const serverEvent = new ServerEvent()
@@ -690,7 +793,7 @@ export const fbTracker = (options: TSettings) => {
    */
   const trackProductRemoveFromCart = async (
     basket: T_EA_DataBasket
-  ): Promise<TFbServerEventResponse> => {
+  ): Promise<TServerEventResponse> => {
     const userData = _getUserDataObject();
 
     const eventsData = basket.lastRemoved.map((product) => {
@@ -706,16 +809,17 @@ export const fbTracker = (options: TSettings) => {
           .setBrand(product.brand)
           .setDescription(product.description)
           .setCategory(product.category)
-          .setItemPrice(product.price)
+          .setItemPrice(round(product.price))
       );
 
       const customData = new CustomData()
-        .setValue(round(product.quantity))
+        .setValue(round(product.price))
         .setContents(contents)
         .setContentName(product.title)
         .setContentType('product')
         .setContentCategory(product.category)
-        .setCurrency(currency);
+        .setCurrency(currency)
+        .setNumItems(round(product.quantity));
 
       const page = options.resolvers?.page?.();
       const serverEvent = new ServerEvent()
@@ -754,7 +858,7 @@ export const fbTracker = (options: TSettings) => {
    */
   const trackProductItemView = async (
     product: T_EA_DataProduct
-  ): Promise<TFbServerEventResponse> => {
+  ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
     console.debug('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
@@ -770,12 +874,13 @@ export const fbTracker = (options: TSettings) => {
       .setItemPrice(product.price);
 
     const customData = new CustomData()
-      .setValue(product.price)
+      .setValue(round(product.price))
       .setContents([contents])
       .setContentName(product.title)
       .setContentCategory(product.category)
       .setContentType('product')
-      .setCurrency(currency);
+      .setCurrency(currency)
+      .setNumItems(1);
 
     const serverEvent = new ServerEvent()
       .setEventId(evtName)
@@ -811,7 +916,7 @@ export const fbTracker = (options: TSettings) => {
    */
   const trackProductsItemView = async (
     products: T_EA_DataProduct[]
-  ): Promise<TFbServerEventResponse> => {
+  ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfProductItemView(products[0]);
     console.debug('[EA:Facebook] trackProductsItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
@@ -831,12 +936,13 @@ export const fbTracker = (options: TSettings) => {
       );
 
       const customData = new CustomData()
-        .setValue(product.price)
+        .setValue(round(product.price))
         .setContents(contents)
         .setContentName(product.title)
         .setCurrency(currency)
         .setContentType('product')
-        .setContentCategory(product.category);
+        .setContentCategory(product.category)
+        .setNumItems(products.length);
 
       const page = options.resolvers?.page?.();
       const serverEvent = new ServerEvent()
@@ -875,7 +981,7 @@ export const fbTracker = (options: TSettings) => {
    */
   const trackPageView = async (
     page: T_EA_DataPage
-  ): Promise<TFbServerEventResponse> => {
+  ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfPageView();
     console.error('[EA:Facebook] trackPageView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
@@ -903,7 +1009,29 @@ export const fbTracker = (options: TSettings) => {
     return publish(eventRequest);
   };
 
-  const trackCustom = async (e: T_EA_DataCustomEvent) => {};
+  const trackCustom = async (e: T_EA_DataCustomEvent) => {
+    const evtName = trackUtils.getEventNameOfCustom(e.name ?? '');
+    console.debug('[EA:Facebook] trackCustom', evtName);
+    const current_timestamp = Math.floor(Date.now() / 1000);
+    const userData = _getUserDataObject();
+    const page = options.resolvers?.page?.();
+
+    const serverEvent = new ServerEvent()
+      .setEventId(evtName)
+      .setEventName(e.name)
+      .setEventTime(current_timestamp)
+      .setEventSourceUrl(page?.url ?? '')
+      .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
+
+    const eventsData = [serverEvent];
+    const eventRequest = new EventRequest(access_token, pixel_id)
+      .setTestEventCode(testCode)
+      .setEvents(eventsData);
+
+    return publish(eventRequest);
+  };
 
   /**
    * InitiateCheckout
@@ -918,7 +1046,7 @@ export const fbTracker = (options: TSettings) => {
    */
   const trackInitiateCheckout = async (
     basket: T_EA_DataBasket
-  ): Promise<TFbServerEventResponse> => {
+  ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
     console.debug('[EA:Facebook] trackInitiateCheckout', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
@@ -942,7 +1070,7 @@ export const fbTracker = (options: TSettings) => {
       .setContentCategory(basket.products?.[0]?.category ?? '')
       .setContents(contents)
       .setCurrency(currency)
-      .setNumItems(basket.quantity);
+      .setNumItems(round(basket.quantity));
 
     const serverEvent = new ServerEvent()
       .setEventId(evtName)
@@ -977,7 +1105,7 @@ export const fbTracker = (options: TSettings) => {
   const trackSearch = async (
     searchTerm: string,
     matchingProducts: T_EA_DataProduct[]
-  ): Promise<TFbServerEventResponse> => {
+  ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfSearch(
       searchTerm,
       matchingProducts
@@ -1005,7 +1133,7 @@ export const fbTracker = (options: TSettings) => {
       .setContentType('product')
       .setContentName(page?.name ?? 'Search Results')
       .setContentCategory(matchingProducts?.[0]?.category ?? '')
-      .setNumItems(matchingProducts?.length);
+      .setNumItems(round(matchingProducts?.length));
 
     const serverEvent = new ServerEvent()
       .setEventId(evtName)
@@ -1025,7 +1153,33 @@ export const fbTracker = (options: TSettings) => {
     return publish(eventRequest);
   };
 
-  const trackNewProfile = async (profile: T_EA_DataProfile | null) => {};
+  const trackNewProfile = async (profile: T_EA_DataProfile | null) => {
+    const user = trackIdentify(profile);
+    const evtName = trackUtils.getEventNameOfLead(user?.email ?? '');
+    console.debug('[EA:Facebook] trackNewProfile', evtName);
+    const current_timestamp = Math.floor(Date.now() / 1000);
+    const userData = _getUserDataObject();
+    const page = options.resolvers?.page?.();
+
+    const customData = new CustomData().setContentName(page?.name ?? 'Website');
+
+    const serverEvent = new ServerEvent()
+      .setEventId(evtName)
+      .setEventName('Lead')
+      .setEventTime(current_timestamp)
+      .setCustomData(customData)
+      .setEventSourceUrl(page?.url ?? '')
+      .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
+
+    const eventsData = [serverEvent];
+    const eventRequest = new EventRequest(access_token, pixel_id)
+      .setTestEventCode(testCode)
+      .setEvents(eventsData);
+
+    return publish(eventRequest);
+  };
 
   const trackProfileResetPassword = async (
     profile: T_EA_DataProfile | null
@@ -1035,9 +1189,35 @@ export const fbTracker = (options: TSettings) => {
 
   const trackProfileLogOut = async (profile: T_EA_DataProfile | null) => {};
 
-  const trackProfileSubscribeNL = async (
-    profile: T_EA_DataProfile | null
-  ) => {};
+  const trackProfileSubscribeNL = async (profile: T_EA_DataProfile | null) => {
+    const user = trackIdentify(profile);
+    const evtName = trackUtils.getEventNameOfSubscription(user?.email ?? '');
+    console.debug('[EA:Facebook] trackProfileSubscribeNL', evtName);
+    const current_timestamp = Math.floor(Date.now() / 1000);
+    const userData = _getUserDataObject();
+    const page = options.resolvers?.page?.();
+
+    const customData = new CustomData()
+      .setContentType('subscription')
+      .setContentName(page?.name ?? 'Newsletter');
+
+    const serverEvent = new ServerEvent()
+      .setEventId(evtName)
+      .setEventName('Subscribe')
+      .setEventTime(current_timestamp)
+      .setCustomData(customData)
+      .setEventSourceUrl(page?.url ?? '')
+      .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
+
+    const eventsData = [serverEvent];
+    const eventRequest = new EventRequest(access_token, pixel_id)
+      .setTestEventCode(testCode)
+      .setEvents(eventsData);
+
+    return publish(eventRequest);
+  };
 
   return {
     trackIdentify,

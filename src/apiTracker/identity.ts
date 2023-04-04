@@ -17,7 +17,7 @@ export const resolveUser = (
   restore();
   const u =
     (profile ? profile : customResolver?.()) ??
-    lastIdentity.values().next().value;
+    (lastIdentity.values().next().value as T_EA_DataProfile);
   store(u);
   return u;
 };

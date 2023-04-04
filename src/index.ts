@@ -42,7 +42,7 @@ export const useAnalytics = () => {
     withMisc: (name: string, attributes?: Record<string, any>) => {
       const store = getConfig();
       if (store === null) {
-        throw 'Invoke configureAnalytics first and provide configuration';
+        throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
       const v: T_EA_DataCustomEvent = {
         name,
@@ -81,18 +81,18 @@ export const useAnalytics = () => {
     withPage: (payload: T_EA_DataPage | Record<string, any> | null = null) => {
       const store = getConfig();
       if (store === null) {
-        throw 'Invoke configureAnalytics first and provide configuration';
+        throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
 
       const isNative = isNativePayloadPage(payload);
       if (!isNative && !store.resolvers?.page) {
-        throw '[store.resolvers.page] is not defined';
+        throw '[EA] [store.resolvers.page] is not defined';
       }
 
       const v = isNative ? payload : store.resolvers?.page?.(payload) ?? null;
 
       if (!v) {
-        throw 'Page data is not defined';
+        throw '[EA] Page data is not defined';
       }
 
       return {
@@ -130,12 +130,12 @@ export const useAnalytics = () => {
     ) => {
       const store = getConfig();
       if (store === null) {
-        throw 'Invoke configureAnalytics first and provide configuration';
+        throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
 
       const isNative = isNativePayloadProfile(payload);
       if (!isNative && !store.resolvers?.profile) {
-        throw '[store.resolvers.profile] is not defined';
+        throw '[EA] [store.resolvers.profile] is not defined';
       }
 
       const v = isNative
@@ -181,12 +181,12 @@ export const useAnalytics = () => {
     ) => {
       const store = getConfig();
       if (store === null) {
-        throw 'Invoke configureAnalytics first and provide configuration';
+        throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
 
       const isNative = isNativePayloadProducts(payload);
       if (!isNative && !store.resolvers?.product) {
-        throw '[store.resolvers.profile] is not defined';
+        throw '[EA] [store.resolvers.profile] is not defined';
       }
 
       const v = isNative
@@ -196,7 +196,7 @@ export const useAnalytics = () => {
             .filter((v): v is T_EA_DataProduct => !!v) ?? null;
 
       if (!v) {
-        throw 'Product data is not defined';
+        throw '[EA] Product data is not defined';
       }
 
       return {
@@ -235,20 +235,20 @@ export const useAnalytics = () => {
     ) => {
       const store = getConfig();
       if (store === null) {
-        throw 'Invoke configureAnalytics first and provide configuration';
+        throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
       if (!store.resolvers?.basket) {
-        throw '[store.resolvers.basket] is not defined';
+        throw '[EA] [store.resolvers.basket] is not defined';
       }
 
       const isNative = isNativePayloadBasket(payload);
       if (!isNative && !store.resolvers?.basket) {
-        throw '[store.resolvers.basket] is not defined';
+        throw '[EA] [store.resolvers.basket] is not defined';
       }
 
       const v = isNative ? payload : store.resolvers?.basket?.(payload) ?? null;
       if (!v) {
-        throw 'Basket data is not defined';
+        throw '[EA] Basket data is not defined';
       }
 
       return {
@@ -287,17 +287,17 @@ export const useAnalytics = () => {
       const store = getConfig();
 
       if (store === null) {
-        throw 'Invoke configureAnalytics first and provide configuration';
+        throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
 
       const isNative = isNativePayloadOrder(payload);
       if (!isNative && !store.resolvers?.order) {
-        throw '[store.resolvers.order] is not defined';
+        throw '[EA] [store.resolvers.order] is not defined';
       }
 
       const v = isNative ? payload : store.resolvers?.order?.(payload) ?? null;
       if (!v) {
-        throw 'Order data is not defined';
+        throw '[EA] Order data is not defined';
       }
       return {
         s2s: {
@@ -333,5 +333,3 @@ export const useAnalytics = () => {
 };
 
 export default useAnalytics;
-
-useAnalytics().withOrder().events.fb().trackTransaction();
