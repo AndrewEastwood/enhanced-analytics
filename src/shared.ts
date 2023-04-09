@@ -70,6 +70,12 @@ export type T_EA_DataProduct = {
   // basket features
   total?: number;
   quantity?: number;
+  // location offline name (id)
+  gaLocationId?: string;
+  categories?: string[];
+  // A product affiliation to designate a supplying company or brick and mortar store location.
+  // Note: `affiliation` is only available at the item-scope.
+  affiliation?: string;
 };
 
 export type T_EA_DataBasket = {
@@ -157,6 +163,7 @@ export type TSettings = {
     [ETrackers.GoogleAnalytics]?: {
       enabled: boolean;
       trackId?: null | string;
+      ga4?: boolean;
     };
   };
   links?: {

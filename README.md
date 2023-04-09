@@ -3,15 +3,15 @@
 A couple of convenient tools for populating dataLayer ecommerce event data or even more.
 
 **integrated services**:\
-&nbsp;&nbsp;✅ Google Analytics / Tag Manager (Browser Only)\
+&nbsp;&nbsp;✅ Google Analytics & GA4 / Tag Manager (Browser Only)\
 &nbsp;&nbsp;✅ Klaviyo (Server+Browser) https://www.klaviyo.com/
 
 - Install `npm i -S klaviyo-api@2.11` when this lib is being used at NodeJs
-- This will auto-install js when runnig it in a broswer.
+- This will auto-install js when running it in a broswer.
 
-&nbsp;&nbsp;✅ Facebook (NodeJs Side Only)
+&nbsp;&nbsp;✅ Facebook (Server+Browser)
 
-- Install `npm i -S facebook-nodejs-business-sdk@13.0.0`
+- install `npm i -S facebook-nodejs-business-sdk@13.0.0` when running in NodeJs env
 
 &nbsp;&nbsp;✅ FullStory (Broswer Only) https://www.fullstory.com/
 
@@ -23,7 +23,7 @@ A couple of convenient tools for populating dataLayer ecommerce event data or ev
 
 ```tsx
 import { useEffect } from 'react';
-import { configureAnalytics, useAnalytics } from 'enhanced-analytics';
+import { configureAnalytics } from 'enhanced-analytics';
 import * as EATypes from 'enhanced-analytics';
 
 const MyApp = () => {
@@ -54,6 +54,7 @@ const MyApp = () => {
         ga: {
           enabled: true,
           trackId: 'GTM-XXXXXXX',
+          ga4: true, // <-- publish GA4 events data
         },
         // FullStory
         fullstory: {
@@ -61,6 +62,12 @@ const MyApp = () => {
           orgId: 'YOUR-ORG-ID',
           // @ts-ignore
           sdk: FullStory, // <-- this requires: npm i @fullstory/browser
+        },
+        // Facebook Pixel
+        fb: {
+          enabled: true,
+          pixelId: 'YOUR-PIXEL-ID',
+          testCode: 'TEST61709', // <---- test code, when testing Pixel data
         },
       },
       // you may have your own data structure
@@ -78,35 +85,31 @@ const MyApp = () => {
             url: window.location.href,      //            |
             title: document.title,          //            |
           };                                //            |
-        }, //            |
+        }, //                               //            |
         //                                                |
         // ^^ here, If you call useAnalytics().withPage('test').integrations.klaviyo.trackPageView();
-        //    and the same approach for the other scopes: withUser, withBasket.. etc.
+        //    and the same approach for the other scopes: withUser, withBasket... etc.
         profile(input) {
-          const st = $storeUser.getState();
-          const currUser = input || st?.userOrderForm;
-          const phone = currUser?.phone.replace(/[^0-9]/gi, '') ?? '';
-          return currUser?.userName && phone.length === 12
+          const currUser = input || /* get session user */;
+          return currUser?.userName && currUser?.email === 12
             ? {
-                email: `customer_${phone}@nightburger.lviv.ua`,
+                email: currUser.email,
                 firstName: currUser.userName,
               }
             : null;
         },
-        product: (p: any, viewOrder: number) => {
+        product: (p: any) => {
           const res: EATypes.T_EA_DataProduct = {
             id: p.id,
             brand: p.seller,
-            category:
-              $store.getState().categoryItems.find((c) => c.id === p.categoryId)
-                ?.title || 'unresolved',
+            category: p.category,
             description: p.description,
             isSale: !!p.promo,
             price: p.price,
             salePrice: p.price,
             title: p.title,
             sku: p.sku,
-            viewOrder: viewOrder,
+            viewOrder: p.viewOrder,
           };
           return res;
         },
@@ -123,36 +126,33 @@ const MyApp = () => {
           };
           return res;
         },
-        order: (p: any) => {
+        order: (o: any) => {
           const res: EATypes.T_EA_DataOrder = {
-            id: p.id,
-            coupon: p.coupon,
-            dateCreated: p.dateCreated,
-            revenue: p.costsDetails.net,
-            status: p.status,
-            tax: 0,
+            id: o.id,
+            coupon: o.coupon,
+            dateCreated: o.dateCreated,
+            revenue: o.costsDetails.net,
+            status: o.status,
+            tax: o.taxValue,
             payment: {
-              type: p.paymentType,
+              type: o.paymentType,
             },
-            products: getOrderFeaturesList(
-              p.features,
-              $store.getState().productItems
-            ).map(mapCartItemToAnalytics),
-            quantity: p.features.reduce((r, v) => r + v.q, 0),
+            products: o.orderProducts,
+            quantity: o.orderTotal
             customer: {
-              email: '',
-              firstName: p.customerFullName,
-              lastName: '',
-              phone: p.customerPhone,
+              email: o.customerEmail,
+              firstName: o.customerFullName,
+              lastName: o.customerLastName,
+              phone: o.customerPhone,
               address: {
-                street: p.customerAddress,
+                street: o.customerAddress,
               },
             },
             shipping: {
-              cost: p.costsDetails.feeValue,
-              name: p.deliveryMethod,
+              cost: o.costsDetails.feeValue,
+              name: o.deliveryMethod,
               address: {
-                street: p.customerAddress,
+                street: o.customerAddress,
               },
             },
           };
@@ -166,7 +166,7 @@ const MyApp = () => {
 };
 ```
 
-## 1.2 Use It
+## 1.2 Google Analytics
 
 ... somewhere in components:
 
@@ -186,7 +186,7 @@ const MyComponent = () => {
       .withBasket(/* TDataBasket|Record<any>|null */) // <- this can be empty or TDataBasket AND resolver.basket is being invoked as well
       .events.ga()
       .getEECCheckoutList()
-      .when(() => true /* or your condition */)
+      .when(() => true /* or your condition */) // <----- or omit this call, if there is no any conditions
       .push(); // <- inject event into the dataLayer (config dataLayerName default is 'dataLayer');
 
     //
@@ -197,7 +197,6 @@ const MyComponent = () => {
       // ^ the resolver.product is being invoked over the each item in the given collection
       .events.ga()
       .getEECProductsList()
-      .when(() => myProductItems.length > 0)
       .push();
 
     //
@@ -227,7 +226,7 @@ const MyComponent = () => {
 };
 ```
 
-### 1.2.Klaviyo UI / FullStory UI
+### 1.2.Klaviyo UI / FullStory UI / Facebook Pixel
 
 ```tsx
 import useAnalytics from 'enhanced-analytics';
@@ -251,6 +250,7 @@ const MyComponent = () => {
     const evtPageView = analytics.withPage().events;
     evtProfile.fullstory().trackIdentify();
     evtProfile.klaviyo().trackIdentify();
+    evtPageView.fb().trackPageView();
   }, []);
 
   // Track Order Complete + Custom event "OrderSeen"
@@ -273,17 +273,19 @@ const MyComponent = () => {
     // indetify current session (this will link anonymous events to this user by email)
     evtProfile.fullstory().trackIdentify();
     evtProfile.klaviyo().trackIdentify();
+    evtPageView.fb().trackIdentify();
 
     // any other custom events
     evtCustom.fullstory().trackCustom();
     evtCustom.klaviyo().trackCustom();
+    evtPageView.fb().trackCustom();
   }, []);
 };
 ```
 
 ## 2 Configure (API Side)
 
-Simple snippet of configuration for Express.Js
+Simple snippet with Express.Js as middleware:
 
 ```typescript
 app.use(
@@ -394,11 +396,69 @@ app.use(
 );
 ```
 
+Another configuration for NextJs:
+
+```typescript
+
+// src/utils/ea.ts
+// Server Side EA Configuration
+const getServerEA = (req: GetServerSidePropsContext['req']) => {
+  configureAnalytics({
+    absoluteURL: "https://my-store.com/",
+    affiliation: "My Store",
+    currency: "USD",
+    integrations: {
+      testing: true,
+      fb: {
+        enabled: true,
+        pixelId: "PIXEL-ID",
+        token: "PIXEL-TOKEN",
+        sdk: bizSdk,
+        testCode: "TESTxxxxx",
+      },
+    },
+    resolvers: {
+      eventUUID() {
+        return Date.now().toString(32);
+      },
+      session() {
+        return {
+          agent: req.headers["user-agent"],
+          fbp: req.cookies["_fbp"],
+          ip: req.socket.remoteAddress,
+        };
+      },
+      profile() {
+        const user = /* get session user info */
+        return user
+          ? {
+              email: user.email,
+              firstName: user.username,
+            }
+          : null;
+      },
+      basket() {
+        return {
+          total: 0,
+          coupon: null,
+          quantity: 0,
+          lastAdded: [],
+          lastRemoved: [],
+          products: [],
+        };
+      },
+    },
+  });
+
+  return useAnalytics();
+}
+
+// See usage below at 2.3.FB Pixel
+```
+
 ## 2.1 Use It
 
 ### 2.2.Klaviyo API
-
-... docs are in progress
 
 Track new order:
 
@@ -411,6 +471,196 @@ const evtPayload = { order, products };
 await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackTransaction();
 ```
 
-### 2.2.FB Events API
+Begin checkout:
 
-... docs are in progress
+```typescript
+import useAnalytics from 'enhanced-analytics';
+
+const evtPayload = { order, products };
+// you can define your own payload
+// and handle it at your resolvers.order function
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackInitiateCheckout();
+```
+
+All methods:
+
+```ts
+// track Identify
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackIdentify();
+
+// track Transaction
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackTransaction();
+
+// track ProductAddToCart
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackProductAddToCart();
+
+// track ProductRemoveFromCart
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackProductRemoveFromCart();
+
+// track ProductItemView
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackProductItemView();
+
+// track ProductsItemView
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackProductsItemView();
+
+// track Search
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackSearch();
+
+// track PageView
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackPageView();
+
+// track InitiateCheckout
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackInitiateCheckout();
+
+// track NewProfile
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackNewProfile();
+
+// track ProfileResetPassword
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackProfileResetPassword();
+
+// track ProfileLogIn
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackProfileLogIn();
+
+// track ProfileLogOut
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackProfileLogOut();
+
+// track ProfileSubscribeNL
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackProfileSubscribeNL();
+
+// track TransactionRefund
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackTransactionRefund();
+
+// track TransactionCancel
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackTransactionCancel();
+
+// track TransactionFulfill
+await useAnalytics()
+  .withOrder(evtPayload)
+  .s2s.klaviyo()
+  .trackTransactionFulfill();
+
+// track Custom
+await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackCustom();
+```
+
+### 2.2.FB Pixel (Server+UI)
+
+This examples shows how to send server-side (NextJs) fb events and then re-process then from the UI.
+
+```tsx
+import { GetServerSideProps } from "next";
+import { useEffect } from "react";
+import {
+  EA_FB_Server_RePublish_Events,
+  TFbNormalizedEventPayload,
+} from "enhanced-analytics/apiTracker/facebook";
+import useAnalytics, { configureAnalytics } from "enhanced-analytics";
+import * as bizSdk from "facebook-nodejs-business-sdk";
+import { GetServerSidePropsContext } from "next";
+
+interface IShopProductResponse {
+  eaFbEvents: any;
+}
+
+export default function AnyProductPage({
+  eaFbEvents,
+}: IShopProductResponse) {
+    useEffect(() => {
+      analytics
+        .withPage({
+          name: props.title,
+          path: window.location.pathname,
+        })
+        .events.fb()
+        .trackPageView();
+    }, []);
+  return (
+    <div>
+      <span>testing fb events</span>
+      {* The component from EA, which is digesting handed server response *}
+      <EA_FB_Server_RePublish_Events serverPayloads={props.eaFbEvents} />
+    </div>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps = async ({ req, }) => {
+  // analytics
+  const product = fetch(/* your api that fetches product data */);
+  const ea = getServerEA(req); /* see NextJs configuration */
+  const fbResp = await ea
+    .withCatalog([
+      {
+        id: product.id,
+        title: product.title,
+        description: product.description,
+        salePrice: roundToTwo(product.salePrice),
+        price: product.salePrice || product.price,
+        isSale: roundToTwo(product.salePrice) > 0,
+        brand: product.brand,
+        category: product.category,
+        color: product.color,
+        sku: product.sku,
+        imageUrl: product.images.length > 0 ? product.images[0] : void 0,
+        url: `https://my-store.com/any-product/${product.shortId}/${product.slug}`,
+      },
+    ])
+    .s2s.fb()
+    .trackProductItemView(); // server to server event
+
+  return {
+    props: {
+      // @ts-ignore
+      eaFbEvents: fbResp[0].value.payload
+    },
+  };
+};
+
+```
+
+## 3 useAnalytics top methods
+
+```ts
+const ea = useAnalytics();
+
+// set runtime user
+ea.identify(user: T_EA_DataProfile);
+
+// custom events
+ea.withMisc(name: string, attributes?: Record<string, any>);
+
+// ...TBD
+ea.withPage(payload: T_EA_DataPage | Record<string, any> | null = null);
+ea.withProfile(payload: T_EA_DataProfile | Record<string, any> | null = null);
+ea.withCatalog(payload: (T_EA_DataProduct | Record<string, any>)[] | null = null);
+ea.withBasket(payload: T_EA_DataBasket | Record<string, any> | null = null);
+ea.withOrder(payload: T_EA_DataOrder | Record<string, any> | null = null);
+
+// TBD
+```

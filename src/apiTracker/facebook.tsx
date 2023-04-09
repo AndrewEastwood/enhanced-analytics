@@ -262,10 +262,10 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
     }
   }
   class EventRequest {
-    _test_event_code;
-    _events;
-    _pixel_id;
-    _access_token;
+    _test_event_code: string = '';
+    _events: ServerEvent[] = [];
+    _pixel_id: string;
+    _access_token: string;
     constructor(at: string, pxId: string) {
       this._access_token = at;
       this._pixel_id = pxId;
@@ -285,29 +285,38 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       return this;
     }
     async execute() {
-      isBrowserMode
-        ? this._events
-            .filter((evt) => !!evt._user_data)
-            .map((evt) => {
+      return isBrowserMode
+        ? Promise.resolve({
+            message: null,
+            response: 'Browser Processed',
+            processedItems: this._events.map((evt) => {
+              // re-init
               globalThis.window.fbq?.('init', this._pixel_id, {
-                ...evt._user_data.normalize(),
+                ...(evt._user_data ? evt._user_data.normalize() : {}),
               });
+              // track event
               globalThis.window.fbq?.(
-                'track',
+                isStandardEvent(evt._event_name) ? 'track' : 'trackCustom',
                 evt._event_name,
                 getFbqObjectByNormalizedData(evt.normalize()),
                 {
                   eventID: evt._event_id,
                 }
               );
-            })
-        : null;
-      return Promise.reject({
-        data: {
-          message:
-            'Wrong SDK used. Server side requires the official Facebook-NodeJs-SDK to be installed',
-        },
-      });
+              return {
+                [evt._event_name]: `Sent to ${this._pixel_id}`,
+                IsStandardEvent: isStandardEvent(evt._event_name),
+                UserData: evt._user_data,
+                eventID: evt._event_id,
+              };
+            }),
+          })
+        : Promise.reject({
+            message:
+              'Wrong SDK used. Server side requires the official Facebook-NodeJs-SDK to be installed',
+            response: null,
+            payload: [],
+          });
     }
   }
 
@@ -372,6 +381,28 @@ export type TFbNormalizedEventPayload = {
   action_source?: string;
 };
 
+const StandardEvents = [
+  'AddPaymentInfo',
+  'AddToCart',
+  'AddToWishlist',
+  'CompleteRegistration',
+  'Contact',
+  'CustomizeProduct',
+  'Donate',
+  'FindLocation',
+  'InitiateCheckout',
+  'Lead',
+  'Purchase',
+  'Schedule',
+  'Search',
+  'StartTrial',
+  'SubmitApplication',
+  'Subscribe',
+  'ViewContent',
+];
+
+const isStandardEvent = (eName: string) => StandardEvents.includes(eName);
+
 const installFB = (
   pixelId: string,
   user?: TFbNormalizedEventPayload['user_data'] | null
@@ -415,7 +446,7 @@ const installFB = (
           'script',
           'https://connect.facebook.net/en_US/fbevents.js'
         );
-        // try to identify
+        // try to identify (https://developers.facebook.com/docs/meta-pixel/advanced/advanced-matching)
         user
           ? globalThis.window.fbq?.('init', pixelId, user)
           : globalThis.window.fbq?.('init', pixelId);
@@ -427,13 +458,17 @@ export const getFbqObjectByNormalizedData = (
   p: TFbNormalizedEventPayload | Record<string, any>
 ) => {
   return {
-    value: p.custom_data?.value ?? 0,
-    currency: p.custom_data?.currency ?? 'USD',
+    // https://developers.facebook.com/docs/meta-pixel/reference
+    // Contact, Donate, FindLocation, Schedule, StartTrial, SubmitApplication, CompleteRegistration, AddToWishlist, AddPaymentInfo
+    // TBD Later
+    /// ------------------
     // AddToCart: [content_ids, content_name, content_type, contents, currency, value
     // Optional.
     // Required for Advantage+ catalog ads: content_type and contents]
     ...(p.event_name === 'AddToCart'
       ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
           content_type: p.custom_data?.content_type,
           content_name: p.custom_data?.content_name, // 'Auto Insurance',
           content_category: p.custom_data?.content_category, //'Product Search',
@@ -446,6 +481,8 @@ export const getFbqObjectByNormalizedData = (
     // Required for Advantage+ catalog ads: content_type and contents]
     ...(p.event_name === 'RemoveFromCart'
       ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
           content_type: p.custom_data?.content_type,
           content_name: p.custom_data?.content_name, // 'Auto Insurance',
           content_category: p.custom_data?.content_category, //'Product Search',
@@ -458,6 +495,8 @@ export const getFbqObjectByNormalizedData = (
     // When a sign up is completed. A person clicks on pricing.
     ...(p.event_name === 'Lead'
       ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
           content_name: p.custom_data?.content_name, // 'Auto Insurance',
           content_category: p.custom_data?.content_category, // 'Quote',
         }
@@ -467,6 +506,8 @@ export const getFbqObjectByNormalizedData = (
     // Required for Advantage+ catalog ads: content_type and contents, or content_ids]
     ...(p.event_name === 'ViewContent'
       ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
           content_type: p.custom_data?.content_type,
           content_name: p.custom_data?.content_name, // 'ABC Leather Sandal',
           contents: p.custom_data?.contents ?? [],
@@ -479,6 +520,8 @@ export const getFbqObjectByNormalizedData = (
     // Required for Advantage+ catalog ads: content_type and contents, or content_ids]
     ...(p.event_name === 'Search'
       ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
           search_string: p.custom_data?.search_string ?? '',
           content_category: p.custom_data?.content_category, //'Product Search',
           contents: p.custom_data?.contents ?? [],
@@ -490,6 +533,8 @@ export const getFbqObjectByNormalizedData = (
     // Required for Advantage+ catalog ads: content_type and contents, or content_ids]
     ...(p.event_name === 'Purchase'
       ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
           content_name: p.custom_data?.content_name,
           content_type: p.custom_data?.content_type,
           contents: p.custom_data?.contents ?? [],
@@ -502,19 +547,24 @@ export const getFbqObjectByNormalizedData = (
   };
 };
 
-export const EA_FB_Events: React.FC<{
+// This component is being used along with FB Server Events.
+// Once you trigger any event at your server side, you may return response
+// to your frontent side and hand it to this component.
+// If so, it re-publish the same events but from the frontent side.
+// Here the eventID is being used to dedup any of them.
+export const EA_FB_Server_RePublish_Events: React.FC<{
   errorMessage?: string;
-  payloads?: TFbNormalizedEventPayload[];
+  serverPayloads?: TFbNormalizedEventPayload[];
 }> = (props) => {
-  const { errorMessage, payloads } = props;
+  const { errorMessage, serverPayloads } = props;
 
   useEffect(() => {
-    payloads?.map((p) => {
+    serverPayloads?.map((p) => {
       !globalThis.window.fbq && p.pixel
         ? installFB(p.pixel, p.user_data)
         : void 0;
       globalThis.window.fbq?.(
-        'track',
+        isStandardEvent(p.event_name) ? 'track' : 'trackCustom',
         p.event_name,
         getFbqObjectByNormalizedData(p),
         { eventID: p.event_id }
@@ -526,12 +576,14 @@ export const EA_FB_Events: React.FC<{
     events.map((p) => (
       <span
         key={p.event_id}
-        id={`_ea_fb_event_${p.event_name}`}
+        id={`_ea_fb_event_${p.event_name.toLowerCase()}`}
         data-fb-event={JSON.stringify(p)}
       ></span>
     ));
 
-  return payloads && !errorMessage ? <>{getEvents(payloads)}</> : null;
+  return serverPayloads && !errorMessage ? (
+    <>{getEvents(serverPayloads)}</>
+  ) : null;
 };
 
 export const fbTracker = (options: TSettings) => {

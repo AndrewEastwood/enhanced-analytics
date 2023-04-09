@@ -1,5 +1,6 @@
 import { getConfig } from './config';
 import apiTracker, { getEEC } from './apiTracker';
+import { resolveUser } from './apiTracker/identity';
 import {
   ETrackers,
   T_EA_DataBasket,
@@ -39,6 +40,10 @@ let runtimeUser: T_EA_DataProfile | null = null;
 export const useAnalytics = () => {
   return {
     config: getConfig(),
+    identify: (user: T_EA_DataProfile) => {
+      const u = resolveUser(user, getConfig()?.resolvers?.profile);
+      return u && u.email;
+    },
     withMisc: (name: string, attributes?: Record<string, any>) => {
       const store = getConfig();
       if (store === null) {

@@ -17,4 +17,5 @@ interface Window {
   };
   fbq?(fn: string, event: string, attr?: any, modif?: { eventID: string });
   _fbq?(fn: string, event: string, attr?: any, modif?: { eventID: string });
+  gtag?();
 }

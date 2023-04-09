@@ -18,7 +18,7 @@ type TTrackers = {
 
 export * from './ga';
 export {
-  EA_FB_Events,
+  EA_FB_Server_RePublish_Events,
   TFbNormalizedEventPayload,
   getFbqObjectByNormalizedData,
 } from './facebook';

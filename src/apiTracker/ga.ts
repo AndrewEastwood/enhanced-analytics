@@ -15,14 +15,20 @@ let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 
 export const installGTM = (
   trackingCode?: string | null,
-  dataLayerName: string = 'dataLayer'
+  dataLayerName: string = 'dataLayer',
+  debug?: boolean
 ) => {
   return uiLibInstallStatus === 'no' && trackingCode && globalThis.window
     ? new Promise((r, e) => {
         uiLibInstallStatus = 'installing';
         (function (w, d, s, l, i) {
           w[l] = w[l] || [];
-          w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+          // w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+          function gtag(fn: string, p: any, o?: any) {
+            w[l].push(arguments);
+          }
+          gtag?.('js', new Date());
+          gtag?.('config', i, { debug_mode: !!debug });
           var f = d.getElementsByTagName('script')[0],
             j = d.createElement('script'),
             dl = l != 'dataLayer' ? '&l=' + l : '';
@@ -51,12 +57,12 @@ const innerDataLayer = new Set<any>();
 // Is designed to run in browsers only.
 
 export const getEEC = (options: TSettings) => {
+  const { enabled = false, trackId = null } = options.integrations?.ga ?? {};
   // install gtm tag
   installGTM(
-    options.integrations?.ga?.enabled
-      ? options.integrations?.ga?.trackId
-      : void 0,
-    options.dataLayerName
+    enabled ? trackId : void 0,
+    options.dataLayerName,
+    options.integrations?.testing
   );
 
   const publishEvent = (payload) => {
@@ -65,6 +71,9 @@ export const getEEC = (options: TSettings) => {
           globalThis.window[options.dataLayerName] || []),
         globalThis.window[options.dataLayerName] as any[])
       : [];
+    if (payload && payload.ecommerce) {
+      dl.push({ ecommerce: null }); // Clear the previous ecommerce object.
+    }
     dl.push(payload);
     innerDataLayer.add(payload);
   };
