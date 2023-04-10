@@ -90,6 +90,7 @@ const EECUtils = {
       discount: product.isSale ? round(product.price - product.salePrice) : 0,
       item_variant: product.variant || '',
       price: product.isSale ? round(product.salePrice) : round(product.price),
+      affiliation: product?.affiliation ?? null,
       ...(product.categories || []).reduce(
         (r, v, idx) => ({
           ...r,
@@ -185,9 +186,6 @@ const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
         item_list_name: params?.listName || options.defaultBasketName,
         items: basket.products.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
-          affiliation: options?.affiliation ?? 'Store',
-          coupon: basket.coupon,
-          index: idx,
         })),
       },
     };
@@ -253,11 +251,10 @@ const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
       ecommerce: {
         currency: options.currency,
         value: product.isSale ? product.salePrice : product.price,
+        item_list_name: params?.listName || options.defaultCatalogName,
         items: [
           {
             ...EECUtils.getProductItem(product),
-            affiliation: options?.affiliation ?? 'Store',
-            item_list_name: params?.listName || options.defaultCatalogName,
           },
         ],
       },
@@ -343,11 +340,9 @@ const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
         shipping: order.shipping.cost,
         currency: options.currency,
         coupon: order.coupon,
+        item_list_name: params?.listName || options.defaultBasketName,
         items: order.products.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
-          affiliation: options.affiliation,
-          index: idx,
-          item_list_name: params?.listName || options.defaultBasketName,
         })),
       },
     };
@@ -416,11 +411,9 @@ const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
         shipping: order.shipping.cost,
         currency: options.currency,
         coupon: order.coupon,
+        item_list_name: params?.listName || options.defaultBasketName,
         items: order.products.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
-          affiliation: options.affiliation,
-          index: idx,
-          item_list_name: params?.listName || options.defaultBasketName,
         })),
       },
     };
@@ -482,17 +475,15 @@ const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
     };
   },
   getEECGA4DataLayer: (params?: TEECParams) => {
-    const product = basket.lastRemoved?.[0] || {};
+    const product = basket.lastAdded?.[0] || {};
     return {
       event: params?.evName ?? 'add_to_cart',
       ecommerce: {
         currency: options.currency,
         value: product.total ?? 0,
-        items: basket.lastRemoved.map((product, idx) => ({
+        item_list_name: params?.listName || options.defaultBasketName,
+        items: basket.lastAdded.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
-          affiliation: options.affiliation,
-          index: idx,
-          item_list_name: params?.listName || options.defaultBasketName,
         })),
       },
     };
@@ -560,11 +551,9 @@ const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
       ecommerce: {
         currency: options.currency,
         value: product.total ?? 0,
+        item_list_name: params?.listName || options.defaultBasketName,
         items: basket.lastRemoved.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
-          affiliation: options.affiliation,
-          index: idx,
-          item_list_name: params?.listName || options.defaultBasketName,
         })),
       },
     };
@@ -618,11 +607,9 @@ const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
     return {
       event: 'view_item_list',
       ecommerce: {
+        item_list_name: params?.listName || options.defaultCatalogName,
         items: products.map((product) => ({
           ...EECUtils.getProductItem(product),
-          affiliation: options.affiliation,
-          index: product.viewOrder ?? 0,
-          item_list_name: params?.listName || options.defaultCatalogName,
         })),
       },
     };

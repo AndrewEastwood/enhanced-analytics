@@ -11,10 +11,11 @@ import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
 import { resolveUser } from './identity';
 
-const installFS = (orgId: string) => {
-  return trackUtils.isBrowserMode
-    ? (() => {
-        // uiLibInstallStatus = 'installing';
+let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
+export const installFS = (orgId?: string | null) => {
+  return trackUtils.isBrowserMode && uiLibInstallStatus === 'no' && orgId
+    ? new Promise((instok, insterr) => {
+        uiLibInstallStatus = 'installing';
         globalThis.window['_fs_host'] = 'fullstory.com';
         globalThis.window['_fs_script'] = 'edge.fullstory.com/s/fs.js';
         globalThis.window['_fs_org'] = orgId;
@@ -26,6 +27,11 @@ const installFS = (orgId: string) => {
                 'FullStory namespace conflict. Please set window["_fs_namespace"].'
               );
             }
+            return;
+          }
+          if (m.FS) {
+            uiLibInstallStatus = 'yes';
+            instok(m.FS);
             return;
           }
           // @ts-ignore
@@ -132,6 +138,20 @@ const installFS = (orgId: string) => {
             };
           // @ts-ignore
           g._v = '1.3.0';
+          new Promise((resolve, reject) => {
+            // @ts-ignore
+            o.onload = resolve;
+            // @ts-ignore
+            o.onerror = reject;
+          })
+            .then(() => {
+              uiLibInstallStatus = 'yes';
+              instok(globalThis.window.FS);
+            })
+            .catch(() => {
+              uiLibInstallStatus = 'no';
+              insterr();
+            });
         })(
           globalThis.window,
           globalThis.document,
@@ -139,8 +159,9 @@ const installFS = (orgId: string) => {
           'script',
           'user'
         );
-        return globalThis.window.FS;
-      })()
+        uiLibInstallStatus = 'yes';
+        instok(globalThis.window.FS);
+      })
     : null;
 };
 
@@ -157,8 +178,7 @@ export const fullstoryTracker = (options: TSettings) => {
     throw '[EA] FullStory is not configured properly; orgId is not defined';
   }
 
-  const { event, identify, setUserVars, setVars } =
-    globalThis.window.FS ?? installFS(analytics?.fullstory?.orgId);
+  const { event, identify, setUserVars, setVars } = globalThis.window.FS; // ?? installFS(analytics?.fullstory?.orgId);
 
   // restore id on the UI
   // const savedId = localStorage.getItem('EA_FullStory_Identity');
@@ -608,6 +628,19 @@ export const fullstoryTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
+  const trackAddPaymentInfo = async (basket: T_EA_DataBasket) => {
+    return trackIdentify();
+  };
+  const trackAddShippingInfo = async (basket: T_EA_DataBasket) => {
+    return trackIdentify();
+  };
+  const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {
+    return trackIdentify();
+  };
+  const trackViewBasket = async (basket: T_EA_DataBasket) => {
+    return trackIdentify();
+  };
+
   return {
     trackIdentify,
     trackTransaction,
@@ -627,6 +660,10 @@ export const fullstoryTracker = (options: TSettings) => {
     trackTransactionCancel,
     trackTransactionFulfill,
     trackCustom,
+    trackAddPaymentInfo,
+    trackAddShippingInfo,
+    trackAddToWishlist,
+    trackViewBasket,
   };
 };
 

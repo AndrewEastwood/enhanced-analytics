@@ -14,6 +14,32 @@ import { resolveUser } from './identity';
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 const queuedEvents = new Set<any>();
 const indentifiedEmails = new Set();
+export const installK = (siteId?: string | null) => {
+  return trackUtils.isBrowserMode && uiLibInstallStatus === 'no' && siteId
+    ? new Promise((instok, insterr) => {
+        uiLibInstallStatus = 'installing';
+        // install UI lib
+        const el = document.createElement('script');
+        el.crossOrigin = 'anonymous';
+        el.src = `//static.klaviyo.com/onsite/js/klaviyo.js?company_id=${siteId}`;
+        el.async = true;
+        el.setAttribute('data-integration-id', `eak-${siteId}`);
+        new Promise((resolve, reject) => {
+          el.onload = resolve;
+          el.onerror = reject;
+        })
+          .then(() => {
+            uiLibInstallStatus = 'yes';
+            instok(true);
+          })
+          .catch(() => {
+            uiLibInstallStatus = 'no';
+            insterr(true);
+          });
+        document.head.appendChild(el);
+      })
+    : null;
+};
 
 // Is desgned to run in both: browsers and server sides.
 
@@ -34,19 +60,22 @@ export const klaviyoTracker = (options: TSettings) => {
     throw '[EA] Klaviyo is not configured properly; Please provide token to run in the server mode;';
   }
 
-  if (trackUtils.isBrowserMode && uiLibInstallStatus === 'no') {
-    uiLibInstallStatus = 'installing';
-    // install UI lib
-    const el = document.createElement('script');
-    el.crossOrigin = 'anonymous';
-    el.src = `//static.klaviyo.com/onsite/js/klaviyo.js?company_id=${analytics.klaviyo?.siteId}`;
-    el.async = true;
-    el.setAttribute('data-integration-id', `eak-${analytics.klaviyo?.siteId}`);
-    new Promise((resolve) => (el.onload = resolve)).then(() => {
-      uiLibInstallStatus = 'yes';
-    });
-    document.head.appendChild(el);
+  if (trackUtils.isBrowserMode) {
+    installK(analytics.klaviyo?.siteId);
   }
+  // if (trackUtils.isBrowserMode && uiLibInstallStatus === 'no') {
+  //   uiLibInstallStatus = 'installing';
+  //   // install UI lib
+  //   const el = document.createElement('script');
+  //   el.crossOrigin = 'anonymous';
+  //   el.src = `//static.klaviyo.com/onsite/js/klaviyo.js?company_id=${analytics.klaviyo?.siteId}`;
+  //   el.async = true;
+  //   el.setAttribute('data-integration-id', `eak-${analytics.klaviyo?.siteId}`);
+  //   new Promise((resolve) => (el.onload = resolve)).then(() => {
+  //     uiLibInstallStatus = 'yes';
+  //   });
+  //   document.head.appendChild(el);
+  // }
 
   analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
 
@@ -543,6 +572,19 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify(profile);
   };
 
+  const trackAddPaymentInfo = async (basket: T_EA_DataBasket) => {
+    return trackIdentify();
+  };
+  const trackAddShippingInfo = async (basket: T_EA_DataBasket) => {
+    return trackIdentify();
+  };
+  const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {
+    return trackIdentify();
+  };
+  const trackViewBasket = async (basket: T_EA_DataBasket) => {
+    return trackIdentify();
+  };
+
   return {
     trackIdentify,
     trackTransaction,
@@ -562,6 +604,10 @@ export const klaviyoTracker = (options: TSettings) => {
     trackTransactionCancel,
     trackTransactionFulfill,
     trackCustom,
+    trackAddPaymentInfo,
+    trackAddShippingInfo,
+    trackAddToWishlist,
+    trackViewBasket,
   };
 };
 

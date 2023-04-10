@@ -45,6 +45,7 @@ export type T_EA_DataProfile = {
   organization?: string;
   avatarUrl?: string;
   extraProps?: Record<string, string>;
+  loginProvider?: string;
   url?: string;
 };
 
@@ -90,7 +91,6 @@ export type T_EA_DataBasket = {
 export enum ETrackers {
   Facebook = 'fb',
   Klaviyo = 'klaviyo',
-  GoogleEEC = 'geec',
   FullStory = 'fullstory',
   GoogleAnalytics = 'ga',
 }

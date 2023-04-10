@@ -18,8 +18,8 @@ export const installGTM = (
   dataLayerName: string = 'dataLayer',
   debug?: boolean
 ) => {
-  return uiLibInstallStatus === 'no' && trackingCode && globalThis.window
-    ? new Promise((r, e) => {
+  return trackUtils.isBrowserMode && uiLibInstallStatus === 'no' && trackingCode
+    ? new Promise((instok, insterr) => {
         uiLibInstallStatus = 'installing';
         (function (w, d, s, l, i) {
           w[l] = w[l] || [];
@@ -27,8 +27,9 @@ export const installGTM = (
           function gtag(fn: string, p: any, o?: any) {
             w[l].push(arguments);
           }
-          gtag?.('js', new Date());
-          gtag?.('config', i, { debug_mode: !!debug });
+          gtag('js', new Date());
+          gtag('config', i, { debug_mode: !!debug });
+          //
           var f = d.getElementsByTagName('script')[0],
             j = d.createElement('script'),
             dl = l != 'dataLayer' ? '&l=' + l : '';
@@ -40,11 +41,11 @@ export const installGTM = (
           })
             .then(() => {
               uiLibInstallStatus = 'yes';
-              r(true);
+              instok(true);
             })
             .catch(() => {
               uiLibInstallStatus = 'no';
-              e(true);
+              insterr(true);
             });
           f.parentNode?.insertBefore(j, f);
         })(window, document, 'script', dataLayerName, trackingCode);
@@ -57,13 +58,13 @@ const innerDataLayer = new Set<any>();
 // Is designed to run in browsers only.
 
 export const getEEC = (options: TSettings) => {
-  const { enabled = false, trackId = null } = options.integrations?.ga ?? {};
+  // const { enabled = false, trackId = null } = options.integrations?.ga ?? {};
   // install gtm tag
-  installGTM(
-    enabled ? trackId : void 0,
-    options.dataLayerName,
-    options.integrations?.testing
-  );
+  // installGTM(
+  //   enabled ? trackId : void 0,
+  //   options.dataLayerName,
+  //   options.integrations?.testing
+  // );
 
   const publishEvent = (payload) => {
     const dl = globalThis.window
@@ -184,6 +185,67 @@ export const getEEC = (options: TSettings) => {
     return _evt(dl);
   };
 
+  const getEECSearch = (searchTerm: string, params?: TEECParams) => {
+    return _evt({
+      event: 'search',
+      search_term: searchTerm,
+    });
+  };
+
+  const getEECUserLogin = (
+    profile?: T_EA_DataProfile | null,
+    params?: TEECParams
+  ) => {
+    return _evt({
+      event: 'login',
+      method: profile?.loginProvider ?? 'website',
+    });
+  };
+
+  const getEECUserNew = (
+    profile?: T_EA_DataProfile | null,
+    params?: TEECParams
+  ) => {
+    return _evt({
+      event: 'sign_up',
+      method: profile?.loginProvider ?? 'website',
+    });
+  };
+
+  const getEECAddToWishlist = (
+    products: T_EA_DataProduct[],
+    params?: TEECParams
+  ) => {
+    return _evt({
+      event: 'add_to_wishlist',
+      ecommerce: {
+        currency: '',
+        value: '',
+        items: [],
+      },
+      // method: profile?.loginProvider ?? 'website',
+    });
+  };
+
+  const getEECViewBasket = (basket: T_EA_DataBasket, params?: TEECParams) => {
+    return _evt({
+      event: 'view_cart',
+      ecommerce: trackUtils
+        .Basket(options, basket)
+        .InitCheckout.getEECDataLayer(params).ecommerce,
+    });
+  };
+
+  const getEECAddPaymentInfo = (
+    basket: T_EA_DataBasket,
+    params?: TEECParams
+  ) => {};
+
+  const getEECAddShippingInfo = (
+    basket: T_EA_DataBasket,
+    params?: TEECParams
+  ) => {};
+
   return {
     misc: (event: T_EA_DataCustomEvent) => ({
       getEECCustom: (p?: TEECParams) => getEECCustom(event, p),
@@ -193,17 +255,24 @@ export const getEEC = (options: TSettings) => {
     }),
     profile: (profile?: T_EA_DataProfile | null) => ({
       getEECUserData: (p?: TEECParams) => getEECUserData(profile, p),
+      getEECUserLogin: (p?: TEECParams) => getEECUserLogin(profile, p),
+      getEECUserNew: (p?: TEECParams) => getEECUserNew(profile, p),
     }),
-    catalog: (products: T_EA_DataProduct[]) => ({
+    catalog: (products: T_EA_DataProduct[], search = '') => ({
       getEECProductsList: (p?: TEECParams) => getEECProductsList(products, p),
       getEECProductDetails: (p?: TEECParams) =>
         getEECProductDetails(products, p),
-      getEECSearch: (p?: TEECParams) => getEECProductsList(products, p),
+      getEECSearch: (p?: TEECParams) => getEECSearch(search, p),
+      getEECAddToWishlist: (p?: TEECParams) => getEECAddToWishlist(products, p),
     }),
     basket: (basket: T_EA_DataBasket) => ({
       getEECCartAdd: (p?: TEECParams) => getEECCartAdd(basket, p),
       getEECCartRemove: (p?: TEECParams) => getEECCartRemove(basket, p),
       getEECCheckoutList: (p?: TEECParams) => getEECCheckoutList(basket, p),
+      getEECAddPaymentInfo: (p?: TEECParams) => getEECAddPaymentInfo(basket, p),
+      getEECAddShippingInfo: (p?: TEECParams) =>
+        getEECAddShippingInfo(basket, p),
+      getEECViewBasket: (p?: TEECParams) => getEECViewBasket(basket, p),
     }),
     order: (order: T_EA_DataOrder) => ({
       getEECPurchased: (p?: TEECParams) => getEECPurchased(order, p),

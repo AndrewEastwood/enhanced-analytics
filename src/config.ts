@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import { defaultsDeep } from 'lodash';
+import { installBrowserTrackers } from './apiTracker/installers';
 import {
   T_EA_DataBasket,
   T_EA_DataOrder,
@@ -10,7 +11,15 @@ import {
   TSettings,
 } from './shared';
 
-let _config: TSettings | null = null;
+const _config: TSettings = {} as TSettings;
+
+const config = new Proxy<TSettings>(_config, {
+  set(target: TSettings, p: keyof TSettings, newValue) {
+    target[p] = newValue;
+    p === 'integrations' && newValue ? installBrowserTrackers(config) : void 0;
+    return true;
+  },
+});
 
 export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
   absoluteURL: '/',
@@ -113,8 +122,12 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
 });
 
 export const configureAnalytics = (_store: Partial<TSettings>): TSettings => {
-  _config = defaultsDeep(_store, getDefaultParams(_store)) as TSettings;
-  return _config;
+  const mergedConfig = defaultsDeep(
+    _store,
+    getDefaultParams(_store)
+  ) as TSettings;
+  Object.assign(config, mergedConfig);
+  return config;
 };
 
 type TSettingsMiddleware = TSettings & {
@@ -145,7 +158,7 @@ export const analyticsMiddleware =
   };
 
 export const getConfig = () => {
-  return _config;
+  return Reflect.ownKeys(config).length > 0 ? config : null;
 };
 
 export const getResolvers = () => {

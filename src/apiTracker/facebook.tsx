@@ -403,12 +403,14 @@ const StandardEvents = [
 
 const isStandardEvent = (eName: string) => StandardEvents.includes(eName);
 
-const installFB = (
-  pixelId: string,
+let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
+export const installFB = (
+  pixelId?: string | null,
   user?: TFbNormalizedEventPayload['user_data'] | null
 ) => {
-  return trackUtils.isBrowserMode
+  return trackUtils.isBrowserMode && uiLibInstallStatus === 'no' && pixelId
     ? (() => {
+        uiLibInstallStatus = 'installing';
         // @ts-ignore
         !(function (f, b, e, v, n, t, s) {
           if (f.fbq) return;
@@ -450,6 +452,7 @@ const installFB = (
         user
           ? globalThis.window.fbq?.('init', pixelId, user)
           : globalThis.window.fbq?.('init', pixelId);
+        uiLibInstallStatus = 'yes';
       })()
     : null;
 };
@@ -598,18 +601,18 @@ export const fbTracker = (options: TSettings) => {
   }
 
   if (isBrowserMode) {
-    const initUser = resolveUser(null, options.resolvers?.profile);
-    installFB(
-      pixel_id,
-      initUser && initUser.email
-        ? {
-            em: [initUser.email].filter((v): v is string => !!v),
-            fn: [initUser.firstName].filter((v): v is string => !!v),
-            ln: [initUser.lastName].filter((v): v is string => !!v),
-            external_id: [initUser.email].filter((v): v is string => !!v),
-          }
-        : void 0
-    );
+    // const initUser = resolveUser(null, options.resolvers?.profile);
+    // installFB(
+    //   pixel_id,
+    //   initUser && initUser.email
+    //     ? {
+    //         em: [initUser.email].filter((v): v is string => !!v),
+    //         fn: [initUser.firstName].filter((v): v is string => !!v),
+    //         ln: [initUser.lastName].filter((v): v is string => !!v),
+    //         external_id: [initUser.email].filter((v): v is string => !!v),
+    //       }
+    //     : void 0
+    // );
   } else {
     if (!access_token) {
       throw '[EA] Facebook is configured without access_token; Please provide access_token;';
@@ -1271,6 +1274,13 @@ export const fbTracker = (options: TSettings) => {
     return publish(eventRequest);
   };
 
+  const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {};
+  const trackAddPaymentInfo = async (basket: T_EA_DataBasket) => {};
+  const trackAddShippingInfo = async (basket: T_EA_DataBasket) => {};
+  const trackViewBasket = async (basket: T_EA_DataBasket) => {
+    return trackIdentify();
+  };
+
   return {
     trackIdentify,
     trackTransaction,
@@ -1290,6 +1300,10 @@ export const fbTracker = (options: TSettings) => {
     trackTransactionCancel,
     trackTransactionFulfill,
     trackCustom,
+    trackAddPaymentInfo,
+    trackAddShippingInfo,
+    trackAddToWishlist,
+    trackViewBasket,
   };
 };
 

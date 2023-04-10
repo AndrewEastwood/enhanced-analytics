@@ -247,6 +247,50 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       return await Promise.allSettled(r);
     };
 
+  const trackAddToWishlist = (products: T_EA_DataProduct[]) => async () => {
+    const r = [
+      useFb ? tFb(config).trackAddToWishlist : null,
+      useKl ? tKlyo(config).trackAddToWishlist : null,
+      useFs ? tFs(config).trackAddToWishlist : null,
+    ]
+      .filter((v) => !!v)
+      .map((v) => v!(products));
+    return await Promise.allSettled(r);
+  };
+
+  const trackViewBasket = (basket: T_EA_DataBasket) => async () => {
+    const r = [
+      useFb ? tFb(config).trackViewBasket : null,
+      useKl ? tKlyo(config).trackViewBasket : null,
+      useFs ? tFs(config).trackViewBasket : null,
+    ]
+      .filter((v) => !!v)
+      .map((v) => v!(basket));
+    return await Promise.allSettled(r);
+  };
+
+  const trackAddPaymentInfo = (basket: T_EA_DataBasket) => async () => {
+    const r = [
+      useFb ? tFb(config).trackAddPaymentInfo : null,
+      useKl ? tKlyo(config).trackAddPaymentInfo : null,
+      useFs ? tFs(config).trackAddPaymentInfo : null,
+    ]
+      .filter((v) => !!v)
+      .map((v) => v!(basket));
+    return await Promise.allSettled(r);
+  };
+
+  const trackAddShippingInfo = (basket: T_EA_DataBasket) => async () => {
+    const r = [
+      useFb ? tFb(config).trackAddShippingInfo : null,
+      useKl ? tKlyo(config).trackAddShippingInfo : null,
+      useFs ? tFs(config).trackAddShippingInfo : null,
+    ]
+      .filter((v) => !!v)
+      .map((v) => v!(basket));
+    return await Promise.allSettled(r);
+  };
+
   return {
     misc: (event: T_EA_DataCustomEvent) => ({
       trackCustom: trackCustom(event),
@@ -266,11 +310,15 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       trackProductsItemView: trackProductsItemView(products),
       trackProductItemView: trackProductItemView(products[0]),
       trackSearch: trackSearch(search, products),
+      trackAddToWishlist: trackAddToWishlist(products),
     }),
     basket: (basket: T_EA_DataBasket) => ({
+      trackViewBasket: trackViewBasket(basket),
       trackProductAddToCart: trackProductAddToCart(basket),
       trackProductRemoveFromCart: trackProductRemoveFromCart(basket),
       trackInitiateCheckout: trackInitiateCheckout(basket),
+      trackAddPaymentInfo: trackAddPaymentInfo(basket),
+      trackAddShippingInfo: trackAddShippingInfo(basket),
     }),
     order: (order: T_EA_DataOrder) => ({
       trackTransaction: trackTransaction(order),
