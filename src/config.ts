@@ -15,13 +15,18 @@ const _config: TSettings = {} as TSettings;
 
 const config = new Proxy<TSettings>(_config, {
   set(target: TSettings, p: keyof TSettings, newValue) {
-    target[p] = newValue;
-    p === 'integrations' && newValue ? installBrowserTrackers(config) : void 0;
-    return true;
+    const r = Reflect.set(target, p, newValue);
+    // temprory solution....
+    installBrowserTrackers(target);
+    return r;
+  },
+  get(target, p) {
+    return target[p];
   },
 });
 
 export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
+  _configured: false,
   absoluteURL: '/',
   currency: 'usd',
   affiliation: 'WebSite',
@@ -123,6 +128,9 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
 
 export const configureAnalytics = (_store: Partial<TSettings>): TSettings => {
   const mergedConfig = defaultsDeep(
+    {
+      _configured: true,
+    },
     _store,
     getDefaultParams(_store)
   ) as TSettings;
@@ -158,7 +166,7 @@ export const analyticsMiddleware =
   };
 
 export const getConfig = () => {
-  return Reflect.ownKeys(config).length > 0 ? config : null;
+  return config;
 };
 
 export const getResolvers = () => {

@@ -11,7 +11,6 @@ import {
 } from '../shared';
 import * as trackUtils from '../utils';
 import { round, isBrowserMode } from '../utils';
-import { resolveUser } from './identity';
 
 const DeliveryCategory = {
   IN_STORE: 'in_store',
@@ -308,6 +307,7 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
                 IsStandardEvent: isStandardEvent(evt._event_name),
                 UserData: evt._user_data,
                 eventID: evt._event_id,
+                evt: evt.normalize(),
               };
             }),
           })
@@ -409,7 +409,7 @@ export const installFB = (
   user?: TFbNormalizedEventPayload['user_data'] | null
 ) => {
   return trackUtils.isBrowserMode && uiLibInstallStatus === 'no' && pixelId
-    ? (() => {
+    ? new Promise((instok) => {
         uiLibInstallStatus = 'installing';
         // @ts-ignore
         !(function (f, b, e, v, n, t, s) {
@@ -453,7 +453,8 @@ export const installFB = (
           ? globalThis.window.fbq?.('init', pixelId, user)
           : globalThis.window.fbq?.('init', pixelId);
         uiLibInstallStatus = 'yes';
-      })()
+        instok(globalThis.window.fbq);
+      })
     : null;
 };
 

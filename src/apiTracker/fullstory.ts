@@ -30,8 +30,6 @@ export const installFS = (orgId?: string | null) => {
             return;
           }
           if (m.FS) {
-            uiLibInstallStatus = 'yes';
-            instok(m.FS);
             return;
           }
           // @ts-ignore

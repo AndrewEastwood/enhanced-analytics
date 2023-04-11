@@ -111,6 +111,7 @@ type TResolvers = {
 };
 
 export type TSettings = {
+  _configured: boolean;
   affiliation: string;
   absoluteURL: string;
   currency: string;

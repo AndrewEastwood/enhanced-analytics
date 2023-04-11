@@ -4,6 +4,7 @@ import { installFS } from './fullstory';
 import { installGTM } from './ga';
 import { resolveUser } from './identity';
 import { installK } from './klaviyo';
+import { isBrowserMode } from '../utils';
 
 export const installer = {
   [ETrackers.Facebook]: (s: TSettings) => {
@@ -17,7 +18,7 @@ export const installer = {
             external_id: [initUser.email].filter((v): v is string => !!v),
           }
         : void 0;
-    installFB(s.integrations?.fb?.pixelId, fbUser);
+    return installFB(s.integrations?.fb?.pixelId, fbUser);
   },
   [ETrackers.Klaviyo]: (s: TSettings) =>
     installK(s.integrations?.klaviyo?.siteId),
@@ -31,12 +32,18 @@ export const installer = {
     ),
 };
 
-export const installBrowserTrackers = (s: TSettings) => {
-  // defer install until config is ready
-  setTimeout(() => {
-    //
-    Object.values(ETrackers).map((v) => {
-      s.integrations?.[v]?.enabled && installer[v] ? installer[v](s) : void 0;
-    });
-  });
+const installedTrackers = new Set<ETrackers>();
+export const installBrowserTrackers = async (s: TSettings) => {
+  isBrowserMode
+    ? await Promise.allSettled(
+        Object.values(ETrackers)
+          .filter((v) => !installedTrackers.has(v))
+          .map((v) => {
+            console.debug('[EA] installing browser tracker of ' + v);
+            return s.integrations?.[v]?.enabled && installer[v]
+              ? (installer[v](s), installedTrackers.add(v))
+              : Promise.resolve();
+          })
+      )
+    : void 0;
 };

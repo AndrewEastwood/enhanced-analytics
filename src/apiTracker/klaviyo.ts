@@ -19,6 +19,7 @@ export const installK = (siteId?: string | null) => {
     ? new Promise((instok, insterr) => {
         uiLibInstallStatus = 'installing';
         // install UI lib
+        globalThis._learnq = globalThis._learnq || [];
         const el = document.createElement('script');
         el.crossOrigin = 'anonymous';
         el.src = `//static.klaviyo.com/onsite/js/klaviyo.js?company_id=${siteId}`;

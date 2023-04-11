@@ -1,6 +1,8 @@
-import { getConfig } from './config';
+import { configureAnalytics, getConfig } from './config';
 import apiTracker, { getEEC } from './apiTracker';
 import { resolveUser } from './apiTracker/identity';
+import { TSettings } from './shared';
+import { installBrowserTrackers } from './apiTracker/installers';
 import {
   ETrackers,
   T_EA_DataBasket,
@@ -37,7 +39,10 @@ export * from './guards';
 
 let runtimeUser: T_EA_DataProfile | null = null;
 
-export const useAnalytics = () => {
+export const useAnalytics = (c?: TSettings) => {
+  c ? configureAnalytics(c) : void 0;
+  // temporary solution
+  c ? installBrowserTrackers(c) : void 0;
   return {
     config: getConfig(),
     identify: (user: T_EA_DataProfile) => {
@@ -46,7 +51,7 @@ export const useAnalytics = () => {
     },
     withMisc: (name: string, attributes?: Record<string, any>) => {
       const store = getConfig();
-      if (store === null) {
+      if (!store._configured) {
         throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
       const v: T_EA_DataCustomEvent = {
@@ -85,7 +90,7 @@ export const useAnalytics = () => {
     },
     withPage: (payload: T_EA_DataPage | Record<string, any> | null = null) => {
       const store = getConfig();
-      if (store === null) {
+      if (!store._configured) {
         throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
 
@@ -134,7 +139,7 @@ export const useAnalytics = () => {
       payload: T_EA_DataProfile | Record<string, any> | null = null
     ) => {
       const store = getConfig();
-      if (store === null) {
+      if (!store._configured) {
         throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
 
@@ -185,7 +190,7 @@ export const useAnalytics = () => {
       payload: (T_EA_DataProduct | Record<string, any>)[] | null = null
     ) => {
       const store = getConfig();
-      if (store === null) {
+      if (!store._configured) {
         throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
 
@@ -239,7 +244,7 @@ export const useAnalytics = () => {
       payload: T_EA_DataBasket | Record<string, any> | null = null
     ) => {
       const store = getConfig();
-      if (store === null) {
+      if (!store._configured) {
         throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
       if (!store.resolvers?.basket) {
@@ -291,7 +296,7 @@ export const useAnalytics = () => {
     ) => {
       const store = getConfig();
 
-      if (store === null) {
+      if (!store._configured) {
         throw '[EA] Invoke configureAnalytics first and provide configuration';
       }
 
