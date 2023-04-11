@@ -61,23 +61,6 @@ export const klaviyoTracker = (options: TSettings) => {
     throw '[EA] Klaviyo is not configured properly; Please provide token to run in the server mode;';
   }
 
-  if (trackUtils.isBrowserMode) {
-    installK(analytics.klaviyo?.siteId);
-  }
-  // if (trackUtils.isBrowserMode && uiLibInstallStatus === 'no') {
-  //   uiLibInstallStatus = 'installing';
-  //   // install UI lib
-  //   const el = document.createElement('script');
-  //   el.crossOrigin = 'anonymous';
-  //   el.src = `//static.klaviyo.com/onsite/js/klaviyo.js?company_id=${analytics.klaviyo?.siteId}`;
-  //   el.async = true;
-  //   el.setAttribute('data-integration-id', `eak-${analytics.klaviyo?.siteId}`);
-  //   new Promise((resolve) => (el.onload = resolve)).then(() => {
-  //     uiLibInstallStatus = 'yes';
-  //   });
-  //   document.head.appendChild(el);
-  // }
-
   analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
 
   const getUserObj = (profile?: T_EA_DataProfile | null) => {

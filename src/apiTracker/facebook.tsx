@@ -617,20 +617,7 @@ export const fbTracker = (options: TSettings) => {
     throw '[EA] Facebook is configured without pixel_id; Please provide pixel_id;';
   }
 
-  if (isBrowserMode) {
-    // const initUser = resolveUser(null, options.resolvers?.profile);
-    // installFB(
-    //   pixel_id,
-    //   initUser && initUser.email
-    //     ? {
-    //         em: [initUser.email].filter((v): v is string => !!v),
-    //         fn: [initUser.firstName].filter((v): v is string => !!v),
-    //         ln: [initUser.lastName].filter((v): v is string => !!v),
-    //         external_id: [initUser.email].filter((v): v is string => !!v),
-    //       }
-    //     : void 0
-    // );
-  } else {
+  if (!isBrowserMode) {
     if (!access_token) {
       throw '[EA] Facebook is configured without access_token; Please provide access_token;';
     }

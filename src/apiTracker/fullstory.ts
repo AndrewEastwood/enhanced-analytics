@@ -176,24 +176,10 @@ export const fullstoryTracker = (options: TSettings) => {
     throw '[EA] FullStory is not configured properly; orgId is not defined';
   }
 
-  const { event, identify, setUserVars, setVars } = globalThis.window.FS; // ?? installFS(analytics?.fullstory?.orgId);
-
-  // restore id on the UI
-  // const savedId = localStorage.getItem('EA_FullStory_Identity');
-  // lastIdentity.clear();
-  // savedId ? lastIdentity.add(JSON.parse(savedId)) : void 0;
+  const { event, identify, setUserVars, setVars } = globalThis.window.FS;
 
   const getUserObj = (profile?: T_EA_DataProfile | null) => {
-    // const u = profile
-    //   ? profile
-    //   : options.resolvers?.profile?.() ?? lastIdentity.values().next().value;
-    // lastIdentity.clear();
-    // u ? lastIdentity.add(u) : void 0;
-    // trackUtils.isBrowserMode && u
-    //   ? localStorage.setItem('EA_FullStory_Identity', JSON.stringify(u))
-    //   : void 0;
     return resolveUser(profile, options.resolvers?.profile);
-    // return u;
   };
 
   const fldTypeResolver = (fld: any) => {
