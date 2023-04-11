@@ -196,29 +196,29 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
     }
     normalize(): Record<string, any> {
       return {
-        em: this._emails.map((v) =>
-          trackUtils.digestMessage(v.toLowerCase().trim())
+        em: this._emails.map(
+          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
         ),
-        ph: this._phones.map((v) =>
-          trackUtils.digestMessage(v.toLowerCase().trim())
+        ph: this._phones.map(
+          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
         ),
-        fn: this._first_names.map((v) =>
-          trackUtils.digestMessage(v.toLowerCase().trim())
+        fn: this._first_names.map(
+          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
         ),
-        ln: this._last_names.map((v) =>
-          trackUtils.digestMessage(v.toLowerCase().trim())
+        ln: this._last_names.map(
+          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
         ),
-        ct: this._cities.map((v) =>
-          trackUtils.digestMessage(v.toLowerCase().trim())
+        ct: this._cities.map(
+          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
         ),
-        zp: this._zips.map((v) =>
-          trackUtils.digestMessage(v.toLowerCase().trim())
+        zp: this._zips.map(
+          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
         ),
-        country: this._countries.map((v) =>
-          trackUtils.digestMessage(v.toLowerCase().trim())
+        country: this._countries.map(
+          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
         ),
-        external_id: this._external_ids.map((v) =>
-          trackUtils.digestMessage(v.toLowerCase().trim())
+        external_id: this._external_ids.map(
+          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
         ),
         client_ip_address: this._client_ip_address,
         client_user_agent: this._client_user_agent,
