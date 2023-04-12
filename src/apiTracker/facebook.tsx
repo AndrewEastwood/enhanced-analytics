@@ -18,6 +18,8 @@ const DeliveryCategory = {
   HOME_DELIVERY: 'home_delivery',
 };
 
+const sentUserData = new Set();
+
 let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
   class Content {
     _id;
@@ -194,31 +196,47 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._fbp = a;
       return this;
     }
-    normalize(): Record<string, any> {
+    async normalize(): Promise<Record<string, any>> {
       return {
-        em: this._emails.map(
-          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
+        em: await Promise.all(
+          this._emails.map((v) =>
+            trackUtils.digestMessage(v.toLowerCase().trim())
+          )
         ),
-        ph: this._phones.map(
-          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
+        ph: await Promise.all(
+          this._phones.map((v) =>
+            trackUtils.digestMessage(v.toLowerCase().trim())
+          )
         ),
-        fn: this._first_names.map(
-          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
+        fn: await Promise.all(
+          this._first_names.map((v) =>
+            trackUtils.digestMessage(v.toLowerCase().trim())
+          )
         ),
-        ln: this._last_names.map(
-          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
+        ln: await Promise.all(
+          this._last_names.map((v) =>
+            trackUtils.digestMessage(v.toLowerCase().trim())
+          )
         ),
-        ct: this._cities.map(
-          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
+        ct: await Promise.all(
+          this._cities.map((v) =>
+            trackUtils.digestMessage(v.toLowerCase().trim())
+          )
         ),
-        zp: this._zips.map(
-          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
+        zp: await Promise.all(
+          this._zips.map((v) =>
+            trackUtils.digestMessage(v.toLowerCase().trim())
+          )
         ),
-        country: this._countries.map(
-          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
+        country: await Promise.all(
+          this._countries.map((v) =>
+            trackUtils.digestMessage(v.toLowerCase().trim())
+          )
         ),
-        external_id: this._external_ids.map(
-          async (v) => await trackUtils.digestMessage(v.toLowerCase().trim())
+        external_id: await Promise.all(
+          this._external_ids.map((v) =>
+            trackUtils.digestMessage(v.toLowerCase().trim())
+          )
         ),
         client_ip_address: this._client_ip_address,
         client_user_agent: this._client_user_agent,
@@ -304,28 +322,35 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
         ? Promise.resolve({
             message: null,
             response: 'Browser Processed',
-            processedItems: this._events.map((evt) => {
-              // re-init
-              globalThis.window.fbq?.('init', this._pixel_id, {
-                ...(evt._user_data ? evt._user_data.normalize() : {}),
-              });
-              // track event
-              globalThis.window.fbq?.(
-                isStandardEvent(evt._event_name) ? 'track' : 'trackCustom',
-                evt._event_name,
-                getFbqObjectByNormalizedData(evt.normalize()),
-                {
+            processedItems: await Promise.all(
+              this._events.map(async (evt) => {
+                // re-init
+                sentUserData.size === 0
+                  ? globalThis.window.fbq?.('init', this._pixel_id, {
+                      ...(evt._user_data
+                        ? await evt._user_data.normalize()
+                        : {}),
+                    })
+                  : void 0;
+                evt._user_data ? sentUserData.add(evt._user_data) : void 0;
+                // track event
+                globalThis.window.fbq?.(
+                  isStandardEvent(evt._event_name) ? 'track' : 'trackCustom',
+                  evt._event_name,
+                  getFbqObjectByNormalizedData(evt.normalize()),
+                  {
+                    eventID: evt._event_id,
+                  }
+                );
+                return {
+                  [evt._event_name]: `Sent to ${this._pixel_id}`,
+                  IsStandardEvent: isStandardEvent(evt._event_name),
+                  UserData: evt._user_data,
                   eventID: evt._event_id,
-                }
-              );
-              return {
-                [evt._event_name]: `Sent to ${this._pixel_id}`,
-                IsStandardEvent: isStandardEvent(evt._event_name),
-                UserData: evt._user_data,
-                eventID: evt._event_id,
-                evt: evt.normalize(),
-              };
-            }),
+                  evt: evt.normalize(),
+                };
+              })
+            ),
           })
         : Promise.reject({
             message:
@@ -468,6 +493,7 @@ export const installFB = (
         user
           ? globalThis.window.fbq?.('init', pixelId, user)
           : globalThis.window.fbq?.('init', pixelId);
+        // user ? sentUserData.add(user) : void 0;
         uiLibInstallStatus = 'yes';
         instok(globalThis.window.fbq);
       })
@@ -482,6 +508,19 @@ export const getFbqObjectByNormalizedData = (
     // Contact, Donate, FindLocation, Schedule, StartTrial, SubmitApplication, CompleteRegistration, AddToWishlist, AddPaymentInfo
     // TBD Later
     /// ------------------
+    // InitiateCheckout: [content_category, content_ids, contents, currency, num_items, value
+    // Optional.
+    ...(p.event_name === 'InitiateCheckout'
+      ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
+          content_type: p.custom_data?.content_type,
+          content_name: p.custom_data?.content_name, // 'Auto Insurance',
+          content_category: p.custom_data?.content_category, //'Product Search',
+          contents: p.custom_data?.contents ?? [],
+          num_items: p.custom_data?.num_items ?? 0,
+        }
+      : {}),
     // AddToCart: [content_ids, content_name, content_type, contents, currency, value
     // Optional.
     // Required for Advantage+ catalog ads: content_type and contents]
