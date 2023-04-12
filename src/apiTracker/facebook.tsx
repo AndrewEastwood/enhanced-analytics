@@ -196,41 +196,58 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._fbp = a;
       return this;
     }
-    async normalize(): Promise<Record<string, any>> {
+    async normalize(): Promise<
+      TFbNormalizedEventPayload['user_data'] | Record<string, any>
+    > {
+      const noHash = isBrowserMode;
       return {
         em: await Promise.all(
           this._emails.map((v) =>
-            trackUtils.digestMessage(v.toLowerCase().trim())
+            noHash
+              ? v.toLowerCase().trim()
+              : trackUtils.digestMessage(v.toLowerCase().trim())
           )
         ),
         ph: await Promise.all(
           this._phones.map((v) =>
-            trackUtils.digestMessage(v.toLowerCase().trim())
+            noHash
+              ? v.toLowerCase().trim()
+              : trackUtils.digestMessage(v.toLowerCase().trim())
           )
         ),
         fn: await Promise.all(
           this._first_names.map((v) =>
-            trackUtils.digestMessage(v.toLowerCase().trim())
+            noHash
+              ? v.toLowerCase().trim()
+              : trackUtils.digestMessage(v.toLowerCase().trim())
           )
         ),
         ln: await Promise.all(
           this._last_names.map((v) =>
-            trackUtils.digestMessage(v.toLowerCase().trim())
+            noHash
+              ? v.toLowerCase().trim()
+              : trackUtils.digestMessage(v.toLowerCase().trim())
           )
         ),
         ct: await Promise.all(
           this._cities.map((v) =>
-            trackUtils.digestMessage(v.toLowerCase().trim())
+            noHash
+              ? v.toLowerCase().trim()
+              : trackUtils.digestMessage(v.toLowerCase().trim())
           )
         ),
         zp: await Promise.all(
           this._zips.map((v) =>
-            trackUtils.digestMessage(v.toLowerCase().trim())
+            noHash
+              ? v.toLowerCase().trim()
+              : trackUtils.digestMessage(v.toLowerCase().trim())
           )
         ),
         country: await Promise.all(
           this._countries.map((v) =>
-            trackUtils.digestMessage(v.toLowerCase().trim())
+            noHash
+              ? v.toLowerCase().trim()
+              : trackUtils.digestMessage(v.toLowerCase().trim())
           )
         ),
         external_id: await Promise.all(
@@ -247,10 +264,10 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
     _event_id;
     _event_name;
     _event_time;
-    _custom_data;
+    _custom_data: CustomData = new CustomData();
     _event_source_url;
     _action_source;
-    _user_data;
+    _user_data: UserData = new UserData();
     get user_data(): UserData {
       return this._user_data;
     }
@@ -282,7 +299,9 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._user_data = _user_data;
       return this;
     }
-    normalize(): Record<string, any> {
+    async normalize(): Promise<
+      TFbNormalizedEventPayload | Record<string, any>
+    > {
       return {
         event_id: this._event_id,
         event_name: this._event_name,
@@ -290,7 +309,7 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
         custom_data: this._custom_data?.normalize() ?? {},
         event_source_url: this._event_source_url,
         action_source: this._action_source,
-        user_data: this._user_data?.normalize() ?? {},
+        user_data: this._user_data ? await this._user_data.normalize() : {},
       };
     }
   }
@@ -317,6 +336,41 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._events = _events;
       return this;
     }
+    static processBrowserEvent(
+      pixelId: string,
+      evtData: TFbNormalizedEventPayload | Record<string, any>
+    ) {
+      // try to identify (https://developers.facebook.com/docs/meta-pixel/advanced/advanced-matching)
+      const u = Object.entries(evtData.user_data ?? {}).reduce((r, e) => {
+        return {
+          ...r,
+          [e[0]]: Array.isArray(e[1]) ? e[1][0] ?? '' : e[1],
+        };
+      }, {} as Record<string, any>);
+      // re-init
+      sentUserData.size === 0
+        ? globalThis.window.fbq?.('init', pixelId, {
+            ...u,
+          })
+        : void 0;
+      evtData.user_data ? sentUserData.add(evtData.user_data) : void 0;
+      // track event
+      globalThis.window.fbq?.(
+        isStandardEvent(evtData.event_name) ? 'track' : 'trackCustom',
+        evtData.event_name,
+        getFbqObjectByNormalizedData(evtData),
+        {
+          eventID: evtData.event_id,
+        }
+      );
+      return {
+        [evtData.event_name]: `Sent to ${pixelId}`,
+        IsStandardEvent: isStandardEvent(evtData.event_name),
+        UserData: evtData.user_data,
+        eventID: evtData.event_id,
+        evt: evtData,
+      };
+    }
     async execute() {
       return isBrowserMode
         ? Promise.resolve({
@@ -324,31 +378,11 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
             response: 'Browser Processed',
             processedItems: await Promise.all(
               this._events.map(async (evt) => {
-                // re-init
-                sentUserData.size === 0
-                  ? globalThis.window.fbq?.('init', this._pixel_id, {
-                      ...(evt._user_data
-                        ? await evt._user_data.normalize()
-                        : {}),
-                    })
-                  : void 0;
-                evt._user_data ? sentUserData.add(evt._user_data) : void 0;
-                // track event
-                globalThis.window.fbq?.(
-                  isStandardEvent(evt._event_name) ? 'track' : 'trackCustom',
-                  evt._event_name,
-                  getFbqObjectByNormalizedData(evt.normalize()),
-                  {
-                    eventID: evt._event_id,
-                  }
+                const evtData = await evt.normalize();
+                return EventRequest.processBrowserEvent(
+                  this._pixel_id,
+                  evtData
                 );
-                return {
-                  [evt._event_name]: `Sent to ${this._pixel_id}`,
-                  IsStandardEvent: isStandardEvent(evt._event_name),
-                  UserData: evt._user_data,
-                  eventID: evt._event_id,
-                  evt: evt.normalize(),
-                };
               })
             ),
           })
@@ -440,15 +474,13 @@ const StandardEvents = [
   'SubmitApplication',
   'Subscribe',
   'ViewContent',
+  'PageView',
 ];
 
 const isStandardEvent = (eName: string) => StandardEvents.includes(eName);
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
-export const installFB = (
-  pixelId?: string | null,
-  user?: TFbNormalizedEventPayload['user_data'] | null
-) => {
+export const installFB = (pixelId?: string | null) => {
   return trackUtils.isBrowserMode && uiLibInstallStatus === 'no' && pixelId
     ? new Promise((instok) => {
         uiLibInstallStatus = 'installing';
@@ -489,11 +521,6 @@ export const installFB = (
           'script',
           'https://connect.facebook.net/en_US/fbevents.js'
         );
-        // try to identify (https://developers.facebook.com/docs/meta-pixel/advanced/advanced-matching)
-        user
-          ? globalThis.window.fbq?.('init', pixelId, user)
-          : globalThis.window.fbq?.('init', pixelId);
-        // user ? sentUserData.add(user) : void 0;
         uiLibInstallStatus = 'yes';
         instok(globalThis.window.fbq);
       })
@@ -504,10 +531,15 @@ export const getFbqObjectByNormalizedData = (
   p: TFbNormalizedEventPayload | Record<string, any>
 ) => {
   return {
+    // Advanced User Data Matching
+    user_data: p.user_data ?? {},
     // https://developers.facebook.com/docs/meta-pixel/reference
     // Contact, Donate, FindLocation, Schedule, StartTrial, SubmitApplication, CompleteRegistration, AddToWishlist, AddPaymentInfo
     // TBD Later
     /// ------------------
+    // PageView: [
+    // Optional.
+    ...(p.event_name === 'PageView' ? {} : {}),
     // InitiateCheckout: [content_category, content_ids, contents, currency, num_items, value
     // Optional.
     ...(p.event_name === 'InitiateCheckout'
@@ -533,6 +565,7 @@ export const getFbqObjectByNormalizedData = (
           content_category: p.custom_data?.content_category, //'Product Search',
           contents: p.custom_data?.contents ?? [],
           num_items: p.custom_data?.num_items ?? 0,
+          user_data: p.user_data ?? {},
         }
       : {}),
     // RemoveFromCart: [content_ids, content_name, content_type, contents, currency, value
@@ -618,16 +651,8 @@ export const EA_FB_Server_RePublish_Events: React.FC<{
   const { errorMessage, serverPayloads } = props;
 
   useEffect(() => {
-    serverPayloads?.map((p) => {
-      !globalThis.window.fbq && p.pixel
-        ? installFB(p.pixel, p.user_data)
-        : void 0;
-      globalThis.window.fbq?.(
-        isStandardEvent(p.event_name) ? 'track' : 'trackCustom',
-        p.event_name,
-        getFbqObjectByNormalizedData(p),
-        { eventID: p.event_id }
-      );
+    serverPayloads?.map((evtData) => {
+      EventRequest.processBrowserEvent(evtData.pixel, evtData);
     });
   }, []);
 
@@ -650,7 +675,7 @@ export const fbTracker = (options: TSettings) => {
   const access_token = analytics?.fb?.token ?? '';
   const pixel_id = analytics?.fb?.pixelId;
   const testCode = (analytics?.testing ? analytics.fb?.testCode : '') ?? '';
-  const bizSdk = analytics?.fb?.sdk ?? {};
+  const bizSdk = analytics?.fb?.sdk;
 
   if (!pixel_id) {
     throw '[EA] Facebook is configured without pixel_id; Please provide pixel_id;';
@@ -682,12 +707,14 @@ export const fbTracker = (options: TSettings) => {
       console.debug('[EA:Facebook] eventRequest=>Response: ', response);
       return {
         message: null,
-        payload: req.events.map(
-          (se) =>
-            ({
-              ...se.normalize(),
-              pixel: req.pixel,
-            } as TFbNormalizedEventPayload)
+        payload: await Promise.all(
+          req.events.map(
+            async (se) =>
+              ({
+                ...((await se.normalize()) ?? {}),
+                pixel: req.pixel,
+              } as TFbNormalizedEventPayload)
+          )
         ),
         response,
       };
@@ -1091,7 +1118,7 @@ export const fbTracker = (options: TSettings) => {
 
     const serverEvent = new ServerEvent()
       .setEventId(evtName)
-      .setEventName('ViewContent')
+      .setEventName('PageView')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
       .setEventSourceUrl(page?.url ?? '')

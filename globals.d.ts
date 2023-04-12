@@ -15,7 +15,17 @@ interface Window {
     setUserVars: Function;
     event: Function;
   };
-  fbq?(fn: string, event: string, attr?: any, modif?: { eventID: string });
-  _fbq?(fn: string, event: string, attr?: any, modif?: { eventID: string });
+  fbq?(
+    fn: string,
+    event: string,
+    attr?: any,
+    modif?: { eventID?: string; user_data?: any }
+  );
+  _fbq?(
+    fn: string,
+    event: string,
+    attr?: any,
+    modif?: { eventID?: string; user_data?: any }
+  );
   gtag?();
 }

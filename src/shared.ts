@@ -133,6 +133,7 @@ export type TSettings = {
       pixelId: null | string;
       token?: null | string;
       testCode?: null | string;
+      hashUser?: boolean;
     };
     [ETrackers.FullStory]?: {
       enabled: boolean;
