@@ -1108,7 +1108,7 @@ export const fbTracker = (options: TSettings) => {
     page: T_EA_DataPage
   ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfPageView();
-    console.error('[EA:Facebook] trackPageView', evtName);
+    console.debug('[EA:Facebook] trackPageView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
 
