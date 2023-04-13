@@ -111,7 +111,7 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
   },
   resolvers: {
     ...(_store.resolvers || {}),
-    identityStore: _store?.resolvers?.identityStore || (() => void 0),
+    identityStore: void 0,
     session: _store?.resolvers?.session || (() => ({} as T_EA_DataSession)),
     eventUUID: _store.resolvers?.eventUUID ?? (() => Date.now()),
     product: _store.resolvers?.product || ((p) => p as T_EA_DataProduct),

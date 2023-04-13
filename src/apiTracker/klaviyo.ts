@@ -141,6 +141,7 @@ export const klaviyoTracker = (options: TSettings) => {
   ): Promise<TServerEventResponse[]> => {
     const user = getUserObj(profile);
 
+    console.debug('[EA:Klaviyo] trackIdentify', user);
     if (user) {
       const attributes = {
         email: user?.email,
@@ -179,12 +180,14 @@ export const klaviyoTracker = (options: TSettings) => {
           existingProfile?.body.data[0] ||
           indentifiedEmails.has(user.email) ||
           null;
+        console.debug('[EA:Klaviyo] ... foundProfile', foundProfile);
         const profileResp = foundProfile
           ? foundProfile
           : await Profiles?.createProfile({
               data: payload,
             });
         indentifiedEmails.add(user.email);
+        console.debug('[EA:Klaviyo] ... indentifiedEmails.add>', user.email);
         const queueResp =
           trackUtils.isBrowserMode && uiLibInstallStatus !== 'yes'
             ? []

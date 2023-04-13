@@ -27,9 +27,12 @@ export const installBrowserTrackers = async (s: TSettings) => {
         Object.values(ETrackers)
           .filter((v) => !installedTrackers.has(v))
           .map((v) => {
-            console.debug('[EA] installing browser tracker of ' + v);
             return s.integrations?.[v]?.enabled && installer[v]
-              ? (installedTrackers.add(v), installer[v](s))
+              ? (installedTrackers.add(v),
+                console.debug(
+                  '[EA:Installer] installing browser tracker of ' + v
+                ),
+                installer[v](s))
               : Promise.resolve();
           })
       )
