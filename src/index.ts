@@ -43,11 +43,6 @@ export const useAnalytics = (c?: TSettings) => {
   c ? installBrowserTrackers(c) : void 0;
   return {
     config: getConfig(),
-    utils: {
-      extractUserFromBrowserCookie(cookieJar: Record<string, any>) {
-        return;
-      },
-    },
     identify: (user: T_EA_DataProfile) => {
       const u = resolveUser(user);
       return u && u.email;
