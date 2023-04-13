@@ -15,7 +15,7 @@ export const installer = {
   [ETrackers.GoogleAnalytics]: (s: TSettings) =>
     installGTM(
       s.integrations?.ga?.trackId,
-      s.dataLayerName,
+      s.integrations?.ga?.dataLayerName,
       s.integrations?.testing
     ),
 };
@@ -29,7 +29,7 @@ export const installBrowserTrackers = async (s: TSettings) => {
           .map((v) => {
             console.debug('[EA] installing browser tracker of ' + v);
             return s.integrations?.[v]?.enabled && installer[v]
-              ? (installer[v](s), installedTrackers.add(v))
+              ? (installedTrackers.add(v), installer[v](s))
               : Promise.resolve();
           })
       )

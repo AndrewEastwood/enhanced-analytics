@@ -158,7 +158,8 @@ const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
             step: 1,
           },
           products: basket.products.map((p) => ({
-            list: params?.listName || options.defaultBasketName,
+            list:
+              params?.listName || options.integrations?.ga?.defaultBasketName,
             id: p.id,
             sku: p.sku,
             name: p.title,
@@ -193,7 +194,8 @@ const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
         currency: options.currency,
         value: round(basket.total),
         coupon: basket.coupon,
-        item_list_name: params?.listName || options.defaultBasketName,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
         items: basket.products.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
         })),
@@ -224,7 +226,8 @@ const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
         currencyCode: options.currency,
         detail: {
           actionField: {
-            list: params?.listName || options.defaultCatalogName,
+            list:
+              params?.listName || options.integrations?.ga?.defaultCatalogName,
           },
           products: [
             {
@@ -261,7 +264,8 @@ const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
       ecommerce: {
         currency: options.currency,
         value: product.isSale ? product.salePrice : product.price,
-        item_list_name: params?.listName || options.defaultCatalogName,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultCatalogName,
         items: [
           {
             ...EECUtils.getProductItem(product),
@@ -312,7 +316,8 @@ const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
             coupon: (order.coupon && order.coupon) || '',
           },
           products: order.products.map((p) => ({
-            list: params?.listName || options.defaultBasketName,
+            list:
+              params?.listName || options.integrations?.ga?.defaultBasketName,
             id: p.id,
             sku: p.sku,
             name: p.title,
@@ -350,7 +355,8 @@ const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
         shipping: order.shipping.cost,
         currency: options.currency,
         coupon: order.coupon,
-        item_list_name: params?.listName || options.defaultBasketName,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
         items: order.products.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
         })),
@@ -421,7 +427,8 @@ const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
         shipping: order.shipping.cost,
         currency: options.currency,
         coupon: order.coupon,
-        item_list_name: params?.listName || options.defaultBasketName,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
         items: order.products.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
         })),
@@ -454,7 +461,8 @@ const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
         currencyCode: options.currency,
         add: {
           actionField: {
-            list: params?.listName || options.defaultBasketName,
+            list:
+              params?.listName || options.integrations?.ga?.defaultBasketName,
           },
           products: basket.lastAdded.map((p) => ({
             id: p.id,
@@ -491,7 +499,8 @@ const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
       ecommerce: {
         currency: options.currency,
         value: product.total ?? 0,
-        item_list_name: params?.listName || options.defaultBasketName,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
         items: basket.lastAdded.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
         })),
@@ -524,7 +533,8 @@ const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
         currencyCode: options.currency,
         remove: {
           actionField: {
-            list: params?.listName || options.defaultBasketName,
+            list:
+              params?.listName || options.integrations?.ga?.defaultBasketName,
           },
           products: basket.lastRemoved.map((p) => ({
             id: p.id,
@@ -561,7 +571,8 @@ const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
       ecommerce: {
         currency: options.currency,
         value: product.total ?? 0,
-        item_list_name: params?.listName || options.defaultBasketName,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
         items: basket.lastRemoved.map((product, idx) => ({
           ...EECUtils.getProductItem(product),
         })),
@@ -587,7 +598,10 @@ const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
       ecommerce: {
         currencyCode: options.currency,
         impressions: products.map((p) => ({
-          list: p.list || params?.listName || options.defaultCatalogName,
+          list:
+            p.list ||
+            params?.listName ||
+            options.integrations?.ga?.defaultCatalogName,
           id: p.id,
           sku: p.sku,
           name: p.title,
@@ -617,7 +631,8 @@ const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
     return {
       event: 'view_item_list',
       ecommerce: {
-        item_list_name: params?.listName || options.defaultCatalogName,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultCatalogName,
         items: products.map((product) => ({
           ...EECUtils.getProductItem(product),
         })),

@@ -10,6 +10,7 @@ import {
   T_EA_DataCustomEvent,
 } from './../shared';
 import * as trackUtils from './../utils';
+import { resolveUser } from './identity';
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 
@@ -58,20 +59,15 @@ const innerDataLayer = new Set<any>();
 // Is designed to run in browsers only.
 
 export const getEEC = (options: TSettings) => {
-  // const { enabled = false, trackId = null } = options.integrations?.ga ?? {};
-  // install gtm tag
-  // installGTM(
-  //   enabled ? trackId : void 0,
-  //   options.dataLayerName,
-  //   options.integrations?.testing
-  // );
+  const ga = options.integrations?.ga;
 
   const publishEvent = (payload) => {
-    const dl = globalThis.window
-      ? ((globalThis.window[options.dataLayerName] =
-          globalThis.window[options.dataLayerName] || []),
-        globalThis.window[options.dataLayerName] as any[])
-      : [];
+    const dl =
+      globalThis.window && ga
+        ? ((globalThis.window[ga.dataLayerName ?? 'dataLayer'] =
+            globalThis.window[ga.dataLayerName ?? 'dataLayer'] || []),
+          globalThis.window[ga.dataLayerName ?? 'dataLayer'] as any[])
+        : [];
     if (payload && payload.ecommerce) {
       dl.push({ ecommerce: null }); // Clear the previous ecommerce object.
     }
@@ -103,10 +99,11 @@ export const getEEC = (options: TSettings) => {
     profile?: T_EA_DataProfile | null,
     params?: TEECParams
   ) => {
+    const u = resolveUser(profile);
     return _evt({
       event: params?.evName ?? 'eec.user',
       userData: {
-        ...(profile ?? {}),
+        ...(u ?? {}),
       },
     });
   };

@@ -11,6 +11,7 @@ import {
 } from '../shared';
 import * as trackUtils from '../utils';
 import { round, isBrowserMode } from '../utils';
+import { resolveUser } from './identity';
 
 const DeliveryCategory = {
   IN_STORE: 'in_store',
@@ -202,58 +203,72 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       const noHash = isBrowserMode;
       return {
         em: await Promise.all(
-          this._emails.map((v) =>
-            noHash
-              ? v.toLowerCase().trim()
-              : trackUtils.digestMessage(v.toLowerCase().trim())
-          )
+          this._emails
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
         ),
         ph: await Promise.all(
-          this._phones.map((v) =>
-            noHash
-              ? v.toLowerCase().trim()
-              : trackUtils.digestMessage(v.toLowerCase().trim())
-          )
+          this._phones
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
         ),
         fn: await Promise.all(
-          this._first_names.map((v) =>
-            noHash
-              ? v.toLowerCase().trim()
-              : trackUtils.digestMessage(v.toLowerCase().trim())
-          )
+          this._first_names
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
         ),
         ln: await Promise.all(
-          this._last_names.map((v) =>
-            noHash
-              ? v.toLowerCase().trim()
-              : trackUtils.digestMessage(v.toLowerCase().trim())
-          )
+          this._last_names
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
         ),
         ct: await Promise.all(
-          this._cities.map((v) =>
-            noHash
-              ? v.toLowerCase().trim()
-              : trackUtils.digestMessage(v.toLowerCase().trim())
-          )
+          this._cities
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
         ),
         zp: await Promise.all(
-          this._zips.map((v) =>
-            noHash
-              ? v.toLowerCase().trim()
-              : trackUtils.digestMessage(v.toLowerCase().trim())
-          )
+          this._zips
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
         ),
         country: await Promise.all(
-          this._countries.map((v) =>
-            noHash
-              ? v.toLowerCase().trim()
-              : trackUtils.digestMessage(v.toLowerCase().trim())
-          )
+          this._countries
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
         ),
         external_id: await Promise.all(
-          this._external_ids.map((v) =>
-            trackUtils.digestMessage(v.toLowerCase().trim())
-          )
+          this._external_ids
+            .filter(Boolean)
+            .map((v) => trackUtils.digestMessage(v.toLowerCase().trim()))
         ),
         client_ip_address: this._client_ip_address,
         client_user_agent: this._client_user_agent,
@@ -729,7 +744,7 @@ export const fbTracker = (options: TSettings) => {
   };
 
   const trackIdentify = (profile?: T_EA_DataProfile | null) => {
-    const user = profile ? profile : options.resolvers?.profile?.() || null;
+    const user = resolveUser(profile);
     return user;
   };
 

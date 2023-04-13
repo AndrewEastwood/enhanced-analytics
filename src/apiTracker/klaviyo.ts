@@ -64,7 +64,7 @@ export const klaviyoTracker = (options: TSettings) => {
   analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
 
   const getUserObj = (profile?: T_EA_DataProfile | null) => {
-    return resolveUser(profile, options.resolvers?.profile);
+    return resolveUser(profile);
   };
 
   const collectEvent = (evt) => {

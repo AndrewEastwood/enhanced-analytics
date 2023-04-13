@@ -10,6 +10,7 @@ import {
 import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
 import { resolveUser } from './identity';
+import { isBrowserMode } from '../utils';
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 export const installFS = (orgId?: string | null) => {
@@ -168,7 +169,7 @@ export const installFS = (orgId?: string | null) => {
 export const fullstoryTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
 
-  if (!globalThis.window) {
+  if (!isBrowserMode) {
     throw '[EA] FullStory can be run in a browser only';
   }
 
@@ -179,7 +180,7 @@ export const fullstoryTracker = (options: TSettings) => {
   const { event, identify, setUserVars, setVars } = globalThis.window.FS;
 
   const getUserObj = (profile?: T_EA_DataProfile | null) => {
-    return resolveUser(profile, options.resolvers?.profile);
+    return resolveUser(profile);
   };
 
   const fldTypeResolver = (fld: any) => {

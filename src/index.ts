@@ -37,16 +37,19 @@ export {
 export * from './config';
 export * from './guards';
 
-let runtimeUser: T_EA_DataProfile | null = null;
-
 export const useAnalytics = (c?: TSettings) => {
   c ? configureAnalytics(c) : void 0;
   // temporary solution
   c ? installBrowserTrackers(c) : void 0;
   return {
     config: getConfig(),
+    utils: {
+      extractUserFromBrowserCookie(cookieJar: Record<string, any>) {
+        return;
+      },
+    },
     identify: (user: T_EA_DataProfile) => {
-      const u = resolveUser(user, getConfig()?.resolvers?.profile);
+      const u = resolveUser(user);
       return u && u.email;
     },
     withMisc: (name: string, attributes?: Record<string, any>) => {
@@ -148,12 +151,10 @@ export const useAnalytics = (c?: TSettings) => {
         throw '[EA] [store.resolvers.profile] is not defined';
       }
 
-      const v = isNative
-        ? payload ?? runtimeUser ?? null
-        : store.resolvers?.profile?.(payload) ?? runtimeUser ?? null;
-
-      // user can be null, which means it is anonymous
-      runtimeUser = v;
+      const v = isNative ? resolveUser(payload) : null;
+      if (!v) {
+        throw '[EA] User data is not defined';
+      }
 
       return {
         s2s: {

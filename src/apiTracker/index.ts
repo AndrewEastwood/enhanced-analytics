@@ -11,6 +11,7 @@ import tFb from './facebook';
 import tKlyo from './klaviyo';
 import tFs from './fullstory';
 import { T_EA_DataCustomEvent } from '../shared';
+import { isBrowserMode } from '../utils';
 
 type TTrackers = {
   server?: boolean;
@@ -38,11 +39,11 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     ? trackers?.fullstory && analytics?.[ETrackers.FullStory]?.enabled
     : true;
 
-  if (trackers?.server && globalThis.window) {
+  if (trackers?.server && isBrowserMode) {
     throw '[EA:Server] Trackers cannot be run in a browser. globalThis.window is detected.';
   }
 
-  if (!trackers?.server && !globalThis.window) {
+  if (!trackers?.server && !isBrowserMode) {
     throw '[EA:Browser] Trackers cannot be run at server side. globalThis.window is not accessible.';
   }
 

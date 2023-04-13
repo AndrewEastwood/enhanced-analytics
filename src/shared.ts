@@ -101,8 +101,12 @@ export type TEECParams = {
 };
 
 type TResolvers = {
+  identityStore?: (
+    key?: string,
+    val?: string
+  ) => string | Record<string, any> | void;
   session?: () => T_EA_DataSession;
-  eventUUID?: (request?: Request) => string | number;
+  eventUUID?: () => string | number;
   product?: (data?: any) => T_EA_DataProduct;
   order?: (data?: any) => T_EA_DataOrder;
   basket?: (data?: any) => T_EA_DataBasket;
@@ -115,18 +119,16 @@ export type TSettings = {
   affiliation: string;
   absoluteURL: string;
   currency: string;
-  defaultCatalogName: string;
-  defaultBasketName: string;
-  dataLayerName: string;
+  // cookies: string;
   integrations?: {
     testing: boolean;
-    evtUuid?: {
-      exposeInResponse?: boolean;
-      cookieName?: string;
-    };
-    userIdentification?: {
-      reqBodyKey?: string;
-    };
+    // evtUuid?: {
+    //   exposeInResponse?: boolean;
+    //   cookieName?: string;
+    // };
+    // userIdentification?: {
+    //   reqBodyKey?: string;
+    // };
     [ETrackers.Facebook]?: {
       enabled: boolean;
       sdk?: any;
@@ -166,6 +168,9 @@ export type TSettings = {
       enabled: boolean;
       trackId?: null | string;
       ga4?: boolean;
+      defaultCatalogName?: string;
+      defaultBasketName?: string;
+      dataLayerName?: string;
     };
   };
   links?: {
