@@ -234,12 +234,12 @@ export const getEEC = (options: TSettings) => {
   };
 
   const getEECAddPaymentInfo = (
-    basket: T_EA_DataBasket,
+    order: T_EA_DataOrder,
     params?: TEECParams
   ) => {};
 
   const getEECAddShippingInfo = (
-    basket: T_EA_DataBasket,
+    order: T_EA_DataOrder,
     params?: TEECParams
   ) => {};
 
@@ -266,14 +266,14 @@ export const getEEC = (options: TSettings) => {
       getEECCartAdd: (p?: TEECParams) => getEECCartAdd(basket, p),
       getEECCartRemove: (p?: TEECParams) => getEECCartRemove(basket, p),
       getEECCheckoutList: (p?: TEECParams) => getEECCheckoutList(basket, p),
-      getEECAddPaymentInfo: (p?: TEECParams) => getEECAddPaymentInfo(basket, p),
-      getEECAddShippingInfo: (p?: TEECParams) =>
-        getEECAddShippingInfo(basket, p),
       getEECViewBasket: (p?: TEECParams) => getEECViewBasket(basket, p),
     }),
     order: (order: T_EA_DataOrder) => ({
       getEECPurchased: (p?: TEECParams) => getEECPurchased(order, p),
       getEECRefund: (p?: TEECParams) => getEECRefund(order, p),
+      getEECAddPaymentInfo: (p?: TEECParams) => getEECAddPaymentInfo(order, p),
+      getEECAddShippingInfo: (p?: TEECParams) =>
+        getEECAddShippingInfo(order, p),
     }),
   };
 };

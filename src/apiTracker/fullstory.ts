@@ -613,10 +613,10 @@ export const fullstoryTracker = (options: TSettings) => {
     return trackIdentify();
   };
 
-  const trackAddPaymentInfo = async (basket: T_EA_DataBasket) => {
+  const trackAddPaymentInfo = async (order: T_EA_DataOrder) => {
     return trackIdentify();
   };
-  const trackAddShippingInfo = async (basket: T_EA_DataBasket) => {
+  const trackAddShippingInfo = async (order: T_EA_DataOrder) => {
     return trackIdentify();
   };
   const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {

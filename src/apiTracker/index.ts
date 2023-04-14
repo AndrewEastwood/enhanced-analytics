@@ -270,25 +270,25 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     return await Promise.allSettled(r);
   };
 
-  const trackAddPaymentInfo = (basket: T_EA_DataBasket) => async () => {
+  const trackAddPaymentInfo = (order: T_EA_DataOrder) => async () => {
     const r = [
       useFb ? tFb(config).trackAddPaymentInfo : null,
       useKl ? tKlyo(config).trackAddPaymentInfo : null,
       useFs ? tFs(config).trackAddPaymentInfo : null,
     ]
       .filter((v) => !!v)
-      .map((v) => v!(basket));
+      .map((v) => v!(order));
     return await Promise.allSettled(r);
   };
 
-  const trackAddShippingInfo = (basket: T_EA_DataBasket) => async () => {
+  const trackAddShippingInfo = (order: T_EA_DataOrder) => async () => {
     const r = [
       useFb ? tFb(config).trackAddShippingInfo : null,
       useKl ? tKlyo(config).trackAddShippingInfo : null,
       useFs ? tFs(config).trackAddShippingInfo : null,
     ]
       .filter((v) => !!v)
-      .map((v) => v!(basket));
+      .map((v) => v!(order));
     return await Promise.allSettled(r);
   };
 
@@ -318,14 +318,14 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
       trackProductAddToCart: trackProductAddToCart(basket),
       trackProductRemoveFromCart: trackProductRemoveFromCart(basket),
       trackInitiateCheckout: trackInitiateCheckout(basket),
-      trackAddPaymentInfo: trackAddPaymentInfo(basket),
-      trackAddShippingInfo: trackAddShippingInfo(basket),
     }),
     order: (order: T_EA_DataOrder) => ({
       trackTransaction: trackTransaction(order),
       trackTransactionRefund: trackTransactionRefund(order),
       trackTransactionCancel: trackTransactionCancel(order),
       trackTransactionFulfill: trackTransactionFulfill(order),
+      trackAddPaymentInfo: trackAddPaymentInfo(order),
+      trackAddShippingInfo: trackAddShippingInfo(order),
     }),
   };
 };

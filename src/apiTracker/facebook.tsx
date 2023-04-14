@@ -1359,9 +1359,15 @@ export const fbTracker = (options: TSettings) => {
     return publish(eventRequest);
   };
 
-  const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {};
-  const trackAddPaymentInfo = async (basket: T_EA_DataBasket) => {};
-  const trackAddShippingInfo = async (basket: T_EA_DataBasket) => {};
+  const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {
+    return trackIdentify();
+  };
+  const trackAddPaymentInfo = async (order: T_EA_DataOrder) => {
+    return trackIdentify();
+  };
+  const trackAddShippingInfo = async (order: T_EA_DataOrder) => {
+    return trackIdentify();
+  };
   const trackViewBasket = async (basket: T_EA_DataBasket) => {
     return trackIdentify();
   };

@@ -46,6 +46,10 @@ const getEventNameOfProductItemView = (product: T_EA_DataProduct) => {
   return `view_product_of_${product.id}${getEvtUUIDStr()}`;
 };
 
+const getEventNameOfProductItemWish = (product: T_EA_DataProduct) => {
+  return `wish_product_of_${product.id}${getEvtUUIDStr()}`;
+};
+
 const getEventNameOfSearch = (
   searchTerm: string,
   products: T_EA_DataProduct[]
@@ -715,6 +719,7 @@ export {
   getEventNameOfTransaction,
   getEventNameOfProductAddToCart,
   getEventNameOfProductRemoveFromCart,
+  getEventNameOfProductItemWish,
   getEventNameOfProductItemView,
   getEventNameOfSearch,
   getEventNameOfPageView,

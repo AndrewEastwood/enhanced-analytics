@@ -6,9 +6,9 @@ import {
   T_EA_DataBasket,
   T_EA_DataCustomEvent,
   TServerEventResponse,
+  T_EA_DataPage,
 } from '../shared';
 import * as trackUtils from '../utils';
-import { T_EA_DataPage } from '../shared';
 import { resolveUser } from './identity';
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
@@ -263,7 +263,7 @@ export const klaviyoTracker = (options: TSettings) => {
         BillingAddress: {
           FirstName: order.customer.firstName,
           LastName: order.customer.lastName,
-          Company: '',
+          Company: order.customer.organization,
           Address1: order.shipping.address.street,
           Address2: '',
           City: order.shipping.address.city,
@@ -277,7 +277,7 @@ export const klaviyoTracker = (options: TSettings) => {
         ShippingAddress: {
           FirstName: order.customer.firstName,
           LastName: order.customer.lastName,
-          Company: '',
+          Company: order.customer.organization,
           Address1: order.shipping.address.street,
           Address2: '',
           City: order.shipping.address.city,
@@ -570,16 +570,83 @@ export const klaviyoTracker = (options: TSettings) => {
     return trackIdentify(profile);
   };
 
-  const trackAddPaymentInfo = async (basket: T_EA_DataBasket) => {
+  const trackAddPaymentInfo = async (order: T_EA_DataOrder) => {
+    console.debug('[EA:Klaviyo] trackAddPaymentInfo');
+    collectEvent({
+      event: 'Payment Added',
+      properties: {
+        BillingAddress: {
+          FirstName: order.customer.firstName,
+          LastName: order.customer.lastName,
+          Company: order.customer.organization,
+          Address1: order.shipping.address.street,
+          Address2: '',
+          City: order.shipping.address.city,
+          Region: order.shipping.address.region,
+          Region_code: '',
+          Country: order.shipping.address.country,
+          CountryCode: order.shipping.address.countryCode,
+          Zip: order.shipping.address.postcode,
+          Phone: order.shipping.address,
+        },
+      },
+    });
     return trackIdentify();
   };
-  const trackAddShippingInfo = async (basket: T_EA_DataBasket) => {
+
+  const trackAddShippingInfo = async (order: T_EA_DataOrder) => {
+    console.debug('[EA:Klaviyo] trackViewBasket');
+    collectEvent({
+      event: 'Shipping Added',
+      properties: {
+        ShippingAddress: {
+          FirstName: order.customer.firstName,
+          LastName: order.customer.lastName,
+          Company: order.customer.organization,
+          Address1: order.shipping.address.street,
+          Address2: '',
+          City: order.shipping.address.city,
+          Region: order.shipping.address.region,
+          Region_code: '',
+          Country: order.shipping.address.country,
+          CountryCode: order.shipping.address.countryCode,
+          Zip: order.shipping.address.postcode,
+          Phone: order.shipping.address,
+        },
+      },
+    });
     return trackIdentify();
   };
+
   const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {
+    const product = products[0];
+    const evtName = trackUtils.getEventNameOfProductItemWish(product);
+    console.debug('[EA:Klaviyo] trackAddToWishlist', evtName);
+    collectEvent({
+      event: 'Added Wish Product',
+      properties: {
+        $event_id: evtName,
+        $value: product.price,
+        ProductName: product.title,
+        ProductID: product.id,
+        SKU: product.sku,
+        Categories: [product.category],
+        ImageURL: getProductImageUrl(product),
+        URL: getProductUrl(product),
+        Brand: product.brand,
+        Price: product.price,
+        SalePrice: product.salePrice,
+      },
+    });
     return trackIdentify();
   };
+
   const trackViewBasket = async (basket: T_EA_DataBasket) => {
+    console.debug('[EA:Klaviyo] trackViewBasket');
+    collectEvent({
+      event: 'View Basket',
+      properties: {},
+    });
     return trackIdentify();
   };
 
