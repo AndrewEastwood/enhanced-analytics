@@ -1,10 +1,4 @@
 /* eslint-disable no-var */
-
-type TGetSet = <K = string, V = any>(
-  n?: K,
-  v?: V
-) => typeof n extends undefined ? Record<string, any> : string;
-
 class Cookies {
   constructor(private defaultAttributes: Record<string, any>) {}
 

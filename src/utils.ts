@@ -1,10 +1,10 @@
 import { getConfig } from './config';
 import {
-  T_EA_DataBasket,
-  T_EA_DataOrder,
-  T_EA_DataProduct,
-  TEECParams,
-  TSettings,
+  type T_EA_DataBasket,
+  type T_EA_DataOrder,
+  type T_EA_DataProduct,
+  type TEECParams,
+  type TSettings,
 } from './shared';
 
 export const isBrowserMode = typeof globalThis.window !== 'undefined';

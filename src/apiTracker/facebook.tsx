@@ -1,14 +1,14 @@
 import { log } from '../log';
 import React, { useEffect } from 'react';
 import {
-  T_EA_DataBasket,
-  T_EA_DataCustomEvent,
-  T_EA_DataOrder,
-  T_EA_DataPage,
-  T_EA_DataProduct,
-  T_EA_DataProfile,
-  TSettings,
-  TServerEventResponse,
+  type T_EA_DataBasket,
+  type T_EA_DataCustomEvent,
+  type T_EA_DataOrder,
+  type T_EA_DataPage,
+  type T_EA_DataProduct,
+  type T_EA_DataProfile,
+  type TSettings,
+  type TServerEventResponse,
 } from '../shared';
 import * as trackUtils from '../utils';
 import { round, isBrowserMode } from '../utils';

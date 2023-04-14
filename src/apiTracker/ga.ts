@@ -1,13 +1,13 @@
 import {
-  T_EA_DataBasket,
-  T_EA_DataOrder,
-  T_EA_DataProduct,
-  TEECParams,
-  TEvtType,
-  TSettings,
-  T_EA_DataPage,
-  T_EA_DataProfile,
-  T_EA_DataCustomEvent,
+  type T_EA_DataBasket,
+  type T_EA_DataOrder,
+  type T_EA_DataProduct,
+  type TEECParams,
+  type TEvtType,
+  type TSettings,
+  type T_EA_DataPage,
+  type T_EA_DataProfile,
+  type T_EA_DataCustomEvent,
 } from './../shared';
 import * as trackUtils from './../utils';
 import { resolveUser } from './identity';

@@ -2,13 +2,13 @@ import { Request } from 'express';
 import { defaultsDeep } from 'lodash';
 import { installBrowserTrackers } from './apiTracker/installers';
 import {
-  T_EA_DataBasket,
-  T_EA_DataOrder,
-  T_EA_DataPage,
-  T_EA_DataProduct,
-  T_EA_DataProfile,
-  T_EA_DataSession,
-  TSettings,
+  type T_EA_DataBasket,
+  type T_EA_DataOrder,
+  type T_EA_DataPage,
+  type T_EA_DataProduct,
+  type T_EA_DataProfile,
+  type T_EA_DataSession,
+  type TSettings,
 } from './shared';
 
 const _config: TSettings = {} as TSettings;

@@ -1,10 +1,12 @@
-import { T_EA_DataAddress, T_EA_Payment, T_EA_Shipping } from './shared';
 import {
-  T_EA_DataProduct,
-  T_EA_DataPage,
-  T_EA_DataProfile,
-  T_EA_DataBasket,
-  T_EA_DataOrder,
+  type T_EA_DataAddress,
+  type T_EA_Payment,
+  type T_EA_Shipping,
+  type T_EA_DataProduct,
+  type T_EA_DataPage,
+  type T_EA_DataProfile,
+  type T_EA_DataBasket,
+  type T_EA_DataOrder,
 } from './shared';
 
 export const isNativePayloadPage = (payload: any): payload is T_EA_DataPage => {

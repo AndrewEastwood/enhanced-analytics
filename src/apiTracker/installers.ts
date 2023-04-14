@@ -1,4 +1,4 @@
-import { ETrackers, TSettings } from '../shared';
+import { ETrackers, type TSettings } from '../shared';
 import { installFB } from './facebook';
 import { installFS } from './fullstory';
 import { installGTM } from './ga';

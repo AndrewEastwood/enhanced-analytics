@@ -1,16 +1,16 @@
 import {
   ETrackers,
-  T_EA_DataBasket,
-  T_EA_DataOrder,
-  T_EA_DataPage,
-  T_EA_DataProduct,
-  T_EA_DataProfile,
-  TSettings,
+  type T_EA_DataBasket,
+  type T_EA_DataOrder,
+  type T_EA_DataPage,
+  type T_EA_DataProduct,
+  type T_EA_DataProfile,
+  type TSettings,
+  type T_EA_DataCustomEvent,
 } from '../shared';
 import tFb from './facebook';
 import tKlyo from './klaviyo';
 import tFs from './fullstory';
-import { T_EA_DataCustomEvent } from '../shared';
 import { isBrowserMode } from '../utils';
 
 type TTrackers = {

@@ -1,11 +1,11 @@
 import {
-  TSettings,
-  T_EA_DataProduct,
-  T_EA_DataProfile,
-  T_EA_DataOrder,
-  T_EA_DataBasket,
-  T_EA_DataCustomEvent,
-  TServerEventResponse,
+  type TSettings,
+  type T_EA_DataProduct,
+  type T_EA_DataProfile,
+  type T_EA_DataOrder,
+  type T_EA_DataBasket,
+  type T_EA_DataCustomEvent,
+  type TServerEventResponse,
 } from '../shared';
 import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';

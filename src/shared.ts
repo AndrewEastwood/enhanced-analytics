@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import { type TKalviyoSdk } from './apiTracker/klaviyo';
 
 export type TTrackerRunMode = {
   server?: boolean;
@@ -137,18 +137,7 @@ export type TSettings = {
       enabled: boolean;
       siteId?: null | string;
       token?: null | string;
-      sdk?: null | {
-        ConfigWrapper?: (string) => void;
-        Events: {
-          _unprocessed?: any[];
-          createEvent: (payload: any) => Promise<any>;
-        };
-        Profiles: {
-          _unprocessed?: any[];
-          getProfiles?: (filter: any) => Promise<{ body: { data: any[] } }>;
-          createProfile: (payload: any) => Promise<any>;
-        };
-      };
+      sdk?: null | TKalviyoSdk;
       events?: {
         onEvent?: (
           eventPayloads: any[],

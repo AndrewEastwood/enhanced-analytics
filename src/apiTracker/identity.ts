@@ -1,5 +1,5 @@
 import { isBrowserMode } from '../utils';
-import { T_EA_DataProfile } from '../shared';
+import { type T_EA_DataProfile } from '../shared';
 import cookies from '../cookies';
 import { getConfig } from '../config';
 

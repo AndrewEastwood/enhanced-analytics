@@ -1,17 +1,30 @@
 import {
-  TSettings,
-  T_EA_DataProduct,
-  T_EA_DataProfile,
-  T_EA_DataOrder,
-  T_EA_DataBasket,
-  T_EA_DataCustomEvent,
-  TServerEventResponse,
-  T_EA_DataPage,
+  type TSettings,
+  type T_EA_DataProduct,
+  type T_EA_DataProfile,
+  type T_EA_DataOrder,
+  type T_EA_DataBasket,
+  type T_EA_DataCustomEvent,
+  type TServerEventResponse,
+  type T_EA_DataPage,
 } from '../shared';
 import * as trackUtils from '../utils';
 import { resolveUser } from './identity';
 import { log } from '../log';
 import { isBrowserMode } from '../utils';
+
+export type TKalviyoSdk = {
+  ConfigWrapper?: (string) => void;
+  Events: {
+    _unprocessed?: any[];
+    createEvent: (payload: any) => Promise<any>;
+  };
+  Profiles: {
+    _unprocessed?: any[];
+    getProfiles?: (filter: any) => Promise<{ body: { data: any[] } }>;
+    createProfile: (payload: any) => Promise<any>;
+  };
+};
 
 const BrowserSdkWrapper = (() => {
   let _unprocessed: [string, any[]][] = [];
