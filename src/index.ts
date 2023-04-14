@@ -47,6 +47,27 @@ export const useAnalytics = (c?: TSettings) => {
       const u = resolveUser(user);
       return u && u.email;
     },
+    utils: {
+      observeItemsOnScreen(
+        elSelector: string,
+        whenFound: (e: IntersectionObserverEntry) => void
+      ) {
+        // Register IntersectionObserver
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            entry.intersectionRatio > 0 ? whenFound(entry) : void 0;
+          });
+        });
+
+        setTimeout(() => {
+          // Declares what to observe, and observes its properties.
+          const boxElList = document.querySelectorAll(elSelector);
+          boxElList.forEach((el) => {
+            io.observe(el);
+          });
+        });
+      },
+    },
     withMisc: (name: string, attributes?: Record<string, any>) => {
       const store = getConfig();
       if (!store._configured) {
