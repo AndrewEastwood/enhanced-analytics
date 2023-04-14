@@ -119,16 +119,8 @@ export type TSettings = {
   affiliation: string;
   absoluteURL: string;
   currency: string;
-  // cookies: string;
+  debug: boolean;
   integrations?: {
-    testing: boolean;
-    // evtUuid?: {
-    //   exposeInResponse?: boolean;
-    //   cookieName?: string;
-    // };
-    // userIdentification?: {
-    //   reqBodyKey?: string;
-    // };
     [ETrackers.Facebook]?: {
       enabled: boolean;
       sdk?: any;

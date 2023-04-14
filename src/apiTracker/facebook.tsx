@@ -1,3 +1,4 @@
+import { log } from '../log';
 import React, { useEffect } from 'react';
 import {
   T_EA_DataBasket,
@@ -689,7 +690,7 @@ export const fbTracker = (options: TSettings) => {
   const { integrations: analytics, currency } = options;
   const access_token = analytics?.fb?.token ?? '';
   const pixel_id = analytics?.fb?.pixelId;
-  const testCode = (analytics?.testing ? analytics.fb?.testCode : '') ?? '';
+  const testCode = analytics?.fb?.testCode ?? '';
   const bizSdk = analytics?.fb?.sdk;
 
   if (!pixel_id) {
@@ -719,7 +720,7 @@ export const fbTracker = (options: TSettings) => {
         : !!req.events[0].user_data
         ? await req.execute()
         : await Promise.reject('UserData is not set');
-      console.debug('[EA:Facebook] eventRequest=>Response: ', response);
+      log('[EA:Facebook] eventRequest=>Response: ', response);
       return {
         message: null,
         payload: await Promise.all(
@@ -808,7 +809,7 @@ export const fbTracker = (options: TSettings) => {
     order: T_EA_DataOrder
   ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
-    console.debug('[EA:Facebook] trackTransaction', evtName);
+    log('[EA:Facebook] trackTransaction', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject(order);
     const page = options.resolvers?.page?.();
@@ -873,7 +874,7 @@ export const fbTracker = (options: TSettings) => {
 
     const eventsData = basket.lastAdded.map((product) => {
       const evtName = trackUtils.getEventNameOfProductAddToCart(product);
-      console.debug('[EA:Facebook] trackProductAddToCart', evtName);
+      log('[EA:Facebook] trackProductAddToCart', evtName);
       const current_timestamp = Math.floor(Date.now() / 1000);
 
       const contents = basket.lastAdded.map((product) =>
@@ -938,7 +939,7 @@ export const fbTracker = (options: TSettings) => {
 
     const eventsData = basket.lastRemoved.map((product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
-      console.debug('[EA:Facebook] trackProductRemoveFromCart', evtName);
+      log('[EA:Facebook] trackProductRemoveFromCart', evtName);
       const current_timestamp = Math.floor(Date.now() / 1000);
 
       const contents = basket.lastRemoved.map((product) =>
@@ -1000,7 +1001,7 @@ export const fbTracker = (options: TSettings) => {
     product: T_EA_DataProduct
   ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
-    console.debug('[EA:Facebook] trackProductItemView', evtName);
+    log('[EA:Facebook] trackProductItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
     const page = options.resolvers?.page?.();
@@ -1058,7 +1059,7 @@ export const fbTracker = (options: TSettings) => {
     products: T_EA_DataProduct[]
   ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfProductItemView(products[0]);
-    console.debug('[EA:Facebook] trackProductsItemView', evtName);
+    log('[EA:Facebook] trackProductsItemView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
 
@@ -1123,7 +1124,7 @@ export const fbTracker = (options: TSettings) => {
     page: T_EA_DataPage
   ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfPageView();
-    console.debug('[EA:Facebook] trackPageView', evtName);
+    log('[EA:Facebook] trackPageView', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
 
@@ -1151,7 +1152,7 @@ export const fbTracker = (options: TSettings) => {
 
   const trackCustom = async (e: T_EA_DataCustomEvent) => {
     const evtName = trackUtils.getEventNameOfCustom(e.name ?? '');
-    console.debug('[EA:Facebook] trackCustom', evtName);
+    log('[EA:Facebook] trackCustom', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
     const page = options.resolvers?.page?.();
@@ -1188,7 +1189,7 @@ export const fbTracker = (options: TSettings) => {
     basket: T_EA_DataBasket
   ): Promise<TServerEventResponse> => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
-    console.debug('[EA:Facebook] trackInitiateCheckout', evtName);
+    log('[EA:Facebook] trackInitiateCheckout', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
     const page = options.resolvers?.page?.();
@@ -1250,7 +1251,7 @@ export const fbTracker = (options: TSettings) => {
       searchTerm,
       matchingProducts
     );
-    console.debug('[EA:Facebook] trackSearch', evtName);
+    log('[EA:Facebook] trackSearch', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
     const page = options.resolvers?.page?.();
@@ -1296,7 +1297,7 @@ export const fbTracker = (options: TSettings) => {
   const trackNewProfile = async (profile: T_EA_DataProfile | null) => {
     const user = trackIdentify(profile);
     const evtName = trackUtils.getEventNameOfLead(user?.email ?? '');
-    console.debug('[EA:Facebook] trackNewProfile', evtName);
+    log('[EA:Facebook] trackNewProfile', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
     const page = options.resolvers?.page?.();
@@ -1332,7 +1333,7 @@ export const fbTracker = (options: TSettings) => {
   const trackProfileSubscribeNL = async (profile: T_EA_DataProfile | null) => {
     const user = trackIdentify(profile);
     const evtName = trackUtils.getEventNameOfSubscription(user?.email ?? '');
-    console.debug('[EA:Facebook] trackProfileSubscribeNL', evtName);
+    log('[EA:Facebook] trackProfileSubscribeNL', evtName);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const userData = _getUserDataObject();
     const page = options.resolvers?.page?.();

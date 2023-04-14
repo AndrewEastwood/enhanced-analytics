@@ -4,6 +4,7 @@ import { installFS } from './fullstory';
 import { installGTM } from './ga';
 import { installK } from './klaviyo';
 import { isBrowserMode } from '../utils';
+import { log } from '../log';
 
 export const installer = {
   [ETrackers.Facebook]: (s: TSettings) =>
@@ -16,7 +17,7 @@ export const installer = {
     installGTM(
       s.integrations?.ga?.trackId,
       s.integrations?.ga?.dataLayerName,
-      s.integrations?.testing
+      s.debug
     ),
 };
 
@@ -29,9 +30,7 @@ export const installBrowserTrackers = async (s: TSettings) => {
           .map((v) => {
             return s.integrations?.[v]?.enabled && installer[v]
               ? (installedTrackers.add(v),
-                console.debug(
-                  '[EA:Installer] installing browser tracker of ' + v
-                ),
+                log('[EA:Installer] installing browser tracker of ' + v),
                 installer[v](s))
               : Promise.resolve();
           })

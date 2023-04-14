@@ -41,10 +41,8 @@ const MyApp = () => {
       affiliation: activeStore.name,
       absoluteURL: activeStore.homepage,
       currency: activeStore.localization.currency,
-      defaultCatalogName: `${activeStore.name} Landing Products`,
-      defaultBasketName: 'Shopping Cart',
+      debug: /* set true when localhost or dev env */
       integrations: {
-        testing: false,
         // Klaviyo
         klaviyo: {
           enabled: true,
@@ -55,6 +53,10 @@ const MyApp = () => {
           enabled: true,
           trackId: 'GTM-XXXXXXX',
           ga4: true, // <-- publish GA4 events data
+          // more default params:
+          // defaultCatalogName: `${activeStore.name} Landing Products`,
+          // defaultBasketName: 'Shopping Cart',
+          // dataLayerName: 'dataLayer'
         },
         // FullStory
         fullstory: {
@@ -67,7 +69,7 @@ const MyApp = () => {
         fb: {
           enabled: true,
           pixelId: 'YOUR-PIXEL-ID',
-          testCode: 'TEST61709', // <---- test code, when testing Pixel data
+          testCode: 'TEST61709', // <---- test code, when testing Pixel data (server side only)
         },
       },
       // you may have your own data structure
@@ -378,7 +380,7 @@ app.use(
       page() {
         return {
           id: req.baseUrl,
-          name: req.baseUrl,
+          name: req.path.split('/')[0],
           path: req.path,
           title: 'Main Page',
           url: `${req.protocol}://${req.hostname}${req.originalUrl}`,
@@ -386,6 +388,7 @@ app.use(
       },
       session() {
         return {
+          // agent, fbp and ip are optional when using fb tracking
           agent: req.headers['user-agent'],
           fbp: req.cookies['_fbp'],
           ip: req.ip,
@@ -401,9 +404,9 @@ Another configuration for NextJs:
 ```typescript
 
 // src/utils/ea.ts
-// Server Side EA Configuration
+// Server Side EA Configuration for NextJs
 const getServerEA = (req: GetServerSidePropsContext['req']) => {
-  configureAnalytics({
+  const ea = useAnalytics({
     absoluteURL: "https://my-store.com/",
     affiliation: "My Store",
     currency: "USD",
@@ -422,6 +425,7 @@ const getServerEA = (req: GetServerSidePropsContext['req']) => {
         return Date.now().toString(32);
       },
       session() {
+          // agent, fbp and ip are optional when using fb tracking
         return {
           agent: req.headers["user-agent"],
           fbp: req.cookies["_fbp"],
@@ -450,7 +454,7 @@ const getServerEA = (req: GetServerSidePropsContext['req']) => {
     },
   });
 
-  return useAnalytics();
+  return ea;
 }
 
 // See usage below at 2.3.FB Pixel

@@ -11,6 +11,7 @@ import * as trackUtils from '../utils';
 import { T_EA_DataPage } from '../shared';
 import { resolveUser } from './identity';
 import { isBrowserMode } from '../utils';
+import { log } from '../log';
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 export const installFS = (orgId?: string | null) => {
@@ -218,10 +219,7 @@ export const fullstoryTracker = (options: TSettings) => {
       payload.event,
       normalizePayloadFieldNames(payload.properties ?? {})
     );
-    console.debug(
-      `[EA:FullStory] collecting event ${payload.event}`,
-      payload.properties
-    );
+    log(`[EA:FullStory] collecting event ${payload.event}`, payload.properties);
   };
 
   const getProductUrl = (product: T_EA_DataProduct) => {

@@ -10,6 +10,7 @@ import {
 } from '../shared';
 import * as trackUtils from '../utils';
 import { resolveUser } from './identity';
+import { log } from '../log';
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 const queuedEvents = new Set<any>();
@@ -68,7 +69,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const collectEvent = (evt) => {
-    console.debug('[EA:Klaviyo] addEvent', evt);
+    log('[EA:Klaviyo] addEvent', evt);
     const current_timestamp = Math.floor(Date.now() / 1000);
     const session = options.resolvers?.session?.();
     queuedEvents.add({
@@ -76,14 +77,14 @@ export const klaviyoTracker = (options: TSettings) => {
       ipAddress: session?.ip,
       agent: session?.agent,
       timestamp: current_timestamp,
-      isTest: analytics.testing,
+      isTest: options.debug,
     });
-    console.debug('[EA:Klaviyo] queuedEvents count', queuedEvents.size);
+    log('[EA:Klaviyo] queuedEvents count', queuedEvents.size);
     return queuedEvents;
   };
 
   const releaseAnonymousEvents = async (): Promise<TServerEventResponse[]> => {
-    console.debug('[EA:Klaviyo] releasing queuedEvents');
+    log('[EA:Klaviyo] releasing queuedEvents');
     const user = getUserObj();
     try {
       const resp = await Promise.allSettled(
@@ -111,9 +112,7 @@ export const klaviyoTracker = (options: TSettings) => {
           return Events?.createEvent({ data: payload });
         })
       );
-      console.debug(
-        '[EA:Klaviyo] queuedEvents released count:' + queuedEvents.size
-      );
+      log('[EA:Klaviyo] queuedEvents released count:' + queuedEvents.size);
       queuedEvents.clear();
       return Array.from(queuedEvents).map((evt, idx) => ({
         message: resp[idx].status,
@@ -123,7 +122,7 @@ export const klaviyoTracker = (options: TSettings) => {
     } catch (error) {
       console.error(error);
     }
-    console.debug('[EA:Klaviyo] queuedEvents count:' + queuedEvents.size);
+    log('[EA:Klaviyo] queuedEvents count:' + queuedEvents.size);
     return [];
   };
 
@@ -140,7 +139,7 @@ export const klaviyoTracker = (options: TSettings) => {
     profile?: T_EA_DataProfile | null
   ): Promise<TServerEventResponse[]> => {
     const user = getUserObj(profile);
-    console.debug('[EA:Klaviyo] trackIdentify', user);
+    log('[EA:Klaviyo] trackIdentify', user);
     if (user) {
       const attributes = {
         email: user?.email,
@@ -179,14 +178,14 @@ export const klaviyoTracker = (options: TSettings) => {
           existingProfile?.body.data[0] ||
           indentifiedEmails.has(user.email) ||
           null;
-        console.debug('[EA:Klaviyo] ... foundProfile', foundProfile);
+        log('[EA:Klaviyo] ... foundProfile', foundProfile);
         const profileResp = foundProfile
           ? foundProfile
           : await Profiles?.createProfile({
               data: payload,
             });
         indentifiedEmails.add(user.email);
-        console.debug('[EA:Klaviyo] ... indentifiedEmails.add>', user.email);
+        log('[EA:Klaviyo] ... indentifiedEmails.add>', user.email);
         const queueResp =
           trackUtils.isBrowserMode && uiLibInstallStatus !== 'yes'
             ? []
@@ -224,7 +223,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackTransaction = async (order: T_EA_DataOrder) => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
     const page = options.resolvers?.page?.();
-    console.debug('[EA:Klaviyo] trackTransaction', evtName);
+    log('[EA:Klaviyo] trackTransaction', evtName);
     collectEvent({
       event: 'Placed Order',
       customerProperties: {
@@ -296,7 +295,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackProductAddToCart = async (basket: T_EA_DataBasket) => {
     basket.lastAdded.map((product) => {
       const evtName = trackUtils.getEventNameOfProductAddToCart(product);
-      console.debug('[EA:Klaviyo] trackProductAddToCart', evtName);
+      log('[EA:Klaviyo] trackProductAddToCart', evtName);
       // const basket = request.session.basket;
       collectEvent({
         event: 'Added to Cart',
@@ -341,7 +340,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackProductRemoveFromCart = async (basket: T_EA_DataBasket) => {
     basket.lastRemoved.map((product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
-      console.debug('[EA:Klaviyo] trackProductRemoveFromCart', evtName);
+      log('[EA:Klaviyo] trackProductRemoveFromCart', evtName);
       // const basket = request.session.basket;
       collectEvent({
         event: 'Removed form Cart',
@@ -394,7 +393,7 @@ export const klaviyoTracker = (options: TSettings) => {
     customEventName?: string
   ) => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
-    console.debug('[EA:Klaviyo] trackProductItemView', evtName);
+    log('[EA:Klaviyo] trackProductItemView', evtName);
     collectEvent({
       event: customEventName ?? 'Viewed Product',
       properties: {
@@ -415,7 +414,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackPageView = async (page: T_EA_DataPage) => {
-    console.debug('[EA:Klaviyo] trackPageView');
+    log('[EA:Klaviyo] trackPageView');
     collectEvent({
       event: 'Viewed Page',
       properties: {
@@ -427,7 +426,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackCustom = async (e: T_EA_DataCustomEvent) => {
-    console.debug('[EA:Klaviyo] trackCustom', e.name);
+    log('[EA:Klaviyo] trackCustom', e.name);
     collectEvent({
       event: e.name,
       properties: e.attributes ?? {},
@@ -438,7 +437,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackInitiateCheckout = async (basket: T_EA_DataBasket) => {
     const evtName = trackUtils.getEventNameOfInitiateCheckout(basket);
     const page = options.resolvers?.page?.();
-    console.debug('[EA:Klaviyo] trackInitiateCheckout', evtName);
+    log('[EA:Klaviyo] trackInitiateCheckout', evtName);
     collectEvent({
       event: 'Started Checkout',
       properties: {
@@ -473,7 +472,7 @@ export const klaviyoTracker = (options: TSettings) => {
     searchTerm: string,
     matchingProducts: T_EA_DataProduct[]
   ) => {
-    console.debug('[EA:Klaviyo] trackSearch', searchTerm);
+    log('[EA:Klaviyo] trackSearch', searchTerm);
     const evtName = trackUtils.getEventNameOfSearch(
       searchTerm,
       matchingProducts
@@ -494,7 +493,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackNewProfile = async (profile: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
     // console.log('klaviyo:trackNewProfile', user);
-    console.debug('[EA:Klaviyo] trackNewProfile');
+    log('[EA:Klaviyo] trackNewProfile');
     user
       ? collectEvent({
           event: 'Created Account',
@@ -511,7 +510,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackProfileResetPassword = async (
     profile: T_EA_DataProfile | null
   ) => {
-    console.debug('[EA:Klaviyo] trackProfileResetPassword');
+    log('[EA:Klaviyo] trackProfileResetPassword');
     const user = getUserObj(profile);
     user
       ? collectEvent({
@@ -530,7 +529,7 @@ export const klaviyoTracker = (options: TSettings) => {
 
   const trackProfileLogIn = async (profile: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
-    console.debug('[EA:Klaviyo] trackProfileLogIn');
+    log('[EA:Klaviyo] trackProfileLogIn');
     user
       ? collectEvent({
           event: 'Custom User Login',
@@ -544,7 +543,7 @@ export const klaviyoTracker = (options: TSettings) => {
 
   const trackProfileLogOut = async (profile: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
-    console.debug('[EA:Klaviyo] trackProfileLogOut');
+    log('[EA:Klaviyo] trackProfileLogOut');
     user
       ? collectEvent({
           event: 'Custom User Log Out',
@@ -557,7 +556,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackProfileSubscribeNL = async (profile: T_EA_DataProfile | null) => {
-    console.debug('[EA:Klaviyo] trackProfileSubscribeNL');
+    log('[EA:Klaviyo] trackProfileSubscribeNL');
     const user = getUserObj(profile);
     user
       ? collectEvent({
@@ -571,7 +570,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackAddPaymentInfo = async (order: T_EA_DataOrder) => {
-    console.debug('[EA:Klaviyo] trackAddPaymentInfo');
+    log('[EA:Klaviyo] trackAddPaymentInfo');
     collectEvent({
       event: 'Payment Added',
       properties: {
@@ -595,7 +594,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackAddShippingInfo = async (order: T_EA_DataOrder) => {
-    console.debug('[EA:Klaviyo] trackViewBasket');
+    log('[EA:Klaviyo] trackViewBasket');
     collectEvent({
       event: 'Shipping Added',
       properties: {
@@ -621,7 +620,7 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {
     const product = products[0];
     const evtName = trackUtils.getEventNameOfProductItemWish(product);
-    console.debug('[EA:Klaviyo] trackAddToWishlist', evtName);
+    log('[EA:Klaviyo] trackAddToWishlist', evtName);
     collectEvent({
       event: 'Added Wish Product',
       properties: {
@@ -642,7 +641,7 @@ export const klaviyoTracker = (options: TSettings) => {
   };
 
   const trackViewBasket = async (basket: T_EA_DataBasket) => {
-    console.debug('[EA:Klaviyo] trackViewBasket');
+    log('[EA:Klaviyo] trackViewBasket');
     collectEvent({
       event: 'View Basket',
       properties: {},
