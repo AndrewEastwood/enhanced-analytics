@@ -215,33 +215,47 @@ export const getEEC = (options: TSettings) => {
   ) => {
     return _evt({
       event: 'add_to_wishlist',
-      ecommerce: {
-        currency: '',
-        value: '',
-        items: [],
-      },
-      // method: profile?.loginProvider ?? 'website',
+      ecommerce: trackUtils
+        .Catalog(options, products)
+        .Products.getEECDataLayer(params).ecommerce,
     });
   };
 
   const getEECViewBasket = (basket: T_EA_DataBasket, params?: TEECParams) => {
     return _evt({
       event: 'view_cart',
-      ecommerce: trackUtils
-        .Basket(options, basket)
-        .InitCheckout.getEECDataLayer(params).ecommerce,
+      ecommerce: {
+        ...trackUtils
+          .Basket(options, basket)
+          .InitCheckout.getEECDataLayer(params).ecommerce,
+      },
     });
   };
 
-  const getEECAddPaymentInfo = (
-    order: T_EA_DataOrder,
-    params?: TEECParams
-  ) => {};
+  const getEECAddPaymentInfo = (order: T_EA_DataOrder, params?: TEECParams) => {
+    return _evt({
+      event: 'add_payment_info',
+      ecommerce: {
+        payment_type: order.payment.type,
+        ...trackUtils.Order(options, order).Purchase.getEECDataLayer(params)
+          .ecommerce,
+      },
+    });
+  };
 
   const getEECAddShippingInfo = (
     order: T_EA_DataOrder,
     params?: TEECParams
-  ) => {};
+  ) => {
+    return _evt({
+      event: 'add_shipping_info',
+      ecommerce: {
+        shipping_tier: order.shipping.name,
+        ...trackUtils.Order(options, order).Purchase.getEECDataLayer(params)
+          .ecommerce,
+      },
+    });
+  };
 
   return {
     misc: (event: T_EA_DataCustomEvent) => ({

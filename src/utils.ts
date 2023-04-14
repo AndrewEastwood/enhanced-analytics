@@ -635,6 +635,7 @@ const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
     return {
       event: 'view_item_list',
       ecommerce: {
+        currency: options.currency,
         item_list_name:
           params?.listName || options.integrations?.ga?.defaultCatalogName,
         items: products.map((product) => ({
