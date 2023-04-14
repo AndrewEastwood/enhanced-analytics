@@ -11,6 +11,53 @@ import {
 import * as trackUtils from '../utils';
 import { resolveUser } from './identity';
 import { log } from '../log';
+import { isBrowserMode } from '../utils';
+
+const BrowserSdkWrapper = (() => {
+  let _unprocessed: [string, any[]][] = [];
+
+  const processQueue = (q: [string, any[]][]) => {
+    q.map(([fn, payload]) => window.klaviyo[fn](...payload));
+    return [];
+  };
+
+  const Events = {
+    async createEvent(body: any) {
+      _unprocessed.push([
+        'track',
+        [
+          body?.data?.attributes?.metric?.name,
+          body?.data?.attributes?.properties,
+        ],
+      ]);
+      // .filter((b) => !(b instanceof Promise))
+      _unprocessed = window.klaviyo ? processQueue(_unprocessed) : _unprocessed;
+    },
+  };
+
+  const Profiles = {
+    getProfiles(filter: Record<string, any>) {
+      return Promise.resolve({ body: { data: [] } });
+    },
+    async createProfile(body: any) {
+      _unprocessed.push(['identify', [body?.data?.attributes ?? {}]]);
+      _unprocessed = window.klaviyo ? processQueue(_unprocessed) : _unprocessed;
+    },
+  };
+
+  // compatibility
+  const ConfigWrapper = () => {};
+
+  return {
+    process() {
+      _unprocessed = window.klaviyo ? processQueue(_unprocessed) : _unprocessed;
+      return _unprocessed;
+    },
+    ConfigWrapper,
+    Events,
+    Profiles,
+  };
+})();
 
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 const queuedEvents = new Set<any>();
@@ -31,6 +78,8 @@ export const installK = (siteId?: string | null) => {
           el.onerror = reject;
         })
           .then(() => {
+            // shitty hardcode
+            setTimeout(BrowserSdkWrapper.process, 2000);
             uiLibInstallStatus = 'yes';
             instok(true);
           })
@@ -48,21 +97,24 @@ export const installK = (siteId?: string | null) => {
 export const klaviyoTracker = (options: TSettings) => {
   const { absoluteURL, integrations: analytics } = options;
   const bizSdk = analytics?.klaviyo?.sdk;
-  const { ConfigWrapper, Events, Profiles } = bizSdk || {};
+  const { ConfigWrapper, Events, Profiles } = isBrowserMode
+    ? BrowserSdkWrapper
+    : bizSdk ?? {};
 
-  if (!bizSdk) {
-    throw '[EA] Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
+  if (trackUtils.isBrowserMode) {
+    if (!analytics?.klaviyo?.siteId) {
+      throw '[EA] Klaviyo is not configured properly; Please provide siteId to run in the UI mode;';
+    }
+  } else {
+    if (!analytics?.klaviyo?.token) {
+      throw '[EA] Klaviyo is not configured properly; Please provide token to run in the server mode;';
+    }
+    if (!bizSdk || !ConfigWrapper) {
+      throw '[EA] Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
+    }
+    // configure server tracker
+    ConfigWrapper(analytics.klaviyo?.token);
   }
-
-  if (trackUtils.isBrowserMode && !analytics?.klaviyo?.siteId) {
-    throw '[EA] Klaviyo is not configured properly; Please provide siteId to run in the UI mode;';
-  }
-
-  if (!trackUtils.isBrowserMode && !analytics?.klaviyo?.token) {
-    throw '[EA] Klaviyo is not configured properly; Please provide token to run in the server mode;';
-  }
-
-  analytics.klaviyo?.token ? ConfigWrapper?.(analytics.klaviyo?.token) : void 0;
 
   const getUserObj = (profile?: T_EA_DataProfile | null) => {
     return resolveUser(profile);
@@ -186,10 +238,7 @@ export const klaviyoTracker = (options: TSettings) => {
             });
         indentifiedEmails.add(user.email);
         log('[EA:Klaviyo] ... indentifiedEmails.add>', user.email);
-        const queueResp =
-          trackUtils.isBrowserMode && uiLibInstallStatus !== 'yes'
-            ? []
-            : await releaseAnonymousEvents();
+        const queueResp = await releaseAnonymousEvents();
         return [
           foundProfile
             ? void 0

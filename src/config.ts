@@ -44,53 +44,7 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       enabled: false,
       siteId: null,
       token: null,
-      sdk:
-        _store.integrations?.klaviyo?.siteId &&
-        document &&
-        !_store.integrations.klaviyo.sdk
-          ? {
-              Events: {
-                _unprocessed: [],
-                createEvent(body: any) {
-                  this._unprocessed = this._unprocessed || [];
-                  this._unprocessed.push(body);
-                  this._unprocessed = this._unprocessed
-                    .filter((b) => !(b instanceof Promise))
-                    .map((b) =>
-                      window.klaviyo
-                        ? window.klaviyo.track(
-                            body?.data?.attributes?.metric?.name,
-                            body?.data?.attributes?.properties
-                          )
-                        : b
-                    );
-                  return Promise.allSettled(
-                    this._unprocessed?.filter((v) => v instanceof Promise) ?? []
-                  );
-                },
-              },
-              Profiles: {
-                _unprocessed: [],
-                getProfiles(filter: Record<string, any>) {
-                  return Promise.resolve({ body: { data: [] } });
-                },
-                createProfile(body: any) {
-                  this._unprocessed = this._unprocessed || [];
-                  this._unprocessed.push(body);
-                  this._unprocessed = this._unprocessed
-                    .filter((b) => !(b instanceof Promise))
-                    .map((b) =>
-                      window.klaviyo
-                        ? window.klaviyo.identify(b?.data?.attributes ?? {})
-                        : b
-                    );
-                  return Promise.allSettled(
-                    this._unprocessed?.filter((v) => v instanceof Promise) ?? []
-                  );
-                },
-              },
-            }
-          : null,
+      sdk: null,
     },
     fullstory: {
       enabled: false,
