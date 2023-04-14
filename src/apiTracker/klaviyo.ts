@@ -91,7 +91,11 @@ export const installK = (siteId?: string | null) => {
         })
           .then(() => {
             // shitty hardcode
-            setTimeout(BrowserSdkWrapper.process, 2000);
+            const tmRef = setInterval(() => {
+              window.klaviyo
+                ? (BrowserSdkWrapper.process(), clearInterval(tmRef))
+                : void 0;
+            }, 500);
             uiLibInstallStatus = 'yes';
             instok(true);
           })
