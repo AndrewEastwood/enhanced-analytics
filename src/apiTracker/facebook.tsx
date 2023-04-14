@@ -556,6 +556,34 @@ export const getFbqObjectByNormalizedData = (
     // PageView: [
     // Optional.
     ...(p.event_name === 'PageView' ? {} : {}),
+    // AddPaymentInfo: [content_category, content_ids, contents, currency, value
+    // Optional.
+    // When payment information is added in the checkout flow. A person clicks on a save billing information button.
+    ...(p.event_name === 'AddPaymentInfo'
+      ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
+          content_type: p.custom_data?.content_type,
+          content_name: p.custom_data?.content_name, // 'Auto Insurance',
+          content_category: p.custom_data?.content_category, //'Product Search',
+          contents: p.custom_data?.contents ?? [],
+          num_items: p.custom_data?.num_items ?? 0,
+        }
+      : {}),
+    // AddShippingInfo: [content_category, content_ids, contents, currency, value
+    // Optional.
+    // When shipping information is added in the checkout flow. A person clicks on a save shipping information button.
+    ...(p.event_name === 'AddShippingInfo'
+      ? {
+          value: p.custom_data?.value ?? 0,
+          currency: p.custom_data?.currency ?? 'USD',
+          content_type: p.custom_data?.content_type,
+          content_name: p.custom_data?.content_name, // 'Auto Insurance',
+          content_category: p.custom_data?.content_category, //'Product Search',
+          contents: p.custom_data?.contents ?? [],
+          num_items: p.custom_data?.num_items ?? 0,
+        }
+      : {}),
     // InitiateCheckout: [content_category, content_ids, contents, currency, num_items, value
     // Optional.
     ...(p.event_name === 'InitiateCheckout'
@@ -1363,12 +1391,108 @@ export const fbTracker = (options: TSettings) => {
   const trackAddToWishlist = async (products: T_EA_DataProduct[]) => {
     return trackIdentify();
   };
+
+  /**
+   *
+   * AddPaymentInfo
+   * When payment information is added in the checkout flow.
+   * A person clicks on a save billing information button.
+   * content_category, content_ids, contents, currency, value Optional.
+   * ADD_PAYMENT_INFO
+   */
   const trackAddPaymentInfo = async (order: T_EA_DataOrder) => {
-    return trackIdentify();
+    const evtName = trackUtils.getEventNameOfPaymentInfo(order.payment.type);
+    log('[EA:Facebook] trackAddPaymentInfo', evtName);
+    const current_timestamp = Math.floor(Date.now() / 1000);
+    const userData = _getUserDataObject();
+    const page = options.resolvers?.page?.();
+
+    const contents = order.products.map((storedProduct) =>
+      new Content()
+        .setId(storedProduct.id.toString())
+        .setQuantity(round(storedProduct.quantity))
+        .setTitle(storedProduct.title)
+        .setBrand(storedProduct.brand)
+        .setDescription(storedProduct.description)
+        .setCategory(storedProduct.category)
+        .setItemPrice(storedProduct.price)
+        .setDeliveryCategory(DeliveryCategory.HOME_DELIVERY)
+    );
+
+    const customData = new CustomData()
+      .setValue(round(order.revenue))
+      .setContentCategory(order.products?.[0]?.category ?? '')
+      .setContents(contents)
+      .setCurrency(currency)
+      .setNumItems(round(order.quantity));
+
+    const serverEvent = new ServerEvent()
+      .setEventId(evtName)
+      .setEventName('AddPaymentInfo')
+      .setEventTime(current_timestamp)
+      .setCustomData(customData)
+      .setEventSourceUrl(page?.url ?? '')
+      .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
+
+    const eventsData = [serverEvent];
+    const eventRequest = new EventRequest(access_token, pixel_id)
+      .setTestEventCode(testCode)
+      .setEvents(eventsData);
+
+    return publish(eventRequest);
   };
+
+  /**
+   *
+   * Custom Event: AddShippingInfo
+   * Params are the same as for AddPaymentInfo
+   */
   const trackAddShippingInfo = async (order: T_EA_DataOrder) => {
-    return trackIdentify();
+    const evtName = trackUtils.getEventNameOfShippingInfo(order.shipping.name);
+    log('[EA:Facebook] trackAddShippingInfo', evtName);
+    const current_timestamp = Math.floor(Date.now() / 1000);
+    const userData = _getUserDataObject();
+    const page = options.resolvers?.page?.();
+
+    const contents = order.products.map((storedProduct) =>
+      new Content()
+        .setId(storedProduct.id.toString())
+        .setQuantity(round(storedProduct.quantity))
+        .setTitle(storedProduct.title)
+        .setBrand(storedProduct.brand)
+        .setDescription(storedProduct.description)
+        .setCategory(storedProduct.category)
+        .setItemPrice(storedProduct.price)
+        .setDeliveryCategory(DeliveryCategory.HOME_DELIVERY)
+    );
+
+    const customData = new CustomData()
+      .setValue(round(order.revenue))
+      .setContentCategory(order.products?.[0]?.category ?? '')
+      .setContents(contents)
+      .setCurrency(currency)
+      .setNumItems(round(order.quantity));
+
+    const serverEvent = new ServerEvent()
+      .setEventId(evtName)
+      .setEventName('AddPaymentInfo')
+      .setEventTime(current_timestamp)
+      .setCustomData(customData)
+      .setEventSourceUrl(page?.url ?? '')
+      .setActionSource('website');
+
+    userData ? serverEvent.setUserData(userData) : void 0;
+
+    const eventsData = [serverEvent];
+    const eventRequest = new EventRequest(access_token, pixel_id)
+      .setTestEventCode(testCode)
+      .setEvents(eventsData);
+
+    return publish(eventRequest);
   };
+
   const trackViewBasket = async (basket: T_EA_DataBasket) => {
     return trackIdentify();
   };

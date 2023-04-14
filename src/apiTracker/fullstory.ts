@@ -521,10 +521,10 @@ export const fullstoryTracker = (options: TSettings) => {
   };
 
   const trackSearch = async (searchTerm, matchingProducts) => {
-    const evtName = trackUtils.getEventNameOfSearch(
-      searchTerm,
-      matchingProducts
-    );
+    // const evtName = trackUtils.getEventNameOfSearch(
+    //   searchTerm,
+    //   matchingProducts
+    // );
     const page = options.resolvers?.page?.();
     collectEvent({
       event: 'Searched Site',
@@ -598,7 +598,7 @@ export const fullstoryTracker = (options: TSettings) => {
   };
 
   const trackProfileSubscribeNL = async (profile: T_EA_DataProfile | null) => {
-    // console.error('klaviyo:trackProfileSubscribeNL', request.user);
+    // log('[EA:FullStory] trackProfileSubscribeNL', profile);
     const user = getUserObj(profile);
     user
       ? collectEvent({

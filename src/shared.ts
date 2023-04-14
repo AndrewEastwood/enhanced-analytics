@@ -119,7 +119,7 @@ export type TSettings = {
   affiliation: string;
   absoluteURL: string;
   currency: string;
-  debug: boolean;
+  debug?: boolean;
   integrations?: {
     [ETrackers.Facebook]?: {
       enabled: boolean;

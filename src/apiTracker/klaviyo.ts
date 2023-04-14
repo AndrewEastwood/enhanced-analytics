@@ -246,6 +246,9 @@ export const klaviyoTracker = (options: TSettings) => {
         Brands: Object.values(order.products).map((product) => product.brand),
         DiscountCode: order.coupon, // "Free Shipping",
         // "DiscountValue": 5,
+        DeliveryType: order.shipping.name,
+        DeliveryCost: order.shipping.cost,
+        PaymentType: order.payment.type,
         SuccessURL: order.url ? order.url : page?.url || '',
         Items: order.products.map((product) => ({
           ProductID: product.id,
@@ -574,6 +577,7 @@ export const klaviyoTracker = (options: TSettings) => {
     collectEvent({
       event: 'Payment Added',
       properties: {
+        PaymentType: order.payment.type,
         BillingAddress: {
           FirstName: order.customer.firstName,
           LastName: order.customer.lastName,
@@ -598,6 +602,8 @@ export const klaviyoTracker = (options: TSettings) => {
     collectEvent({
       event: 'Shipping Added',
       properties: {
+        DeliveryType: order.shipping.name,
+        DeliveryCost: order.shipping.cost,
         ShippingAddress: {
           FirstName: order.customer.firstName,
           LastName: order.customer.lastName,

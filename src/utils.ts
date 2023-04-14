@@ -50,6 +50,14 @@ const getEventNameOfProductItemWish = (product: T_EA_DataProduct) => {
   return `wish_product_of_${product.id}${getEvtUUIDStr()}`;
 };
 
+const getEventNameOfPaymentInfo = (name: string) => {
+  return `info_payment_of_${name}${getEvtUUIDStr()}`;
+};
+
+const getEventNameOfShippingInfo = (name: string) => {
+  return `info_shipoping_of_${name}${getEvtUUIDStr()}`;
+};
+
 const getEventNameOfSearch = (
   searchTerm: string,
   products: T_EA_DataProduct[]
@@ -728,6 +736,8 @@ export {
   getEventNameOfNewProfile,
   getEventNameOfSubscription,
   getEventNameOfLead,
+  getEventNameOfPaymentInfo,
+  getEventNameOfShippingInfo,
   Basket,
   Order,
   Catalog,
