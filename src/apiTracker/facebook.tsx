@@ -675,7 +675,7 @@ export const EA_FB_Server_RePublish_Events: React.FC<{
     events.map((p) => (
       <span
         key={p.event_id}
-        id={`_ea_fb_event_${p.event_name.toLowerCase()}`}
+        id={`_ea_fb_event_${p.event_id.toLowerCase()}`}
         data-fb-event={JSON.stringify(p)}
       ></span>
     ));
