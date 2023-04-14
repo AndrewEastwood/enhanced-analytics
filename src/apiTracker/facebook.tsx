@@ -1477,7 +1477,7 @@ export const fbTracker = (options: TSettings) => {
 
     const serverEvent = new ServerEvent()
       .setEventId(evtName)
-      .setEventName('AddPaymentInfo')
+      .setEventName('AddShippingInfo')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
       .setEventSourceUrl(page?.url ?? '')
