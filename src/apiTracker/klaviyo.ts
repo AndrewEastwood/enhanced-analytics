@@ -30,7 +30,6 @@ const BrowserSdkWrapper = (() => {
           body?.data?.attributes?.properties,
         ],
       ]);
-      // .filter((b) => !(b instanceof Promise))
       _unprocessed = window.klaviyo ? processQueue(_unprocessed) : _unprocessed;
     },
   };
