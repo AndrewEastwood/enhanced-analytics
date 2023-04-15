@@ -30,6 +30,7 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
   absoluteURL: '/',
   currency: 'usd',
   affiliation: 'WebSite',
+  description: 'My Web Store',
   debug: false,
   integrations: {
     fb: {

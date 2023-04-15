@@ -62,12 +62,27 @@ export type T_EA_DataProduct = {
   variant?: string;
   color?: string;
   size?: string;
+  gender?: 'male' | 'female' | 'unisex';
+  ageGroup?: 'newborn' | 'infant' | 'toddler' | 'kids' | 'adult';
+  condition?: 'new' | 'refurbished' | 'used';
   metrics?: number[];
   dimensions?: string[];
   list?: string;
   viewOrder?: number;
   url?: string;
   imageUrl?: string;
+  imageUrls?: string[];
+  inStock?: number;
+  groupId?: string | number;
+  // sizings
+  dimLength?: string | number;
+  dimWidth?: string | number;
+  dimHeight?: string | number;
+  dimWeight?: string | number;
+  dimShippingLength?: string | number;
+  dimShippingWidth?: string | number;
+  dimShippingHeight?: string | number;
+  dimShippingWeight?: string | number;
   // basket features
   total?: number;
   quantity?: number;
@@ -77,6 +92,7 @@ export type T_EA_DataProduct = {
   // A product affiliation to designate a supplying company or brick and mortar store location.
   // Note: `affiliation` is only available at the item-scope.
   affiliation?: string;
+  google_product_category?: string;
 };
 
 export type T_EA_DataBasket = {
@@ -117,6 +133,7 @@ type TResolvers = {
 export type TSettings = {
   _configured: boolean;
   affiliation: string;
+  description?: string;
   absoluteURL: string;
   currency: string;
   debug?: boolean;
