@@ -275,6 +275,7 @@ export const useAnalytics = (c?: TSettings) => {
                   ? imgUrl
                   : config.absoluteURL + imgUrl
                 : '';
+            // https://support.google.com/merchants/answer/7052112?hl=en&ref_topic=6324338&sjid=4696082261280780108-EU
             const items = (products: T_EA_DataProduct[] = []) =>
               products.map((p) =>
                 [
@@ -365,6 +366,7 @@ export const useAnalytics = (c?: TSettings) => {
             return feed.join('');
           },
           [ETrackers.Klaviyo]: () => {
+            // https://developers.klaviyo.com/en/docs/guide_to_syncing_a_custom_catalog_feed_to_klaviyo
             const feed = v.map((p) => ({
               id: p.id,
               title: p.title,
