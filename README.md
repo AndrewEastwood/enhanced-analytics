@@ -39,6 +39,7 @@ const MyApp = () => {
   useEffect(() => {
     configureAnalytics({
       affiliation: activeStore.name,
+      description: 'Your store description. This will appear in product feeds too',
       absoluteURL: activeStore.homepage,
       currency: activeStore.localization.currency,
       debug: /* set true when localhost or dev env */
