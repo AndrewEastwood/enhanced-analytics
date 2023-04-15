@@ -276,86 +276,82 @@ export const useAnalytics = (c?: TSettings) => {
                   : config.absoluteURL + imgUrl
                 : '';
             const items = (products: T_EA_DataProduct[] = []) =>
-              products
-                .filter((p) => p.price)
-                .map((p) =>
-                  [
-                    `<item>`,
-                    `<g:id>${p.id}</g:id>`,
-                    `<g:title>${sanitize(p.title)}</g:title>`,
-                    `<g:description>${sanitize(p.description)
-                      .replace(/<[^>]*>/g, '')
-                      .replace(/\r\n/g, ' ')}</g:description>`,
-                    `<g:link>${p.url}</g:link>`,
-                    `<g:brand>${sanitize(p.brand)}</g:brand>`,
-                    `<g:price>${p.price.toFixed(2)} ${
-                      config.currency
-                    }</g:price>`,
-                    `<g:product_type>${sanitize(p.category)}</g:product_type>`,
-                    `<g:image_link>${imgLink(p.imageUrl)}</g:image_link>`,
-                    p.dimLength
-                      ? `<g:product_length>${p.dimLength}</g:product_length>`
-                      : null,
-                    p.dimWidth
-                      ? `<g:product_width>${p.dimWidth}</g:product_width>`
-                      : null,
-                    p.dimHeight
-                      ? `<g:product_height>${p.dimHeight}</g:product_height>`
-                      : null,
-                    p.dimWeight
-                      ? `<g:product_weight>${p.dimWeight}</g:product_weight>`
-                      : null,
-                    (p.imageUrls ?? [])
-                      .map(
-                        (img) =>
-                          `<additional_image_link>${imgLink(
-                            img
-                          )}</additional_image_link>`
-                      )
-                      .join(''),
-                    p.condition
-                      ? `<g:condition>${p.condition}</g:condition>`
-                      : null,
-                    p.inStock ?? 0 > 0
-                      ? `<g:quantity_to_sell_on_facebook>${p.inStock}</g:quantity_to_sell_on_facebook>
+              products.map((p) =>
+                [
+                  `<item>`,
+                  `<g:id>${p.id}</g:id>`,
+                  `<g:title>${sanitize(p.title)}</g:title>`,
+                  `<g:description>${sanitize(p.description)
+                    .replace(/<[^>]*>/g, '')
+                    .replace(/\r\n/g, ' ')}</g:description>`,
+                  `<g:link>${p.url}</g:link>`,
+                  `<g:brand>${sanitize(p.brand)}</g:brand>`,
+                  `<g:price>${p.price.toFixed(2)} ${config.currency}</g:price>`,
+                  `<g:product_type>${sanitize(p.category)}</g:product_type>`,
+                  `<g:image_link>${imgLink(p.imageUrl)}</g:image_link>`,
+                  p.dimLength
+                    ? `<g:product_length>${p.dimLength}</g:product_length>`
+                    : null,
+                  p.dimWidth
+                    ? `<g:product_width>${p.dimWidth}</g:product_width>`
+                    : null,
+                  p.dimHeight
+                    ? `<g:product_height>${p.dimHeight}</g:product_height>`
+                    : null,
+                  p.dimWeight
+                    ? `<g:product_weight>${p.dimWeight}</g:product_weight>`
+                    : null,
+                  (p.imageUrls ?? [])
+                    .map(
+                      (img) =>
+                        `<additional_image_link>${imgLink(
+                          img
+                        )}</additional_image_link>`
+                    )
+                    .join(''),
+                  p.condition
+                    ? `<g:condition>${p.condition}</g:condition>`
+                    : null,
+                  p.inStock ?? 0 > 0
+                    ? `<g:quantity_to_sell_on_facebook>${p.inStock}</g:quantity_to_sell_on_facebook>
                           <g:availability>in stock</g:availability>`
-                      : null,
-                    p.isSale
-                      ? `<g:sale_price>${p.salePrice.toFixed(2)} ${
-                          config.currency
-                        }</g:sale_price>`
-                      : null,
-                    (p.dimensions || [])
-                      .map(
-                        (dim, idx) =>
-                          `<g:custom_label_${idx}>${dim}</g:custom_label_${idx}>`
-                      )
-                      .join(''),
-                    (p.metrics || [])
-                      .map(
-                        (met, idx) =>
-                          `<g:custom_number_${idx}>${met}</g:custom_number_${idx}>`
-                      )
-                      .join(''),
-                    p.color ? `<g:color>${p.color}</g:color>` : null,
-                    p.size ? `<g:size>${p.size || 'Unisize'}</g:size>` : null,
-                    p.groupId
-                      ? `<g:item_group_id>${
-                          p.groupId || 'General'
-                        }</g:item_group_id>`
-                      : null,
-                    p.gender ? `<g:gender>${p.gender}</g:gender>` : null,
-                    p.ageGroup
-                      ? `<g:age_group>${p.ageGroup}</g:age_group>`
-                      : null,
-                    p.google_product_category
-                      ? `<g:google_product_category>${p.google_product_category}</g:google_product_category>`
-                      : null,
-                    `</item>`,
-                  ]
-                    .filter(Boolean)
-                    .join('')
-                );
+                    : null,
+                  p.isSale
+                    ? `<g:sale_price>${p.salePrice.toFixed(2)} ${
+                        config.currency
+                      }</g:sale_price>`
+                    : null,
+                  (p.dimensions || [])
+                    .map(
+                      (dim, idx) =>
+                        `<g:custom_label_${idx}>${dim}</g:custom_label_${idx}>`
+                    )
+                    .join(''),
+                  (p.metrics || [])
+                    .map(
+                      (met, idx) =>
+                        `<g:custom_number_${idx}>${met}</g:custom_number_${idx}>`
+                    )
+                    .join(''),
+                  p.color ? `<g:color>${p.color}</g:color>` : null,
+                  p.size ? `<g:size>${p.size || 'Unisize'}</g:size>` : null,
+                  p.groupId
+                    ? `<g:item_group_id>${
+                        p.groupId || 'General'
+                      }</g:item_group_id>`
+                    : null,
+                  p.gender ? `<g:gender>${p.gender}</g:gender>` : null,
+                  p.ageGroup
+                    ? `<g:age_group>${p.ageGroup}</g:age_group>`
+                    : null,
+                  p.google_product_category
+                    ? `<g:google_product_category>${p.google_product_category}</g:google_product_category>`
+                    : null,
+                  `</item>`,
+                ]
+                  .filter(Boolean)
+                  .join('')
+              );
             const feed = [
               xml,
               rssChannel(
