@@ -22,9 +22,12 @@ export type T_EA_DataAddress = {
   state?: string;
   city?: string;
   street?: string;
+  street2?: string;
   postcode?: string;
   region?: string;
+  regionCode?: string;
   timezone?: string;
+  phone?: string;
 };
 
 export type T_EA_DataSession = {
@@ -190,6 +193,8 @@ export type T_EA_Payment = {
 export type T_EA_DataOrder = {
   id: string | number;
   revenue: number;
+  subtotal?: number;
+  discountValue?: number;
   tax: number;
   quantity: number;
   coupon: null | string;
@@ -197,8 +202,10 @@ export type T_EA_DataOrder = {
   dateCreated: number;
   status: string;
   shipping: T_EA_Shipping;
+  billing?: T_EA_DataAddress;
   customer: T_EA_DataProfile;
   payment: T_EA_Payment;
+  trackingNo?: string;
   url?: string;
 };
 
