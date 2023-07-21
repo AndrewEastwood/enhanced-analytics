@@ -2,6 +2,9 @@
 
 A couple of convenient tools for populating dataLayer ecommerce event data or even more.
 
+You can use them either on the Frontend or the Backend sides.
+The Faacebook Pixel events can be configured on both sides, just to increase pixel's performance.
+
 **integrated services**:\
 &nbsp;&nbsp;✅ Google Analytics & GA4 / Tag Manager (Browser Only)\
 &nbsp;&nbsp;✅ Klaviyo (Server+Browser) https://www.klaviyo.com/
@@ -286,7 +289,7 @@ const MyComponent = () => {
 };
 ```
 
-## 2 Configure (API Side)
+## 2 Configure (Backend Side)
 
 Simple snippet with Express.Js as middleware:
 
@@ -577,7 +580,7 @@ await useAnalytics().withOrder(evtPayload).s2s.klaviyo().trackCustom();
 
 ### 2.2.FB Pixel (Server+UI)
 
-This examples shows how to send server-side (NextJs) fb events and then re-process then from the UI.
+This examples shows how to send server-side (NextJs) fb events and then re-process them from the UI.
 
 ```tsx
 import { GetServerSideProps } from "next";
