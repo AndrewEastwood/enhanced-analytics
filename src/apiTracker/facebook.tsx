@@ -782,7 +782,7 @@ export const fbTracker = (options: TSettings) => {
     const u = order ? order.customer : user;
     const session = options.resolvers?.session?.();
     const userData =
-      u && session
+      u && u.email && u.firstName && session
         ? new UserData()
             .setExternalId(u.email)
             .setEmail(u.email)

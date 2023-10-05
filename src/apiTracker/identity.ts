@@ -37,8 +37,10 @@ export const resolveUser = (profile?: T_EA_DataProfile | null) => {
   restore();
   const customResolver = getConfig().resolvers?.profile;
   const lastId = lastIdentity.values().next().value;
-  const u = (profile ? profile : customResolver?.(lastId)) ?? lastId;
-  store(u);
+  const u = (profile ? profile : customResolver?.(lastId)) ?? lastId ?? {};
+  if (u && u.email && u.firstName) {
+    store(u);
+  }
   return u;
 };
 

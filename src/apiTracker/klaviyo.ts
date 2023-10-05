@@ -126,7 +126,7 @@ export const klaviyoTracker = (options: TSettings) => {
       throw '[EA] Klaviyo is not configured properly; Please provide token to run in the server mode;';
     }
     if (!bizSdk || !ConfigWrapper) {
-      throw '[EA] Klaviyo is configured without SDK; Please install the requried dependency: npm i klaviyo-api@2.1.1 OR define your own sdk functions;';
+      throw '[EA] Klaviyo is configured without SDK; Please install the requried dependency: npm install klaviyo-api@6.0.1 (https://github.com/klaviyo/klaviyo-api-node) OR define your own sdk functions;';
     }
     // configure server tracker
     ConfigWrapper(analytics.klaviyo?.token);
