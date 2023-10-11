@@ -46,6 +46,9 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       siteId: null,
       token: null,
       sdk: null,
+      rules: {
+        metrics: {},
+      },
     },
     fullstory: {
       enabled: false,

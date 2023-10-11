@@ -140,6 +140,14 @@ export type TSettings = {
   absoluteURL: string;
   currency: string;
   debug?: boolean;
+  feeds?: {
+    klaviyo?: {
+      feedUrl?: string;
+    };
+    facebook?: {
+      feedUrl?: string;
+    };
+  };
   integrations?: {
     [ETrackers.Facebook]?: {
       enabled: boolean;
@@ -148,10 +156,16 @@ export type TSettings = {
       token?: null | string;
       testCode?: null | string;
       hashUser?: boolean;
+      rules?: {
+        metrics?: Partial<Record<keyof TTrackersEvents, boolean>>;
+      };
     };
     [ETrackers.FullStory]?: {
       enabled: boolean;
       orgId: string | null;
+      rules?: {
+        metrics?: {};
+      };
     };
     [ETrackers.Klaviyo]?: {
       enabled: boolean;
@@ -164,6 +178,9 @@ export type TSettings = {
           state: { isIdentified: boolean }
         ) => void;
       };
+      rules?: {
+        metrics?: Partial<Record<keyof TTrackersEvents, boolean>>;
+      };
     };
     [ETrackers.GoogleAnalytics]?: {
       enabled: boolean;
@@ -172,6 +189,9 @@ export type TSettings = {
       defaultCatalogName?: string;
       defaultBasketName?: string;
       dataLayerName?: string;
+      rules?: {
+        metrics?: {};
+      };
     };
   };
   links?: {
@@ -217,6 +237,31 @@ export type TServerEventResponse<
   payload: P[];
   response: null | T;
   browserData?: string;
+};
+
+export type TTrackersEvents = {
+  trackIdentify(): TServerEventResponse;
+  trackTransaction(): TServerEventResponse;
+  trackProductAddToCart(): TServerEventResponse;
+  trackProductRemoveFromCart(): TServerEventResponse;
+  trackProductItemView(): TServerEventResponse;
+  trackProductsItemView(): TServerEventResponse;
+  trackSearch(): TServerEventResponse;
+  trackPageView(): TServerEventResponse;
+  trackInitiateCheckout(): TServerEventResponse;
+  trackNewProfile(): TServerEventResponse;
+  trackProfileResetPassword(): TServerEventResponse;
+  trackProfileLogIn(): TServerEventResponse;
+  trackProfileLogOut(): TServerEventResponse;
+  trackProfileSubscribeNL(): TServerEventResponse;
+  trackTransactionRefund(): TServerEventResponse;
+  trackTransactionCancel(): TServerEventResponse;
+  trackTransactionFulfill(): TServerEventResponse;
+  trackCustom(): TServerEventResponse;
+  trackAddPaymentInfo(): TServerEventResponse;
+  trackAddShippingInfo(): TServerEventResponse;
+  trackAddToWishlist(): TServerEventResponse;
+  trackViewBasket(): TServerEventResponse;
 };
 
 export type TEvtType<TPayload> = {

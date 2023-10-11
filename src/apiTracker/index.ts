@@ -39,6 +39,18 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
     ? trackers?.fullstory && analytics?.[ETrackers.FullStory]?.enabled
     : true;
 
+  // const metricRules = {
+  //   [ETrackers.Facebook]: analytics?.[ETrackers.Facebook]?.rules?.metrics ?? {},
+  //   [ETrackers.Klaviyo]: analytics?.[ETrackers.Klaviyo]?.rules?.metrics ?? {},
+  // };
+
+  const isMetricAllowed = (tracker: ETrackers, trackFnName?: string) => {
+    const allowed = trackers?.[tracker] && analytics?.[tracker]?.enabled;
+    const rules = analytics?.[tracker]?.rules?.metrics ?? {};
+    const ruleConfig = rules[trackFnName ?? ''];
+    return ruleConfig === false ? false : allowed;
+  };
+
   if (trackers?.server && isBrowserMode) {
     throw '[EA:Server] Trackers cannot be run in a browser. globalThis.window is detected.';
   }
@@ -49,9 +61,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackTransactionRefund = (order: T_EA_DataOrder) => async () => {
     const r = [
-      useFb ? tFb(config).trackTransactionRefund : null,
-      useKl ? tKlyo(config).trackTransactionRefund : null,
-      useFs ? tFs(config).trackTransactionRefund : null,
+      isMetricAllowed(ETrackers.Facebook, trackTransactionRefund.name) ? tFb(config).trackTransactionRefund : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackTransactionRefund.name) ? tKlyo(config).trackTransactionRefund : null,
+      isMetricAllowed(ETrackers.FullStory, trackTransactionRefund.name) ? tFs(config).trackTransactionRefund : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -60,9 +72,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackTransactionCancel = (order: T_EA_DataOrder) => async () => {
     const r = [
-      useFb ? tFb(config).trackTransactionCancel : null,
-      useKl ? tKlyo(config).trackTransactionCancel : null,
-      useFs ? tFs(config).trackTransactionCancel : null,
+      isMetricAllowed(ETrackers.Facebook, trackTransactionCancel.name) ? tFb(config).trackTransactionCancel : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackTransactionCancel.name) ? tKlyo(config).trackTransactionCancel : null,
+      isMetricAllowed(ETrackers.FullStory, trackTransactionCancel.name) ? tFs(config).trackTransactionCancel : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -71,9 +83,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackTransactionFulfill = (order: T_EA_DataOrder) => async () => {
     const r = [
-      useFb ? tFb(config).trackTransactionFulfill : null,
-      useKl ? tKlyo(config).trackTransactionFulfill : null,
-      useFs ? tFs(config).trackTransactionFulfill : null,
+      isMetricAllowed(ETrackers.Facebook, trackTransactionFulfill.name) ? tFb(config).trackTransactionFulfill : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackTransactionFulfill.name) ? tKlyo(config).trackTransactionFulfill : null,
+      isMetricAllowed(ETrackers.FullStory, trackTransactionFulfill.name) ? tFs(config).trackTransactionFulfill : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -82,9 +94,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackTransaction = (order: T_EA_DataOrder) => async () => {
     const r = [
-      useFb ? tFb(config).trackTransaction : null,
-      useKl ? tKlyo(config).trackTransaction : null,
-      useFs ? tFs(config).trackTransaction : null,
+      isMetricAllowed(ETrackers.Facebook, trackTransaction.name) ? tFb(config).trackTransaction : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackTransaction.name) ? tKlyo(config).trackTransaction : null,
+      isMetricAllowed(ETrackers.FullStory, trackTransaction.name) ? tFs(config).trackTransaction : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -93,9 +105,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackProductAddToCart = (basket: T_EA_DataBasket) => async () => {
     const r = [
-      useFb ? tFb(config).trackProductAddToCart : null,
-      useKl ? tKlyo(config).trackProductAddToCart : null,
-      useFs ? tFs(config).trackProductAddToCart : null,
+      isMetricAllowed(ETrackers.Facebook, trackProductAddToCart.name) ? tFb(config).trackProductAddToCart : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackProductAddToCart.name) ? tKlyo(config).trackProductAddToCart : null,
+      isMetricAllowed(ETrackers.FullStory, trackProductAddToCart.name) ? tFs(config).trackProductAddToCart : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(basket));
@@ -104,9 +116,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackProductRemoveFromCart = (basket: T_EA_DataBasket) => async () => {
     const r = [
-      useFb ? tFb(config).trackProductRemoveFromCart : null,
-      useKl ? tKlyo(config).trackProductRemoveFromCart : null,
-      useFs ? tFs(config).trackProductRemoveFromCart : null,
+      isMetricAllowed(ETrackers.Facebook, trackProductRemoveFromCart.name) ? tFb(config).trackProductRemoveFromCart : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackProductRemoveFromCart.name) ? tKlyo(config).trackProductRemoveFromCart : null,
+      isMetricAllowed(ETrackers.FullStory, trackProductRemoveFromCart.name) ? tFs(config).trackProductRemoveFromCart : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(basket));
@@ -115,9 +127,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackProductsItemView = (products: T_EA_DataProduct[]) => async () => {
     const r = [
-      useFb ? tFb(config).trackProductsItemView : null,
-      useKl ? tKlyo(config).trackProductsItemView : null,
-      useFs ? tFs(config).trackProductsItemView : null,
+      isMetricAllowed(ETrackers.Facebook, trackProductsItemView.name) ? tFb(config).trackProductsItemView : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackProductsItemView.name) ? tKlyo(config).trackProductsItemView : null,
+      isMetricAllowed(ETrackers.FullStory, trackProductsItemView.name) ? tFs(config).trackProductsItemView : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(products));
@@ -126,9 +138,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackProductItemView = (product: T_EA_DataProduct) => async () => {
     const r = [
-      useFb ? tFb(config).trackProductItemView : null,
-      useKl ? tKlyo(config).trackProductItemView : null,
-      useFs ? tFs(config).trackProductItemView : null,
+      isMetricAllowed(ETrackers.Facebook, trackProductItemView.name) ? tFb(config).trackProductItemView : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackProductItemView.name) ? tKlyo(config).trackProductItemView : null,
+      isMetricAllowed(ETrackers.FullStory, trackProductItemView.name) ? tFs(config).trackProductItemView : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(product));
@@ -137,9 +149,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackPageView = (page: T_EA_DataPage) => async () => {
     const r = [
-      useFb ? tFb(config).trackPageView : null,
-      useKl ? tKlyo(config).trackPageView : null,
-      useFs ? tFs(config).trackPageView : null,
+      isMetricAllowed(ETrackers.Facebook, trackPageView.name) ? tFb(config).trackPageView : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackPageView.name) ? tKlyo(config).trackPageView : null,
+      isMetricAllowed(ETrackers.FullStory, trackPageView.name) ? tFs(config).trackPageView : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(page));
@@ -148,9 +160,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackCustom = (event: T_EA_DataCustomEvent) => async () => {
     const r = [
-      useFb ? tFb(config).trackCustom : null,
-      useKl ? tKlyo(config).trackCustom : null,
-      useFs ? tFs(config).trackCustom : null,
+      isMetricAllowed(ETrackers.Facebook, trackCustom.name) ? tFb(config).trackCustom : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackCustom.name) ? tKlyo(config).trackCustom : null,
+      isMetricAllowed(ETrackers.FullStory, trackCustom.name) ? tFs(config).trackCustom : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(event));
@@ -159,9 +171,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackInitiateCheckout = (basket: T_EA_DataBasket) => async () => {
     const r = [
-      useFb ? tFb(config).trackInitiateCheckout : null,
-      useKl ? tKlyo(config).trackInitiateCheckout : null,
-      useFs ? tFs(config).trackInitiateCheckout : null,
+      isMetricAllowed(ETrackers.Facebook, trackInitiateCheckout.name) ? tFb(config).trackInitiateCheckout : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackInitiateCheckout.name) ? tKlyo(config).trackInitiateCheckout : null,
+      isMetricAllowed(ETrackers.FullStory, trackInitiateCheckout.name) ? tFs(config).trackInitiateCheckout : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(basket));
@@ -171,9 +183,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   const trackSearch =
     (searchTerm: string, products: T_EA_DataProduct[]) => async () => {
       const r = [
-        useFb ? tFb(config).trackSearch : null,
-        useKl ? tKlyo(config).trackSearch : null,
-        useFs ? tFs(config).trackSearch : null,
+        isMetricAllowed(ETrackers.Facebook, trackSearch.name) ? tFb(config).trackSearch : null,
+        isMetricAllowed(ETrackers.Klaviyo, trackSearch.name) ? tKlyo(config).trackSearch : null,
+        isMetricAllowed(ETrackers.FullStory, trackSearch.name) ? tFs(config).trackSearch : null,
       ]
         .filter((v) => !!v)
         .map((v) => v!(searchTerm, products));
@@ -182,9 +194,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackIdentify = (profile: T_EA_DataProfile | null) => async () => {
     const r = [
-      useFb ? tFb(config).trackIdentify : null,
-      useKl ? tKlyo(config).trackIdentify : null,
-      useFs ? tFs(config).trackIdentify : null,
+      isMetricAllowed(ETrackers.Facebook, trackIdentify.name) ? tFb(config).trackIdentify : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackIdentify.name) ? tKlyo(config).trackIdentify : null,
+      isMetricAllowed(ETrackers.FullStory, trackIdentify.name) ? tFs(config).trackIdentify : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(profile));
@@ -193,9 +205,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackNewProfile = (profile: T_EA_DataProfile | null) => async () => {
     const r = [
-      useFb ? tFb(config).trackNewProfile : null,
-      useKl ? tKlyo(config).trackNewProfile : null,
-      useFs ? tFs(config).trackNewProfile : null,
+      isMetricAllowed(ETrackers.Facebook, trackNewProfile.name) ? tFb(config).trackNewProfile : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackNewProfile.name) ? tKlyo(config).trackNewProfile : null,
+      isMetricAllowed(ETrackers.FullStory, trackNewProfile.name) ? tFs(config).trackNewProfile : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(profile));
@@ -205,9 +217,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   const trackProfileResetPassword =
     (profile: T_EA_DataProfile | null) => async () => {
       const r = [
-        useFb ? tFb(config).trackProfileResetPassword : null,
-        useKl ? tKlyo(config).trackProfileResetPassword : null,
-        useFs ? tFs(config).trackProfileResetPassword : null,
+        isMetricAllowed(ETrackers.Facebook, trackProfileResetPassword.name) ? tFb(config).trackProfileResetPassword : null,
+        isMetricAllowed(ETrackers.Klaviyo, trackProfileResetPassword.name) ? tKlyo(config).trackProfileResetPassword : null,
+        isMetricAllowed(ETrackers.FullStory, trackProfileResetPassword.name) ? tFs(config).trackProfileResetPassword : null,
       ]
         .filter((v) => !!v)
         .map((v) => v!(profile));
@@ -216,9 +228,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackProfileLogIn = (profile: T_EA_DataProfile | null) => async () => {
     const r = [
-      useFb ? tFb(config).trackProfileLogIn : null,
-      useKl ? tKlyo(config).trackProfileLogIn : null,
-      useFs ? tFs(config).trackProfileLogIn : null,
+      isMetricAllowed(ETrackers.Facebook, trackProfileLogIn.name) ? tFb(config).trackProfileLogIn : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackProfileLogIn.name) ? tKlyo(config).trackProfileLogIn : null,
+      isMetricAllowed(ETrackers.FullStory, trackProfileLogIn.name) ? tFs(config).trackProfileLogIn : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(profile));
@@ -227,9 +239,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackProfileLogOut = (profile: T_EA_DataProfile | null) => async () => {
     const r = [
-      useFb ? tFb(config).trackProfileLogOut : null,
-      useKl ? tKlyo(config).trackProfileLogOut : null,
-      useFs ? tFs(config).trackProfileLogOut : null,
+      isMetricAllowed(ETrackers.Facebook, trackProfileLogOut.name) ? tFb(config).trackProfileLogOut : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackProfileLogOut.name) ? tKlyo(config).trackProfileLogOut : null,
+      isMetricAllowed(ETrackers.FullStory, trackProfileLogOut.name) ? tFs(config).trackProfileLogOut : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(profile));
@@ -239,9 +251,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
   const trackProfileSubscribeNL =
     (profile: T_EA_DataProfile | null) => async () => {
       const r = [
-        useFb ? tFb(config).trackProfileSubscribeNL : null,
-        useKl ? tKlyo(config).trackProfileSubscribeNL : null,
-        useFs ? tFs(config).trackProfileSubscribeNL : null,
+        isMetricAllowed(ETrackers.Facebook, trackProfileSubscribeNL.name) ? tFb(config).trackProfileSubscribeNL : null,
+        isMetricAllowed(ETrackers.Klaviyo, trackProfileSubscribeNL.name) ? tKlyo(config).trackProfileSubscribeNL : null,
+        isMetricAllowed(ETrackers.FullStory, trackProfileSubscribeNL.name) ? tFs(config).trackProfileSubscribeNL : null,
       ]
         .filter((v) => !!v)
         .map((v) => v!(profile));
@@ -250,9 +262,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackAddToWishlist = (products: T_EA_DataProduct[]) => async () => {
     const r = [
-      useFb ? tFb(config).trackAddToWishlist : null,
-      useKl ? tKlyo(config).trackAddToWishlist : null,
-      useFs ? tFs(config).trackAddToWishlist : null,
+      isMetricAllowed(ETrackers.Facebook, trackAddToWishlist.name) ? tFb(config).trackAddToWishlist : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackAddToWishlist.name) ? tKlyo(config).trackAddToWishlist : null,
+      isMetricAllowed(ETrackers.FullStory, trackAddToWishlist.name) ? tFs(config).trackAddToWishlist : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(products));
@@ -261,9 +273,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackViewBasket = (basket: T_EA_DataBasket) => async () => {
     const r = [
-      useFb ? tFb(config).trackViewBasket : null,
-      useKl ? tKlyo(config).trackViewBasket : null,
-      useFs ? tFs(config).trackViewBasket : null,
+      isMetricAllowed(ETrackers.Facebook, trackViewBasket.name) ? tFb(config).trackViewBasket : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackViewBasket.name) ? tKlyo(config).trackViewBasket : null,
+      isMetricAllowed(ETrackers.FullStory, trackViewBasket.name) ? tFs(config).trackViewBasket : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(basket));
@@ -272,9 +284,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackAddPaymentInfo = (order: T_EA_DataOrder) => async () => {
     const r = [
-      useFb ? tFb(config).trackAddPaymentInfo : null,
-      useKl ? tKlyo(config).trackAddPaymentInfo : null,
-      useFs ? tFs(config).trackAddPaymentInfo : null,
+      isMetricAllowed(ETrackers.Facebook, trackAddPaymentInfo.name) ? tFb(config).trackAddPaymentInfo : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackAddPaymentInfo.name) ? tKlyo(config).trackAddPaymentInfo : null,
+      isMetricAllowed(ETrackers.FullStory, trackAddPaymentInfo.name) ? tFs(config).trackAddPaymentInfo : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));
@@ -283,9 +295,9 @@ export const apiTracker = (config: TSettings, trackers?: TTrackers) => {
 
   const trackAddShippingInfo = (order: T_EA_DataOrder) => async () => {
     const r = [
-      useFb ? tFb(config).trackAddShippingInfo : null,
-      useKl ? tKlyo(config).trackAddShippingInfo : null,
-      useFs ? tFs(config).trackAddShippingInfo : null,
+      isMetricAllowed(ETrackers.Facebook, trackAddShippingInfo.name) ? tFb(config).trackAddShippingInfo : null,
+      isMetricAllowed(ETrackers.Klaviyo, trackAddShippingInfo.name) ? tKlyo(config).trackAddShippingInfo : null,
+      isMetricAllowed(ETrackers.FullStory, trackAddShippingInfo.name) ? tFs(config).trackAddShippingInfo : null,
     ]
       .filter((v) => !!v)
       .map((v) => v!(order));

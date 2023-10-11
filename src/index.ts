@@ -260,16 +260,16 @@ export const useAnalytics = (c?: TSettings) => {
         feed: {
           [ETrackers.Facebook]: () => {
             const xml = '<?xml version="1.0"?>';
-            const rssChannel = (...inner) =>
+            const rssChannel = (...inner: string[]) =>
               `<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>${inner.join(
                 ''
               )}</channel></rss>`;
-            const title = (t) => `<title>${t}</title>`;
-            const link = (l) =>
-              `<link>${l}</link><atom:link href="${l}/api/products/feed.xml" rel="self" type="application/rss+xml" />`;
-            const desc = (d) => `<description>${d}</description>`;
-            const sanitize = (str) => str.replace(/&(?!a)/g, '&amp;');
-            const imgLink = (imgUrl) =>
+            const title = (t: string) => `<title>${t}</title>`;
+            const link = (l: string) =>
+              `<link>${l}</link><atom:link href="${l}" rel="self" type="application/rss+xml" />`;
+            const desc = (d: string) => `<description>${d}</description>`;
+            const sanitize = (str: string) => str.replace(/&(?!a)/g, '&amp;');
+            const imgLink = (imgUrl: string) =>
               imgUrl
                 ? imgUrl.startsWith('http')
                   ? imgUrl
@@ -289,7 +289,7 @@ export const useAnalytics = (c?: TSettings) => {
                   `<g:brand>${sanitize(p.brand)}</g:brand>`,
                   `<g:price>${p.price.toFixed(2)} ${config.currency}</g:price>`,
                   `<g:product_type>${sanitize(p.category)}</g:product_type>`,
-                  `<g:image_link>${imgLink(p.imageUrl)}</g:image_link>`,
+                  `<g:image_link>${imgLink(p.imageUrl ?? '')}</g:image_link>`,
                   p.dimLength
                     ? `<g:product_length>${p.dimLength}</g:product_length>`
                     : null,
@@ -357,8 +357,8 @@ export const useAnalytics = (c?: TSettings) => {
               xml,
               rssChannel(
                 title(config.affiliation),
-                link(config.absoluteURL),
-                desc(config.description),
+                link(config.feeds?.facebook?.feedUrl ?? config.absoluteURL),
+                desc(config.description ?? ''),
                 ...items(v)
               ),
             ];

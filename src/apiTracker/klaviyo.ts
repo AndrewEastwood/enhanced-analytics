@@ -208,7 +208,7 @@ export const klaviyoTracker = (options: TSettings) => {
   ): Promise<TServerEventResponse[]> => {
     const user = getUserObj(profile);
     log('[EA:Klaviyo] trackIdentify', user);
-    if (user) {
+    if (user && user.email) {
       const attributes = {
         email: user?.email,
         phone_number: user?.phone,
@@ -338,11 +338,16 @@ export const klaviyoTracker = (options: TSettings) => {
           Address2: order.billing?.street2 ?? order.shipping.address.street2,
           City: order.billing?.city ?? order.shipping.address.city,
           Region: order.billing?.region ?? order.shipping.address.region,
-          Region_code: order.billing?.regionCode ?? order.shipping.address.regionCode,
+          Region_code:
+            order.billing?.regionCode ?? order.shipping.address.regionCode,
           Country: order.billing?.country ?? order.shipping.address.country,
-          CountryCode: order.billing?.countryCode ?? order.shipping.address.countryCode,
+          CountryCode:
+            order.billing?.countryCode ?? order.shipping.address.countryCode,
           Zip: order.billing?.postcode ?? order.shipping.address.postcode,
-          Phone: order.billing?.phone ?? order.shipping.address.phone ?? order.customer.phone,
+          Phone:
+            order.billing?.phone ??
+            order.shipping.address.phone ??
+            order.customer.phone,
         },
         ShippingAddress: {
           FirstName: order.customer.firstName,
