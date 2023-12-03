@@ -715,7 +715,7 @@ export const EA_FB_Server_RePublish_Events: React.FC<{
 };
 
 export const fbTracker = (options: TSettings) => {
-  const { integrations: analytics, currency } = options;
+  const { integrations: analytics, currency, absoluteURL } = options;
   const access_token = analytics?.fb?.token ?? '';
   const pixel_id = analytics?.fb?.pixelId;
   const testCode = analytics?.fb?.testCode ?? '';
@@ -775,6 +775,14 @@ export const fbTracker = (options: TSettings) => {
   const trackIdentify = (profile?: T_EA_DataProfile | null) => {
     const user = resolveUser(profile);
     return user;
+  };
+
+  const getAbsoluteUrl = (url?: string) => {
+    return url
+      ? url.startsWith('http')
+        ? url
+        : [absoluteURL, url].join('/').replace(/([^:]\/)\/+/g, '$1')
+      : '';
   };
 
   const _getUserDataObject = (order?: T_EA_DataOrder) => {
@@ -868,7 +876,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('Purchase')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -931,7 +939,7 @@ export const fbTracker = (options: TSettings) => {
         .setEventName('AddToCart')
         .setEventTime(current_timestamp)
         .setCustomData(customData)
-        .setEventSourceUrl(page?.url ?? '')
+        .setEventSourceUrl(getAbsoluteUrl(page?.url))
         .setActionSource('website');
 
       userData ? serverEvent.setUserData(userData) : void 0;
@@ -996,7 +1004,7 @@ export const fbTracker = (options: TSettings) => {
         .setEventName('RemoveFromCart')
         .setEventTime(current_timestamp)
         .setCustomData(customData)
-        .setEventSourceUrl(page?.url ?? '')
+        .setEventSourceUrl(getAbsoluteUrl(page?.url))
         .setActionSource('website');
 
       userData ? serverEvent.setUserData(userData) : void 0;
@@ -1056,7 +1064,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('ViewContent')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -1119,7 +1127,7 @@ export const fbTracker = (options: TSettings) => {
         .setEventName('ViewContent')
         .setEventTime(current_timestamp)
         .setCustomData(customData)
-        .setEventSourceUrl(page?.url ?? '')
+        .setEventSourceUrl(getAbsoluteUrl(page?.url))
         .setActionSource('website');
 
       userData ? serverEvent.setUserData(userData) : void 0;
@@ -1165,7 +1173,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('PageView')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -1189,7 +1197,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventId(evtName)
       .setEventName(e.name)
       .setEventTime(current_timestamp)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -1246,7 +1254,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('InitiateCheckout')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -1309,7 +1317,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('Search')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -1337,7 +1345,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('Lead')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -1375,7 +1383,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('Subscribe')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -1431,7 +1439,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('AddPaymentInfo')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;
@@ -1480,7 +1488,7 @@ export const fbTracker = (options: TSettings) => {
       .setEventName('AddShippingInfo')
       .setEventTime(current_timestamp)
       .setCustomData(customData)
-      .setEventSourceUrl(page?.url ?? '')
+      .setEventSourceUrl(getAbsoluteUrl(page?.url))
       .setActionSource('website');
 
     userData ? serverEvent.setUserData(userData) : void 0;

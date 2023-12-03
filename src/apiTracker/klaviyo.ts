@@ -194,12 +194,20 @@ export const klaviyoTracker = (options: TSettings) => {
     return [];
   };
 
+  const getAbsoluteUrl = (url?: string) => {
+    return url
+      ? url.startsWith('http')
+        ? url
+        : [absoluteURL, url].join('/').replace(/([^:]\/)\/+/g, '$1')
+      : '';
+  };
+
   const getProductUrl = (product: T_EA_DataProduct) => {
-    return product.url;
+    return getAbsoluteUrl(product.url);
   };
 
   const getProductImageUrl = (product: T_EA_DataProduct) => {
-    return product.imageUrl ?? '';
+    return getAbsoluteUrl(product.imageUrl ?? '');
   };
 
   // Identify a user - create/update a profile in Klaviyo
