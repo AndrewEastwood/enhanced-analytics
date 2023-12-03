@@ -269,11 +269,13 @@ export const useAnalytics = (c?: TSettings) => {
               `<link>${l}</link><atom:link href="${l}" rel="self" type="application/rss+xml" />`;
             const desc = (d: string) => `<description>${d}</description>`;
             const sanitize = (str: string) => str.replace(/&(?!a)/g, '&amp;');
-            const imgLink = (imgUrl: string) =>
-              imgUrl
-                ? imgUrl.startsWith('http')
-                  ? imgUrl
-                  : config.absoluteURL + imgUrl
+            const getAbsoluteUrl = (url?: string) =>
+              url
+                ? url.startsWith('http')
+                  ? url
+                  : [config.absoluteURL, url]
+                      .join('/')
+                      .replace(/([^:]\/)\/+/g, '$1')
                 : '';
             // https://support.google.com/merchants/answer/7052112?hl=en&ref_topic=6324338&sjid=4696082261280780108-EU
             const items = (products: T_EA_DataProduct[] = []) =>
@@ -285,11 +287,11 @@ export const useAnalytics = (c?: TSettings) => {
                   `<g:description>${sanitize(p.description)
                     .replace(/<[^>]*>/g, '')
                     .replace(/\r\n/g, ' ')}</g:description>`,
-                  `<g:link>${p.url}</g:link>`,
+                  `<g:link>${getAbsoluteUrl(p.url)}</g:link>`,
                   `<g:brand>${sanitize(p.brand)}</g:brand>`,
                   `<g:price>${p.price.toFixed(2)} ${config.currency}</g:price>`,
                   `<g:product_type>${sanitize(p.category)}</g:product_type>`,
-                  `<g:image_link>${imgLink(p.imageUrl ?? '')}</g:image_link>`,
+                  `<g:image_link>${getAbsoluteUrl(p.imageUrl)}</g:image_link>`,
                   p.dimLength
                     ? `<g:product_length>${p.dimLength}</g:product_length>`
                     : null,
@@ -305,7 +307,7 @@ export const useAnalytics = (c?: TSettings) => {
                   (p.imageUrls ?? [])
                     .map(
                       (img) =>
-                        `<additional_image_link>${imgLink(
+                        `<additional_image_link>${getAbsoluteUrl(
                           img
                         )}</additional_image_link>`
                     )
@@ -357,7 +359,7 @@ export const useAnalytics = (c?: TSettings) => {
               xml,
               rssChannel(
                 title(config.affiliation),
-                link(config.feeds?.facebook?.feedUrl ?? config.absoluteURL),
+                link(getAbsoluteUrl(config.feeds?.facebook?.feedUrl)),
                 desc(config.description ?? ''),
                 ...items(v)
               ),
@@ -366,14 +368,22 @@ export const useAnalytics = (c?: TSettings) => {
             return feed.join('');
           },
           [ETrackers.Klaviyo]: () => {
+            const getAbsoluteUrl = (url?: string) =>
+              url
+                ? url.startsWith('http')
+                  ? url
+                  : [config.absoluteURL, url]
+                      .join('/')
+                      .replace(/([^:]\/)\/+/g, '$1')
+                : '';
             // https://developers.klaviyo.com/en/docs/guide_to_syncing_a_custom_catalog_feed_to_klaviyo
             const feed = v.map((p) => ({
               id: p.id,
               title: p.title,
-              link: p.url,
+              link: getAbsoluteUrl(p.url),
               description: p.description,
               price: p.price,
-              image_link: p.imageUrl,
+              image_link: getAbsoluteUrl(p.imageUrl),
               categories: [p.category, ...(p.categories ?? [])],
               inventory_quantity: p.inStock ?? 1,
               inventory_policy: 1,
