@@ -18,8 +18,12 @@ export const isNativePayloadPage = (payload: any): payload is T_EA_DataPage => {
 export const isNativePayloadProfile = (
   payload: any
 ): payload is T_EA_DataProfile => {
-  return Object.keys(payload ?? { ___: false }).every((k) =>
-    ['firstName', 'email'].includes(k)
+  const resultedPayloadKeys = Object.getOwnPropertyNames(
+    payload ?? { ___: false }
+  );
+  return (
+    resultedPayloadKeys.includes('firstName') &&
+    resultedPayloadKeys.includes('email')
   );
 };
 

@@ -169,7 +169,7 @@ export const useAnalytics = (c?: TSettings) => {
         throw '[EA] [store.resolvers.profile] is not defined';
       }
 
-      const v = isNative ? resolveUser(payload) : null;
+      const v = isNative || !payload ? resolveUser(payload) : null;
       if (!v) {
         throw '[EA] User data is not defined';
       }
