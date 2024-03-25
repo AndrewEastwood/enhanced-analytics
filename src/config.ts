@@ -60,6 +60,7 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       defaultCatalogName: 'Search Results',
       defaultBasketName: 'Basket',
       dataLayerName: 'dataLayer',
+      ga4: true,
     },
   },
   links: {
@@ -88,6 +89,8 @@ export const configureAnalytics = (_store: Partial<TSettings>): TSettings => {
     getDefaultParams(_store)
   ) as TSettings;
   Object.assign(config, mergedConfig);
+  // force set GA4
+  config.integrations?.ga ? (config.integrations.ga.ga4 = true) : void 0;
   return config;
 };
 

@@ -12,6 +12,9 @@ import {
 import * as trackUtils from './../utils';
 import { resolveUser } from './identity';
 
+// GA4 events
+// https://developers.google.com/analytics/devguides/collection/ga4/reference/events
+
 let uiLibInstallStatus: 'no' | 'yes' | 'installing' = 'no';
 
 export const installGTM = (
@@ -28,6 +31,24 @@ export const installGTM = (
           function gtag(fn: string, p: any, o?: any) {
             w[l].push(arguments);
           }
+
+          // Set default consent to 'denied' as a placeholder
+          // Determine actual values based on your own requirements
+          gtag('consent', 'default', {
+            ad_personalization: 'denied',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            analytics_storage: 'denied',
+            functionality_storage: 'denied',
+            personalization_storage: 'denied',
+            security_storage: 'granted',
+            wait_for_update: 500,
+          });
+          // https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#redact_ads_data
+          gtag('set', 'ads_data_redaction', true);
+          // https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced#passthroughs
+          gtag('set', 'url_passthrough', true);
+
           gtag('js', new Date());
           gtag('config', i, { debug_mode: !!debug });
           //
@@ -101,7 +122,7 @@ export const getEEC = (options: TSettings) => {
   ) => {
     const u = resolveUser(profile);
     return _evt({
-      event: params?.evName ?? 'eec.user',
+      event: params?.evName ?? 'ea.user',
       userData: {
         ...(u ?? {}),
       },
@@ -110,7 +131,7 @@ export const getEEC = (options: TSettings) => {
 
   const getEECPageView = (page?: T_EA_DataPage | null, params?: TEECParams) => {
     return _evt({
-      event: params?.evName ?? 'eec.page',
+      event: params?.evName ?? 'ea.page',
       pageData: {
         ...(page ?? {}),
       },
@@ -122,7 +143,7 @@ export const getEEC = (options: TSettings) => {
     params?: TEECParams
   ) => {
     return _evt({
-      event: params?.evName ?? 'eec.custom',
+      event: params?.evName ?? 'ea.custom',
       eventData: {
         ...(event ?? {}),
       },
@@ -133,6 +154,7 @@ export const getEEC = (options: TSettings) => {
     products: T_EA_DataProduct[],
     params?: TEECParams
   ) => {
+    // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#view_item
     const dl = trackUtils
       .Catalog(options, products)
       .ProductDetails.getEECDataLayer(params);
@@ -143,6 +165,7 @@ export const getEEC = (options: TSettings) => {
     products: T_EA_DataProduct[],
     params?: TEECParams
   ) => {
+    // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#view_item_list
     const dl = trackUtils
       .Catalog(options, products)
       .Products.getEECDataLayer(params);
@@ -215,13 +238,16 @@ export const getEEC = (options: TSettings) => {
   ) => {
     return _evt({
       event: 'add_to_wishlist',
-      ecommerce: trackUtils
-        .Catalog(options, products)
-        .Products.getEECDataLayer(params).ecommerce,
+      ecommerce: {
+        ...trackUtils
+          .Catalog(options, products)
+          .Products.getEECDataLayer(params).ecommerce,
+      },
     });
   };
 
   const getEECViewBasket = (basket: T_EA_DataBasket, params?: TEECParams) => {
+    // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#view_cart
     return _evt({
       event: 'view_cart',
       ecommerce: {
@@ -233,12 +259,18 @@ export const getEEC = (options: TSettings) => {
   };
 
   const getEECAddPaymentInfo = (order: T_EA_DataOrder, params?: TEECParams) => {
+    // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#add_payment_info
+    const dataGA4 = trackUtils
+      .Order(options, order)
+      .Purchase.getEECDataLayer(params);
     return _evt({
       event: 'add_payment_info',
       ecommerce: {
         payment_type: order.payment.type,
-        ...trackUtils.Order(options, order).Purchase.getEECDataLayer(params)
-          .ecommerce,
+        currency: dataGA4.ecommerce.currency,
+        value: dataGA4.ecommerce.value,
+        coupon: dataGA4.ecommerce.coupon,
+        items: dataGA4.ecommerce.items,
       },
     });
   };
@@ -247,12 +279,18 @@ export const getEEC = (options: TSettings) => {
     order: T_EA_DataOrder,
     params?: TEECParams
   ) => {
+    // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#add_shipping_info
+    const dataGA4 = trackUtils
+      .Order(options, order)
+      .Purchase.getEECDataLayer(params);
     return _evt({
       event: 'add_shipping_info',
       ecommerce: {
+        currency: dataGA4.ecommerce.currency,
+        value: dataGA4.ecommerce.value,
+        coupon: dataGA4.ecommerce.coupon,
         shipping_tier: order.shipping.name,
-        ...trackUtils.Order(options, order).Purchase.getEECDataLayer(params)
-          .ecommerce,
+        items: dataGA4.ecommerce.items,
       },
     });
   };

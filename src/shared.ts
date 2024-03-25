@@ -117,6 +117,8 @@ export enum ETrackers {
 export type TEECParams = {
   evName?: string;
   listName?: string;
+  page_title?: string;
+  page_location?: string;
 };
 
 type TResolvers = {
@@ -185,7 +187,7 @@ export type TSettings = {
     [ETrackers.GoogleAnalytics]?: {
       enabled: boolean;
       trackId?: null | string;
-      ga4?: boolean;
+      ga4?: true;
       defaultCatalogName?: string;
       defaultBasketName?: string;
       dataLayerName?: string;

@@ -150,9 +150,7 @@ const EECUtils = {
 
 const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? InitCheckout(options, basket).getEECGA4DataLayer(param)
-      : InitCheckout(options, basket).getEECUADataLayer(param);
+    return InitCheckout(options, basket).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     return {
@@ -218,9 +216,7 @@ const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
 
 const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? ProductDetails(options, product).getEECGA4DataLayer(param)
-      : ProductDetails(options, product).getEECUADataLayer(param);
+    return ProductDetails(options, product).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     return {
@@ -290,9 +286,7 @@ const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
 
 const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? Purchase(options, order).getEECGA4DataLayer(param)
-      : Purchase(options, order).getEECUADataLayer(param);
+    return Purchase(options, order).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     return {
@@ -369,7 +363,7 @@ const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
         coupon: order.coupon,
         item_list_name:
           params?.listName || options.integrations?.ga?.defaultBasketName,
-        items: order.products.map((product, idx) => ({
+        items: order.products.map((product) => ({
           ...EECUtils.getProductItem(product),
         })),
       },
@@ -379,9 +373,7 @@ const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
 
 const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? Refund(options, order).getEECGA4DataLayer(param)
-      : Refund(options, order).getEECUADataLayer(param);
+    return Refund(options, order).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     return {
@@ -451,9 +443,7 @@ const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
 
 const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? BasketAddProduct(options, basket).getEECGA4DataLayer(param)
-      : BasketAddProduct(options, basket).getEECUADataLayer(param);
+    return BasketAddProduct(options, basket).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     const product = basket.lastAdded?.[0] || {};
@@ -523,9 +513,7 @@ const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
 
 const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? BasketRemoveProduct(options, basket).getEECGA4DataLayer(param)
-      : BasketRemoveProduct(options, basket).getEECUADataLayer(param);
+    return BasketRemoveProduct(options, basket).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     const product = basket.lastRemoved?.[0] || {};
@@ -595,9 +583,7 @@ const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
 
 const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? Products(options, products).getEECGA4DataLayer(param)
-      : Products(options, products).getEECUADataLayer(param);
+    return Products(options, products).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     return {
@@ -656,9 +642,7 @@ const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
 
 const PageView = (options: TSettings) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? PageView(options).getEECGA4DataLayer(param)
-      : PageView(options).getEECUADataLayer(param);
+    return PageView(options).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     return {
@@ -667,16 +651,14 @@ const PageView = (options: TSettings) => ({
   },
   getEECGA4DataLayer: (params?: TEECParams) => {
     return {
-      event: params?.evName || 'eec.pageView',
+      event: params?.evName || 'page_view',
     };
   },
 });
 
 const ProfileView = (options: TSettings) => ({
   getEECDataLayer: (param?: TEECParams) => {
-    return options.integrations?.ga?.ga4
-      ? ProfileView(options).getEECGA4DataLayer(param)
-      : ProfileView(options).getEECUADataLayer(param);
+    return ProfileView(options).getEECGA4DataLayer(param);
   },
   getEECUADataLayer: (params?: TEECParams) => {
     return {
@@ -684,7 +666,9 @@ const ProfileView = (options: TSettings) => ({
     };
   },
   getEECGA4DataLayer: (params?: TEECParams) => {
-    return {};
+    return {
+      event: params?.evName || 'eec.profileView',
+    };
   },
 });
 
