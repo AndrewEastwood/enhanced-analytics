@@ -57,17 +57,38 @@ export type T_EA_DataProduct = {
   title: string;
   description: string;
   price: number;
-  salePrice: number;
-  isSale: boolean;
+  salePrice?: number;
+  isSale?: boolean;
   brand: string;
   category: string;
   sku?: string;
   variant?: string;
   color?: string;
   size?: string;
+  size_type?: 'regular' | 'petite' | 'plus' | 'tall' | 'big' | 'maternity';
+  size_system?:
+    | 'AU'
+    | 'BR'
+    | 'CN'
+    | 'DE'
+    | 'EU'
+    | 'FR'
+    | 'IT'
+    | 'JP'
+    | 'MEX'
+    | 'UK'
+    | 'US';
   gender?: 'male' | 'female' | 'unisex';
   ageGroup?: 'newborn' | 'infant' | 'toddler' | 'kids' | 'adult';
-  condition?: 'new' | 'refurbished' | 'used';
+  condition?:
+    | 'new'
+    | 'refurbished'
+    | 'used'
+    | 'used_like_new'
+    | 'used_good'
+    | 'used_fair'
+    | 'cpo'
+    | 'open_box_new';
   metrics?: number[];
   dimensions?: string[];
   list?: string;
@@ -96,6 +117,11 @@ export type T_EA_DataProduct = {
   // Note: `affiliation` is only available at the item-scope.
   affiliation?: string;
   google_product_category?: string;
+  fb_product_category?: string;
+  material?: string;
+  pattern?: string;
+  shipping?: string;
+  shipping_weight?: string;
 };
 
 export type T_EA_DataBasket = {

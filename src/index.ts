@@ -287,6 +287,9 @@ export const useAnalytics = (c?: TSettings) => {
                   `<g:description>${sanitize(p.description)
                     .replace(/<[^>]*>/g, '')
                     .replace(/\r\n/g, ' ')}</g:description>`,
+                  `<g:availability>${
+                    p.inStock ? 'in stock' : 'out_of_stock'
+                  }</g:availability>`,
                   `<g:link>${getAbsoluteUrl(p.url)}</g:link>`,
                   `<g:brand>${sanitize(p.brand)}</g:brand>`,
                   `<g:price>${p.price.toFixed(2)} ${config.currency}</g:price>`,
@@ -316,10 +319,9 @@ export const useAnalytics = (c?: TSettings) => {
                     ? `<g:condition>${p.condition}</g:condition>`
                     : null,
                   p.inStock ?? 0 > 0
-                    ? `<g:quantity_to_sell_on_facebook>${p.inStock}</g:quantity_to_sell_on_facebook>
-                          <g:availability>in stock</g:availability>`
+                    ? `<g:quantity_to_sell_on_facebook>${p.inStock}</g:quantity_to_sell_on_facebook>`
                     : null,
-                  p.isSale
+                  p.isSale && p.salePrice
                     ? `<g:sale_price>${p.salePrice.toFixed(2)} ${
                         config.currency
                       }</g:sale_price>`
@@ -350,6 +352,15 @@ export const useAnalytics = (c?: TSettings) => {
                   p.google_product_category
                     ? `<g:google_product_category>${p.google_product_category}</g:google_product_category>`
                     : null,
+                  p.fb_product_category
+                    ? `<g:fb_product_category>${p.fb_product_category}</g:fb_product_category>`
+                    : null,
+                  p.material ? `<g:material>${p.material}</g:material>` : null,
+                  p.pattern ? `<g:pattern>${p.pattern}</g:pattern>` : null,
+                  p.shipping ? `<g:shipping>${p.shipping}</g:shipping>` : null,
+                  p.shipping_weight
+                    ? `<g:shipping_weight>${p.shipping_weight}</g:shipping_weight>`
+                    : null,
                   `</item>`,
                 ]
                   .filter(Boolean)
@@ -364,7 +375,6 @@ export const useAnalytics = (c?: TSettings) => {
                 ...items(v)
               ),
             ];
-
             return feed.join('');
           },
           [ETrackers.Klaviyo]: () => {
@@ -389,6 +399,220 @@ export const useAnalytics = (c?: TSettings) => {
               inventory_policy: 1,
             }));
             return JSON.stringify(feed);
+          },
+          [ETrackers.GoogleAnalytics]: () => {
+            const xml = '<?xml version="1.0"?>';
+            const rssChannel = (...inner: string[]) =>
+              `<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>${inner.join(
+                ''
+              )}</channel></rss>`;
+            const title = (t: string) => `<title>${t}</title>`;
+            const link = (l: string) =>
+              `<link>${l}</link><atom:link href="${l}" rel="self" type="application/rss+xml" />`;
+            const desc = (d: string) => `<description>${d}</description>`;
+            const sanitize = (str: string) => str.replace(/&(?!a)/g, '&amp;');
+            const getAbsoluteUrl = (url?: string) =>
+              url
+                ? url.startsWith('http')
+                  ? url
+                  : [config.absoluteURL, url]
+                      .join('/')
+                      .replace(/([^:]\/)\/+/g, '$1')
+                : '';
+            // https://support.google.com/merchants/answer/7052112?hl=en&ref_topic=6324338&sjid=4696082261280780108-EU
+            const items = (products: T_EA_DataProduct[] = []) =>
+              products.map((p) =>
+                [
+                  `<item>`,
+                  `<g:id>${p.id}</g:id>`,
+                  `<g:title>${sanitize(p.title)}</g:title>`,
+                  `<g:description>${sanitize(p.description)
+                    .replace(/<[^>]*>/g, '')
+                    .replace(/\r\n/g, ' ')}</g:description>`,
+                  `<g:availability>${
+                    p.inStock ? 'in stock' : 'out_of_stock'
+                  }</g:availability>`,
+                  `<g:link>${getAbsoluteUrl(p.url)}</g:link>`,
+                  `<g:brand>${sanitize(p.brand)}</g:brand>`,
+                  `<g:price>${p.price.toFixed(2)} ${config.currency}</g:price>`,
+                  `<g:product_type>${sanitize(p.category)}</g:product_type>`,
+                  `<g:image_link>${getAbsoluteUrl(p.imageUrl)}</g:image_link>`,
+                  p.dimLength
+                    ? `<g:product_length>${p.dimLength}</g:product_length>`
+                    : null,
+                  p.dimWidth
+                    ? `<g:product_width>${p.dimWidth}</g:product_width>`
+                    : null,
+                  p.dimHeight
+                    ? `<g:product_height>${p.dimHeight}</g:product_height>`
+                    : null,
+                  p.dimWeight
+                    ? `<g:product_weight>${p.dimWeight}</g:product_weight>`
+                    : null,
+                  (p.imageUrls ?? [])
+                    .map(
+                      (img) =>
+                        `<additional_image_link>${getAbsoluteUrl(
+                          img
+                        )}</additional_image_link>`
+                    )
+                    .join(''),
+                  p.condition
+                    ? `<g:condition>${p.condition}</g:condition>`
+                    : null,
+                  p.inStock ?? 0 > 0
+                    ? `<g:quantity_to_sell_on_facebook>${p.inStock}</g:quantity_to_sell_on_facebook>`
+                    : null,
+                  p.isSale && p.salePrice
+                    ? `<g:sale_price>${p.salePrice.toFixed(2)} ${
+                        config.currency
+                      }</g:sale_price>`
+                    : null,
+                  (p.dimensions || [])
+                    .map(
+                      (dim, idx) =>
+                        `<g:custom_label_${idx}>${dim}</g:custom_label_${idx}>`
+                    )
+                    .join(''),
+                  (p.metrics || [])
+                    .map(
+                      (met, idx) =>
+                        `<g:custom_number_${idx}>${met}</g:custom_number_${idx}>`
+                    )
+                    .join(''),
+                  p.color ? `<g:color>${p.color}</g:color>` : null,
+                  p.size ? `<g:size>${p.size || 'Unisize'}</g:size>` : null,
+                  p.groupId
+                    ? `<g:item_group_id>${
+                        p.groupId || 'General'
+                      }</g:item_group_id>`
+                    : null,
+                  p.gender ? `<g:gender>${p.gender}</g:gender>` : null,
+                  p.ageGroup
+                    ? `<g:age_group>${p.ageGroup}</g:age_group>`
+                    : null,
+                  p.google_product_category
+                    ? `<g:google_product_category>${p.google_product_category}</g:google_product_category>`
+                    : null,
+                  p.fb_product_category
+                    ? `<g:fb_product_category>${p.fb_product_category}</g:fb_product_category>`
+                    : null,
+                  p.material ? `<g:material>${p.material}</g:material>` : null,
+                  p.pattern ? `<g:pattern>${p.pattern}</g:pattern>` : null,
+                  p.shipping ? `<g:shipping>${p.shipping}</g:shipping>` : null,
+                  p.shipping_weight
+                    ? `<g:shipping_weight>${p.shipping_weight}</g:shipping_weight>`
+                    : null,
+                  `</item>`,
+                ]
+                  .filter(Boolean)
+                  .join('')
+              );
+            const feed = [
+              xml,
+              rssChannel(
+                title(config.affiliation),
+                link(getAbsoluteUrl(config.feeds?.facebook?.feedUrl)),
+                desc(config.description ?? ''),
+                ...items(v)
+              ),
+            ];
+            return feed.join('');
+          },
+          tiktok: () => {
+            const xml = '<?xml version="1.0"?>';
+            const rssChannel = (...inner: string[]) =>
+              `<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>${inner.join(
+                ''
+              )}</channel></rss>`;
+            const title = (t: string) => `<title>${t}</title>`;
+            const link = (l: string) =>
+              `<link>${l}</link><atom:link href="${l}" rel="self" type="application/rss+xml" />`;
+            const desc = (d: string) => `<description>${d}</description>`;
+            const sanitize = (str: string) => str.replace(/&(?!a)/g, '&amp;');
+            const getAbsoluteUrl = (url?: string) =>
+              url
+                ? url.startsWith('http')
+                  ? url
+                  : [config.absoluteURL, url]
+                      .join('/')
+                      .replace(/([^:]\/)\/+/g, '$1')
+                : '';
+            // https://ads.tiktok.com/help/article/catalog-product-parameters?lang=en
+            const items = (products: T_EA_DataProduct[] = []) =>
+              products.map((p) =>
+                [
+                  `<item>`,
+                  `<g:sku_id>${p.id}</g:sku_id>`,
+                  `<g:title>${sanitize(p.title)}</g:title>`,
+                  `<g:description>${sanitize(p.description)
+                    .replace(/<[^>]*>/g, '')
+                    .replace(/\r\n/g, ' ')}</g:description>`,
+                  `<g:availability>${
+                    p.inStock ? 'in stock' : 'out_of_stock'
+                  }</g:availability>`,
+                  p.condition
+                    ? `<g:condition>${p.condition}</g:condition>`
+                    : null,
+                  `<g:price>${p.price.toFixed(2)} ${config.currency}</g:price>`,
+                  `<g:link>${getAbsoluteUrl(p.url)}</g:link>`,
+                  `<g:image_link>${getAbsoluteUrl(p.imageUrl)}</g:image_link>`,
+                  `<g:brand>${sanitize(p.brand)}</g:brand>`,
+                  // optional fields
+                  // https://ads.tiktok.com/help/article/catalog-product-parameters?lang=en#anchor-1
+                  p.google_product_category
+                    ? `<g:google_product_category>${p.google_product_category}</g:google_product_category>`
+                    : null,
+                  (p.imageUrls ?? []).length > 0
+                    ? `<additional_image_link>${p.imageUrls
+                        ?.map((img) => `"${getAbsoluteUrl(img)}"`)
+                        .join(',')}</additional_image_link>`
+                    : null,
+                  p.ageGroup
+                    ? `<g:age_group>${p.ageGroup}</g:age_group>`
+                    : null,
+                  p.color ? `<g:color>${p.color}</g:color>` : null,
+                  p.gender ? `<g:gender>${p.gender}</g:gender>` : null,
+                  p.groupId
+                    ? `<g:item_group_id>${
+                        p.groupId || 'General'
+                      }</g:item_group_id>`
+                    : null,
+                  p.material ? `<g:material>${p.material}</g:material>` : null,
+                  p.pattern ? `<g:pattern>${p.pattern}</g:pattern>` : null,
+                  `<g:product_type>${sanitize(p.category)}</g:product_type>`,
+                  p.isSale && p.salePrice
+                    ? `<g:sale_price>${p.salePrice.toFixed(2)} ${
+                        config.currency
+                      }</g:sale_price>`
+                    : null,
+                  p.shipping ? `<g:shipping>${p.shipping}</g:shipping>` : null,
+                  p.shipping_weight
+                    ? `<g:shipping_weight>${p.shipping_weight}</g:shipping_weight>`
+                    : null,
+                  p.size ? `<g:size>${p.size || 'Unisize'}</g:size>` : null,
+                  (p.dimensions || [])
+                    .map(
+                      (dim, idx) =>
+                        `<g:custom_label_${idx}>${dim}</g:custom_label_${idx}>`
+                    )
+                    .join(''),
+                  `</item>`,
+                ]
+                  .filter(Boolean)
+                  .join('')
+              );
+            const feed = [
+              xml,
+              rssChannel(
+                title(config.affiliation),
+                link(getAbsoluteUrl(config.feeds?.facebook?.feedUrl)),
+                desc(config.description ?? ''),
+                ...items(v)
+              ),
+            ];
+
+            return feed.join('');
           },
         },
       };

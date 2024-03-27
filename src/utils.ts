@@ -109,7 +109,10 @@ const EECUtils = {
       index: product.viewOrder,
       item_brand: product.brand,
       item_category: product.category,
-      discount: product.isSale ? round(product.price - product.salePrice) : 0,
+      discount:
+        product.isSale && product.salePrice
+          ? round(product.price - product.salePrice)
+          : 0,
       item_variant: product.variant || '',
       price: product.isSale ? round(product.salePrice) : round(product.price),
       affiliation: product?.affiliation ?? null,
