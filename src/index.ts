@@ -565,7 +565,7 @@ export const useAnalytics = (c?: TSettings) => {
                     : null,
                   (p.imageUrls ?? []).length > 0
                     ? `<additional_image_link>${p.imageUrls
-                        ?.map((img) => `"${getAbsoluteUrl(img)}"`)
+                        ?.map(getAbsoluteUrl)
                         .join(',')}</additional_image_link>`
                     : null,
                   p.ageGroup
