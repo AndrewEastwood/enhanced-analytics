@@ -151,9 +151,10 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
     _cities: string[] = [];
     _zips: string[] = [];
     _phones: string[] = [];
-    _client_ip_address;
-    _client_user_agent;
-    _fbp;
+    _client_ip_address: string | null = null;
+    _client_user_agent: string | null = null;
+    _fbp: string | null = null;
+    _fbc: string | null = null;
     setExternalId(a: string) {
       this._external_ids = [a];
       return this;
@@ -196,6 +197,10 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
     }
     setFbp(a: string) {
       this._fbp = a;
+      return this;
+    }
+    setFbc(a: string) {
+      this._fbc = a;
       return this;
     }
     async normalize(): Promise<
@@ -271,6 +276,8 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
             .filter(Boolean)
             .map((v) => trackUtils.digestMessage(v.toLowerCase().trim()))
         ),
+        fbc: this._fbc,
+        fbp: this._fbp,
         client_ip_address: this._client_ip_address,
         client_user_agent: this._client_user_agent,
       };
@@ -546,6 +553,7 @@ export const installFB = (pixelId?: string | null) => {
 export const getFbqObjectByNormalizedData = (
   p: TFbNormalizedEventPayload | Record<string, any>
 ) => {
+  // https://developers.facebook.com/docs/meta-pixel/reference#standard-events
   return {
     // Advanced User Data Matching
     user_data: p.user_data ?? {},
@@ -683,6 +691,7 @@ export const getFbqObjectByNormalizedData = (
   };
 };
 
+// https://developers.facebook.com/docs/marketing-api/conversions-api/payload-helper
 // This component is being used along with FB Server Events.
 // Once you trigger any event at your server side, you may return response
 // to your frontent side and hand it to this component.
@@ -804,6 +813,7 @@ export const fbTracker = (options: TSettings) => {
             .setClientIpAddress(session.ip ?? '')
             .setClientUserAgent(session.agent ?? '')
             .setFbp(session.fbp ?? '')
+            .setFbc(session.fbc ?? '')
         : null;
     return userData;
   };

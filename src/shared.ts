@@ -33,6 +33,7 @@ export type T_EA_DataAddress = {
 export type T_EA_DataSession = {
   ip?: string;
   fbp?: string;
+  fbc?: string;
   agent?: string;
 };
 
