@@ -64,7 +64,7 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._delivery_category = _delivery_category;
       return this;
     }
-    normalize(): Record<string, any> {
+    normalize(params?: { forceHash?: boolean }): Record<string, any> {
       return {
         id: this._id,
         quantity: this._quantity,
@@ -128,9 +128,9 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._search_string = _search_string;
       return this;
     }
-    normalize(): Record<string, any> {
+    normalize(params?: { forceHash?: boolean }): Record<string, any> {
       return {
-        contents: this._contents?.map((c) => c.normalize()) ?? [],
+        contents: this._contents?.map((c) => c.normalize(params)) ?? [],
         currency: this._currency,
         order_id: this._order_id,
         status: this._status,
@@ -203,10 +203,10 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._fbc = a;
       return this;
     }
-    async normalize(): Promise<
-      TFbNormalizedEventPayload['user_data'] | Record<string, any>
-    > {
-      const noHash = isBrowserMode;
+    async normalize(params?: {
+      forceHash?: boolean;
+    }): Promise<TFbNormalizedEventPayload['user_data'] | Record<string, any>> {
+      const noHash = params?.forceHash === true ? false : isBrowserMode;
       return {
         em: await Promise.all(
           this._emails
@@ -322,17 +322,19 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._user_data = _user_data;
       return this;
     }
-    async normalize(): Promise<
-      TFbNormalizedEventPayload | Record<string, any>
-    > {
+    async normalize(params?: {
+      forceHash?: boolean;
+    }): Promise<TFbNormalizedEventPayload | Record<string, any>> {
       return {
         event_id: this._event_id,
         event_name: this._event_name,
         event_time: this._event_time,
-        custom_data: this._custom_data?.normalize() ?? {},
+        custom_data: this._custom_data?.normalize(params) ?? {},
         event_source_url: this._event_source_url,
         action_source: this._action_source,
-        user_data: this._user_data ? await this._user_data.normalize() : {},
+        user_data: this._user_data
+          ? await this._user_data.normalize(params)
+          : {},
       };
     }
   }
@@ -752,12 +754,46 @@ export const fbTracker = (options: TSettings) => {
 
   const publish = async (req = new EventRequest('', '')) => {
     try {
-      var response = isBrowserMode
+      if (!req._events.length) {
+        await Promise.reject('No events to publish');
+      }
+      const response = isBrowserMode
         ? await req.execute()
         : !!req.events[0].user_data
         ? await req.execute()
         : await Promise.reject('UserData is not set');
       log('[EA:Facebook] eventRequest=>Response: ', response);
+      let conversionApiResult = null;
+      if (isBrowserMode && analytics.fb?.conversionServerApiUrl) {
+        log(
+          '[EA:Facebook] Sending event to the ConversionAPI: ',
+          analytics.fb.conversionServerApiUrl
+        );
+        const url = analytics.fb.conversionServerApiUrl;
+        const payloadHashed = await Promise.all(
+          req.events.map(
+            async (se) =>
+              ({
+                ...((await se.normalize({ forceHash: true })) ?? {}),
+              } as TFbNormalizedEventPayload)
+          )
+        );
+        try {
+          const convResp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payloadHashed),
+          });
+          conversionApiResult = await convResp.json();
+        } catch (err) {
+          console.error(
+            '[EA:Facebook] Republish ConversionAPI eventRequest=>Error: ',
+            err
+          );
+        }
+      }
       return {
         message: null,
         payload: await Promise.all(
@@ -769,14 +805,26 @@ export const fbTracker = (options: TSettings) => {
               } as TFbNormalizedEventPayload)
           )
         ),
+        payloadHashed: await Promise.all(
+          req.events.map(
+            async (se) =>
+              ({
+                ...((await se.normalize({ forceHash: true })) ?? {}),
+                pixel: req.pixel,
+              } as TFbNormalizedEventPayload)
+          )
+        ),
+        conversionApiResult,
         response,
       };
     } catch (err: any) {
       console.error('[EA:Facebook] eventRequest=>Error: ', err);
       return {
         message: 'Cannot process your request',
-        response: err?.data ?? null,
         payload: [],
+        payloadHashed: [],
+        conversionApiResult: null,
+        response: err?.data ?? null,
       };
     }
   };
@@ -796,7 +844,7 @@ export const fbTracker = (options: TSettings) => {
 
   const _getUserDataObject = (order?: T_EA_DataOrder) => {
     const user = trackIdentify();
-    const u = order ? order.customer : user;
+    const u = order?.customer?.email ?? user;
     const session = options.resolvers?.session?.();
     const userData =
       u && u.email && u.firstName && session

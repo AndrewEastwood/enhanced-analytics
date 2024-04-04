@@ -40,6 +40,7 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       testCode: null,
       token: null,
       hashUser: false,
+      conversionServerApiUrl: '',
     },
     klaviyo: {
       enabled: false,

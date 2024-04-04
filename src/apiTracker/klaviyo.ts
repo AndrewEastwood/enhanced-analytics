@@ -296,13 +296,14 @@ export const klaviyoTracker = (options: TSettings) => {
   const trackTransaction = async (order: T_EA_DataOrder) => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
     const page = options.resolvers?.page?.();
+    const user = getUserObj(order.customer);
     log('[EA:Klaviyo] trackTransaction', evtName);
     collectEvent({
       event: 'Placed Order',
       customerProperties: {
-        email: order.customer.email,
-        first_name: order.customer.firstName,
-        last_name: order.customer.lastName,
+        email: user.email,
+        first_name: user.firstName,
+        last_name: user.lastName,
       },
       properties: {
         $event_id: evtName,
@@ -339,9 +340,9 @@ export const klaviyoTracker = (options: TSettings) => {
           Brand: product.brand,
         })),
         BillingAddress: {
-          FirstName: order.customer.firstName,
-          LastName: order.customer.lastName,
-          Company: order.customer.organization,
+          FirstName: user.firstName,
+          LastName: user.lastName,
+          Company: user.organization,
           Address1: order.billing?.street ?? order.shipping.address.street,
           Address2: order.billing?.street2 ?? order.shipping.address.street2,
           City: order.billing?.city ?? order.shipping.address.city,
@@ -353,14 +354,12 @@ export const klaviyoTracker = (options: TSettings) => {
             order.billing?.countryCode ?? order.shipping.address.countryCode,
           Zip: order.billing?.postcode ?? order.shipping.address.postcode,
           Phone:
-            order.billing?.phone ??
-            order.shipping.address.phone ??
-            order.customer.phone,
+            order.billing?.phone ?? order.shipping.address.phone ?? user.phone,
         },
         ShippingAddress: {
-          FirstName: order.customer.firstName,
-          LastName: order.customer.lastName,
-          Company: order.customer.organization,
+          FirstName: user.firstName,
+          LastName: user.lastName,
+          Company: user.organization,
           Address1: order.shipping.address.street,
           Address2: order.shipping.address.street2,
           City: order.shipping.address.city,
@@ -369,7 +368,7 @@ export const klaviyoTracker = (options: TSettings) => {
           Country: order.shipping.address.country,
           CountryCode: order.shipping.address.countryCode,
           Zip: order.shipping.address.postcode,
-          Phone: order.shipping.address.phone ?? order.customer.phone,
+          Phone: order.shipping.address.phone ?? user.phone,
         },
       },
     });
@@ -658,14 +657,15 @@ export const klaviyoTracker = (options: TSettings) => {
 
   const trackAddPaymentInfo = async (order: T_EA_DataOrder) => {
     log('[EA:Klaviyo] trackAddPaymentInfo');
+    const user = getUserObj(order.customer);
     collectEvent({
       event: 'Payment Added',
       properties: {
         PaymentType: order.payment.type,
         BillingAddress: {
-          FirstName: order.customer.firstName,
-          LastName: order.customer.lastName,
-          Company: order.customer.organization,
+          FirstName: user.firstName,
+          LastName: user.lastName,
+          Company: user.organization,
           Address1: order.shipping.address.street,
           Address2: order.shipping.address.street2,
           City: order.shipping.address.city,
@@ -683,15 +683,16 @@ export const klaviyoTracker = (options: TSettings) => {
 
   const trackAddShippingInfo = async (order: T_EA_DataOrder) => {
     log('[EA:Klaviyo] trackViewBasket');
+    const user = getUserObj(order.customer);
     collectEvent({
       event: 'Shipping Added',
       properties: {
         DeliveryType: order.shipping.name,
         DeliveryCost: order.shipping.cost,
         ShippingAddress: {
-          FirstName: order.customer.firstName,
-          LastName: order.customer.lastName,
-          Company: order.customer.organization,
+          FirstName: user.firstName,
+          LastName: user.lastName,
+          Company: user.organization,
           Address1: order.shipping.address.street,
           Address2: order.shipping.address.street2,
           City: order.shipping.address.city,

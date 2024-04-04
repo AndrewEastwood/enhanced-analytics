@@ -28,7 +28,7 @@ const getStore = () => {
 let _store: ReturnType<typeof getStore>;
 
 export const restore = () => {
-  const savedId = (_store = _store ?? getStore()).getItem(scope);
+  const savedId = getStore().getItem(scope);
   lastIdentity.clear();
   savedId ? lastIdentity.add(JSON.parse(savedId)) : void 0;
 };
@@ -37,7 +37,8 @@ export const resolveUser = (profile?: T_EA_DataProfile | null) => {
   restore();
   const customResolver = getConfig().resolvers?.profile;
   const lastId = lastIdentity.values().next().value;
-  const u = (profile ? profile : customResolver?.(lastId)) ?? lastId ?? {};
+  const u =
+    (profile?.email ? profile : customResolver?.(lastId)) ?? lastId ?? {};
   if (u && u.email && u.firstName) {
     store(u);
   }
@@ -47,5 +48,5 @@ export const resolveUser = (profile?: T_EA_DataProfile | null) => {
 export const store = (u: T_EA_DataProfile) => {
   lastIdentity.clear();
   u ? lastIdentity.add(u) : void 0;
-  (_store = _store ?? getStore()).setItem(scope, JSON.stringify(u ?? {}));
+  getStore().setItem(scope, JSON.stringify(u ?? {}));
 };

@@ -188,6 +188,7 @@ export type TSettings = {
       rules?: {
         metrics?: Partial<Record<keyof TTrackersEvents, boolean>>;
       };
+      conversionServerApiUrl?: string;
     };
     [ETrackers.FullStory]?: {
       enabled: boolean;
@@ -252,7 +253,7 @@ export type T_EA_DataOrder = {
   status: string;
   shipping: T_EA_Shipping;
   billing?: T_EA_DataAddress;
-  customer: T_EA_DataProfile;
+  customer?: T_EA_DataProfile;
   payment: T_EA_Payment;
   trackingNo?: string;
   url?: string;
@@ -264,6 +265,7 @@ export type TServerEventResponse<
 > = {
   message: null | string;
   payload: P[];
+  payloadHashed?: P[];
   response: null | T;
   browserData?: string;
 };

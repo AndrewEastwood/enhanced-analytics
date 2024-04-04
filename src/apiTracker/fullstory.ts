@@ -293,6 +293,7 @@ export const fullstoryTracker = (options: TSettings) => {
   const trackTransaction = async (order: T_EA_DataOrder) => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
     // const session = options.resolvers?.session?.();
+    const user = getUserObj(order.customer);
     const page = options.resolvers?.page?.();
     collectEvent({
       event: 'Placed Order',
@@ -325,8 +326,8 @@ export const fullstoryTracker = (options: TSettings) => {
           })
         ),
         BillingAddress: JSON.stringify({
-          FirstName: order.customer.firstName,
-          LastName: order.customer.lastName,
+          FirstName: user?.firstName,
+          LastName: user?.lastName,
           Company: '',
           Address1: order.shipping.address.street,
           Address2: '',
@@ -339,8 +340,8 @@ export const fullstoryTracker = (options: TSettings) => {
           Phone: order.shipping.address,
         }),
         ShippingAddress: JSON.stringify({
-          FirstName: order.customer.firstName,
-          LastName: order.customer.lastName,
+          FirstName: user?.firstName,
+          LastName: user?.lastName,
           Company: '',
           Address1: order.shipping.address.street,
           Address2: '',
