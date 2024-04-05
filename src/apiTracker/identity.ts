@@ -25,20 +25,20 @@ const getStore = () => {
   };
 };
 
-let _store: ReturnType<typeof getStore>;
-
 export const restore = () => {
   const savedId = getStore().getItem(scope);
   lastIdentity.clear();
   savedId ? lastIdentity.add(JSON.parse(savedId)) : void 0;
 };
 
-export const resolveUser = (profile?: T_EA_DataProfile | null) => {
+export const resolveUser = (
+  profile?: T_EA_DataProfile | null
+): T_EA_DataProfile | null => {
   restore();
   const customResolver = getConfig().resolvers?.profile;
   const lastId = lastIdentity.values().next().value;
   const u =
-    (profile?.email ? profile : customResolver?.(lastId)) ?? lastId ?? {};
+    (profile?.email ? profile : customResolver?.(lastId)) ?? lastId ?? null;
   if (u && u.email && u.firstName) {
     store(u);
   }

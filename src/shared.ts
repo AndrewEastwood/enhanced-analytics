@@ -51,6 +51,7 @@ export type T_EA_DataProfile = {
   extraProps?: Record<string, string>;
   loginProvider?: string;
   url?: string;
+  facebookId?: number | string;
 };
 
 export type T_EA_DataProduct = {

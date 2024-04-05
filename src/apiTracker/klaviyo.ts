@@ -301,9 +301,9 @@ export const klaviyoTracker = (options: TSettings) => {
     collectEvent({
       event: 'Placed Order',
       customerProperties: {
-        email: user.email,
-        first_name: user.firstName,
-        last_name: user.lastName,
+        email: user?.email,
+        first_name: user?.firstName,
+        last_name: user?.lastName,
       },
       properties: {
         $event_id: evtName,
@@ -340,9 +340,9 @@ export const klaviyoTracker = (options: TSettings) => {
           Brand: product.brand,
         })),
         BillingAddress: {
-          FirstName: user.firstName,
-          LastName: user.lastName,
-          Company: user.organization,
+          FirstName: user?.firstName,
+          LastName: user?.lastName,
+          Company: user?.organization,
           Address1: order.billing?.street ?? order.shipping.address.street,
           Address2: order.billing?.street2 ?? order.shipping.address.street2,
           City: order.billing?.city ?? order.shipping.address.city,
@@ -354,12 +354,12 @@ export const klaviyoTracker = (options: TSettings) => {
             order.billing?.countryCode ?? order.shipping.address.countryCode,
           Zip: order.billing?.postcode ?? order.shipping.address.postcode,
           Phone:
-            order.billing?.phone ?? order.shipping.address.phone ?? user.phone,
+            order.billing?.phone ?? order.shipping.address.phone ?? user?.phone,
         },
         ShippingAddress: {
-          FirstName: user.firstName,
-          LastName: user.lastName,
-          Company: user.organization,
+          FirstName: user?.firstName,
+          LastName: user?.lastName,
+          Company: user?.organization,
           Address1: order.shipping.address.street,
           Address2: order.shipping.address.street2,
           City: order.shipping.address.city,
@@ -368,7 +368,7 @@ export const klaviyoTracker = (options: TSettings) => {
           Country: order.shipping.address.country,
           CountryCode: order.shipping.address.countryCode,
           Zip: order.shipping.address.postcode,
-          Phone: order.shipping.address.phone ?? user.phone,
+          Phone: order.shipping.address.phone ?? user?.phone,
         },
       },
     });
@@ -663,9 +663,9 @@ export const klaviyoTracker = (options: TSettings) => {
       properties: {
         PaymentType: order.payment.type,
         BillingAddress: {
-          FirstName: user.firstName,
-          LastName: user.lastName,
-          Company: user.organization,
+          FirstName: user?.firstName,
+          LastName: user?.lastName,
+          Company: user?.organization,
           Address1: order.shipping.address.street,
           Address2: order.shipping.address.street2,
           City: order.shipping.address.city,
@@ -690,9 +690,9 @@ export const klaviyoTracker = (options: TSettings) => {
         DeliveryType: order.shipping.name,
         DeliveryCost: order.shipping.cost,
         ShippingAddress: {
-          FirstName: user.firstName,
-          LastName: user.lastName,
-          Company: user.organization,
+          FirstName: user?.firstName,
+          LastName: user?.lastName,
+          Company: user?.organization,
           Address1: order.shipping.address.street,
           Address2: order.shipping.address.street2,
           City: order.shipping.address.city,

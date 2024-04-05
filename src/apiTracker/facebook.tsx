@@ -149,12 +149,15 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
     _last_names: string[] = [];
     _countries: string[] = [];
     _cities: string[] = [];
+    _states: string[] = [];
     _zips: string[] = [];
     _phones: string[] = [];
     _client_ip_address: string | null = null;
     _client_user_agent: string | null = null;
     _fbp: string | null = null;
     _fbc: string | null = null;
+    _fb_login_id: string | null = null;
+    _date_of_birth: string[] = [];
     setExternalId(a: string) {
       this._external_ids = [a];
       return this;
@@ -179,6 +182,10 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
       this._cities = [a];
       return this;
     }
+    setState(a: string) {
+      this._states = [a];
+      return this;
+    }
     setZip(a: string) {
       this._zips = [a];
       return this;
@@ -201,6 +208,14 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
     }
     setFbc(a: string) {
       this._fbc = a;
+      return this;
+    }
+    setDateOfBirth(a: string) {
+      this._date_of_birth = [a];
+      return this;
+    }
+    setFbLoginId(a: string) {
+      this._fb_login_id = a;
       return this;
     }
     async normalize(params?: {
@@ -271,6 +286,15 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
                 : trackUtils.digestMessage(v.toLowerCase().trim())
             )
         ),
+        st: await Promise.all(
+          this._states
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
+        ),
         external_id: await Promise.all(
           this._external_ids
             .filter(Boolean)
@@ -280,6 +304,16 @@ let { Content, CustomData, UserData, ServerEvent, EventRequest } = (() => {
         fbp: this._fbp,
         client_ip_address: this._client_ip_address,
         client_user_agent: this._client_user_agent,
+        fb_login_id: this._fb_login_id,
+        db: await Promise.all(
+          this._date_of_birth
+            .filter(Boolean)
+            .map((v) =>
+              noHash
+                ? v.toLowerCase().trim()
+                : trackUtils.digestMessage(v.toLowerCase().trim())
+            )
+        ),
       };
     }
   }
@@ -844,7 +878,7 @@ export const fbTracker = (options: TSettings) => {
 
   const _getUserDataObject = (order?: T_EA_DataOrder) => {
     const user = trackIdentify();
-    const u = order?.customer?.email ?? user;
+    const u = order?.customer?.email ? order.customer : user;
     const session = options.resolvers?.session?.();
     const userData =
       u && u.email && u.firstName && session
@@ -856,12 +890,14 @@ export const fbTracker = (options: TSettings) => {
             .setCountry(u.address?.country ?? '')
             .setCity(u.address?.city ?? '')
             .setZip(u.address?.postcode ?? '')
+            .setState(u.address?.state ?? u.address?.region ?? '')
             .setPhone(u.phone ?? '')
             // It is recommended to send Client IP and User Agent for Conversions API Events.
             .setClientIpAddress(session.ip ?? '')
             .setClientUserAgent(session.agent ?? '')
             .setFbp(session.fbp ?? '')
             .setFbc(session.fbc ?? '')
+            .setFbLoginId(u.facebookId?.toString() ?? '')
         : null;
     return userData;
   };
