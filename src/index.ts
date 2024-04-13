@@ -92,6 +92,11 @@ export const useAnalytics = (c?: TSettings) => {
               klaviyo: true,
               server: true,
             }).misc(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, {
+              tiktok: true,
+              server: true,
+            }).misc(v),
           any: (...trackers: ETrackers[]) => {
             const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
               server: true,
@@ -106,6 +111,7 @@ export const useAnalytics = (c?: TSettings) => {
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).misc(v),
           [ETrackers.Facebook]: () => apiTracker(store, { fb: true }).misc(v),
+          [ETrackers.TikTok]: () => apiTracker(store, { tiktok: true }).misc(v),
         },
       };
     },
@@ -139,6 +145,11 @@ export const useAnalytics = (c?: TSettings) => {
               klaviyo: true,
               server: true,
             }).page(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, {
+              tiktok: true,
+              server: true,
+            }).page(v),
           any: (...trackers: ETrackers[]) => {
             const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
               server: true,
@@ -153,6 +164,7 @@ export const useAnalytics = (c?: TSettings) => {
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).page(v),
           [ETrackers.Facebook]: () => apiTracker(store, { fb: true }).page(v),
+          [ETrackers.TikTok]: () => apiTracker(store, { tiktok: true }).page(v),
         },
       };
     },
@@ -187,6 +199,11 @@ export const useAnalytics = (c?: TSettings) => {
               klaviyo: true,
               server: true,
             }).profile(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, {
+              tiktok: true,
+              server: true,
+            }).profile(v),
           any: (...trackers: ETrackers[]) => {
             const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
               server: true,
@@ -202,6 +219,8 @@ export const useAnalytics = (c?: TSettings) => {
             apiTracker(store, { fullstory: true }).profile(v),
           [ETrackers.Facebook]: () =>
             apiTracker(store, { fb: true }).profile(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, { tiktok: true }).profile(v),
         },
       };
     },
@@ -241,6 +260,11 @@ export const useAnalytics = (c?: TSettings) => {
               klaviyo: true,
               server: true,
             }).catalog(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, {
+              tiktok: true,
+              server: true,
+            }).catalog(v),
           any: (...trackers: ETrackers[]) => {
             const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
               server: true,
@@ -256,6 +280,8 @@ export const useAnalytics = (c?: TSettings) => {
             apiTracker(store, { fullstory: true }).catalog(v),
           [ETrackers.Facebook]: () =>
             apiTracker(store, { fb: true }).catalog(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, { tiktok: true }).catalog(v),
         },
         feed: {
           [ETrackers.Facebook]: () => {
@@ -651,6 +677,11 @@ export const useAnalytics = (c?: TSettings) => {
               klaviyo: true,
               server: true,
             }).basket(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, {
+              tiktok: true,
+              server: true,
+            }).basket(v),
           any: (...trackers: ETrackers[]) => {
             const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
               server: true,
@@ -665,6 +696,8 @@ export const useAnalytics = (c?: TSettings) => {
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).basket(v),
           [ETrackers.Facebook]: () => apiTracker(store, { fb: true }).basket(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, { tiktok: true }).basket(v),
         },
       };
     },
@@ -699,6 +732,11 @@ export const useAnalytics = (c?: TSettings) => {
               klaviyo: true,
               server: true,
             }).order(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, {
+              tiktok: true,
+              server: true,
+            }).order(v),
           any: (...trackers: ETrackers[]) => {
             const c = trackers.reduce((r, t) => ({ ...r, [t]: true }), {
               server: true,
@@ -713,6 +751,8 @@ export const useAnalytics = (c?: TSettings) => {
           [ETrackers.FullStory]: () =>
             apiTracker(store, { fullstory: true }).order(v),
           [ETrackers.Facebook]: () => apiTracker(store, { fb: true }).order(v),
+          [ETrackers.TikTok]: () =>
+            apiTracker(store, { tiktok: true }).order(v),
         },
       };
     },

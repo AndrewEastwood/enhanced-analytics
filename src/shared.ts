@@ -41,6 +41,7 @@ export type T_EA_DataSession = {
 
 export type T_EA_DataProfile = {
   id?: string | number | null;
+  externalId?: string | number | null;
   firstName: string;
   lastName?: string;
   title?: string;
@@ -232,6 +233,10 @@ export type TSettings = {
       pixelId?: string | null;
       token?: string | null;
       autoTrackPageViews?: boolean;
+      rules?: {
+        metrics?: {};
+      };
+      conversionServerApiUrl?: string;
     };
   };
   links?: {
@@ -278,6 +283,7 @@ export type TServerEventResponse<
   payloadHashed?: P[];
   response: null | T;
   browserData?: string;
+  conversionApiResult?: any;
 };
 
 export type TTrackersEvents = {

@@ -135,7 +135,7 @@ export const tiktokTracker = (options: TSettings) => {
     payload?: Record<string, any>
   ): Record<string, any> =>
     Object.entries(payload ?? {}).reduce((r, entry) => {
-      return entry[1] === null
+      return entry[1] === null || typeof entry[1] === 'undefined'
         ? r
         : {
             ...r,
@@ -173,73 +173,122 @@ export const tiktokTracker = (options: TSettings) => {
   const collectEvent = async (
     evtName: string,
     payload: T_EA_TikTokEventPayload,
-    user?: T_EA_DataProfile | null
+    userData?: T_EA_DataProfile | null
   ): Promise<TServerEventResponse> => {
     const session = options.resolvers?.session?.();
     const page = options.resolvers?.page?.();
+    const user = userData ?? options.resolvers?.profile?.();
+
+    const eventProps = payload
+      ? {
+          ...normalizePayload(payload),
+          contents: payload?.contents.map(normalizePayload).filter(Boolean),
+        }
+      : {};
+
+    const eventData = {
+      event: evtName,
+      event_id: payload.event_id,
+      event_time: payload.event_time,
+      user: {
+        ...user,
+        ...(user?.email
+          ? {
+              email: await trackUtils.digestMessage(
+                user.email.toLowerCase().trim()
+              ),
+            }
+          : {}),
+        ...(user?.phone
+          ? {
+              phone: await trackUtils.digestMessage(
+                (user.phone.startsWith('+') ? user.phone : `+${user.phone}`)
+                  .toLowerCase()
+                  .trim()
+              ),
+            }
+          : {}),
+        ...(user?.id || user?.externalId
+          ? {
+              external_id: await trackUtils.digestMessage(
+                (user.id! ?? user.externalId!).toString().toLowerCase().trim()
+              ),
+            }
+          : {}),
+        ttclid: session?.ttclid,
+        ttp: session?.ttp,
+        ip: session?.ip,
+        user_agent: session?.agent,
+      },
+      page: { url: page?.url },
+      properties: eventProps,
+    };
+    const eventPayload: Record<string, any> = {
+      event_source: 'web',
+      event_source_id: analytics?.tiktok?.pixelId,
+      data: [eventData],
+    };
 
     log(`[EA:TikTok] collecting event ${evtName}`, payload);
     return isBrowserMode
-      ? new Promise((resolve) => {
-          track?.(
-            evtName,
-            payload
-              ? {
-                  ...normalizePayload(payload),
-                  contents: payload?.contents
-                    .map(normalizePayload)
-                    .filter(Boolean),
-                }
-              : {}
-          );
+      ? new Promise(async (resolve) => {
+          track?.(evtName, eventProps);
+
+          let conversionApiResult = null;
+          if (analytics.tiktok?.conversionServerApiUrl) {
+            log(
+              '[EA:TikTok] Sending event to the ConversionAPI: ',
+              analytics.tiktok.conversionServerApiUrl
+            );
+            const url = analytics.tiktok.conversionServerApiUrl;
+            try {
+              const convResp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(eventPayload),
+              });
+              conversionApiResult = await convResp.json();
+            } catch (err) {
+              console.error(
+                '[EA:TikTok] Republish ConversionAPI eventRequest=>Error: ',
+                err
+              );
+            }
+          }
+
           resolve({
             message: null,
             payload: [payload],
             response: true,
+            conversionApiResult,
+            payloadHashed: [eventPayload],
           });
         })
       : new Promise(async (resolve, reject) => {
-          const eventPayload = {
-            event: evtName,
-            event_id: payload.event_id,
-            event_time: payload.event_time,
-            user: {
-              ...user,
-              ttclid: session?.ttclid,
-              ttp: session?.ttp,
-              ip: session?.ip,
-              user_agent: session?.agent,
-            },
-            page: { url: page?.url },
-            properties: payload,
-          };
-          const serverPayload = {
-            event_source: 'web',
-            event_source_id: analytics?.tiktok?.pixelId,
-            data: [eventPayload],
-          };
           try {
             const result = await fetch(
               'https://business-api.tiktok.com/open_api/v1.3/event/track/',
               {
                 method: 'POST',
                 headers: {
-                  // 'Content-Type': 'application/json',
-                  // 'Access-Token': analytics?.tiktok?.token!,
+                  'Content-Type': 'application/json',
+                  'Access-Token': analytics?.tiktok?.token!,
                 },
-                body: JSON.stringify(serverPayload),
+                body: JSON.stringify(eventPayload),
               }
             );
             resolve({
               message: null,
-              payload: [serverPayload],
+              payload: [eventPayload],
               response: await result.json(),
             });
           } catch (e) {
             console.error(e);
             reject({
               message: `Error while sending event to TikTok: ${e}`,
-              payload: [serverPayload],
+              payload: [eventPayload],
               response: false,
             });
           }
@@ -252,12 +301,15 @@ export const tiktokTracker = (options: TSettings) => {
   ): Promise<TServerEventResponse> => {
     const user = getUserObj(profile);
 
-    if (user) {
-      const payload = {
-        email: user!.email,
-        phone_number: user?.phone,
-        external_id: user?.id,
-      };
+    if (user?.email) {
+      const payload = normalizePayload({
+        email: user.email,
+        phone_number:
+          user.phone && user.phone.startsWith('+')
+            ? user.phone
+            : `+${user.phone}`,
+        external_id: user.id,
+      });
       identify?.(payload);
       return Promise.resolve({
         message: null,
@@ -266,11 +318,11 @@ export const tiktokTracker = (options: TSettings) => {
       });
     }
 
-    return {
+    return Promise.resolve({
       message: 'User is not defined yet',
       payload: [user],
       response: null,
-    };
+    });
   };
 
   const trackTransactionRefund = async (order: T_EA_DataOrder) => {};

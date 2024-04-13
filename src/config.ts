@@ -68,6 +68,7 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       pixelId: null,
       token: null,
       autoTrackPageViews: true,
+      conversionServerApiUrl: '',
     },
   },
   links: {
