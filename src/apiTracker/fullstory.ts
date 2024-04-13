@@ -361,7 +361,6 @@ export const fullstoryTracker = (options: TSettings) => {
   const trackProductAddToCart = async (basket: T_EA_DataBasket) => {
     basket.lastAdded.map((product) => {
       const evtName = trackUtils.getEventNameOfProductAddToCart(product);
-      // console.error('klaviyo:trackInitiateCheckout', evtName);
       // const basket = request.session.basket;
       collectEvent({
         event: 'Added to Cart',
@@ -408,7 +407,6 @@ export const fullstoryTracker = (options: TSettings) => {
   const trackProductRemoveFromCart = async (basket: T_EA_DataBasket) => {
     basket.lastRemoved.map((product) => {
       const evtName = trackUtils.getEventNameOfProductRemoveFromCart(product);
-      // console.error('klaviyo:trackInitiateCheckout', evtName);
       // const basket = request.session.basket;
       collectEvent({
         event: 'Removed form Cart',
@@ -458,7 +456,6 @@ export const fullstoryTracker = (options: TSettings) => {
 
   const trackProductItemView = async (product: T_EA_DataProduct) => {
     const evtName = trackUtils.getEventNameOfProductItemView(product);
-    // console.error('klaviyo:trackProductItemView', evtName);
     collectEvent({
       event: 'Viewed Product',
       properties: {
@@ -530,10 +527,6 @@ export const fullstoryTracker = (options: TSettings) => {
   };
 
   const trackSearch = async (searchTerm, matchingProducts) => {
-    // const evtName = trackUtils.getEventNameOfSearch(
-    //   searchTerm,
-    //   matchingProducts
-    // );
     const page = options.resolvers?.page?.();
     collectEvent({
       event: 'Searched Site',
@@ -548,7 +541,6 @@ export const fullstoryTracker = (options: TSettings) => {
 
   const trackNewProfile = async (profile: T_EA_DataProfile | null) => {
     const user = getUserObj(profile);
-    // console.log('klaviyo:trackNewProfile', user);
     user
       ? collectEvent({
           event: 'Created Account',
@@ -565,7 +557,6 @@ export const fullstoryTracker = (options: TSettings) => {
   const trackProfileResetPassword = async (
     profile: T_EA_DataProfile | null
   ) => {
-    // console.error('klaviyo:trackProfileResetPassword', request.user);
     const user = getUserObj(profile);
     user
       ? collectEvent({
@@ -607,7 +598,6 @@ export const fullstoryTracker = (options: TSettings) => {
   };
 
   const trackProfileSubscribeNL = async (profile: T_EA_DataProfile | null) => {
-    // log('[EA:FullStory] trackProfileSubscribeNL', profile);
     const user = getUserObj(profile);
     user
       ? collectEvent({

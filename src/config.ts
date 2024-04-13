@@ -63,6 +63,12 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       dataLayerName: 'dataLayer',
       ga4: true,
     },
+    tiktok: {
+      enabled: false,
+      pixelId: null,
+      token: null,
+      autoTrackPageViews: true,
+    },
   },
   links: {
     ...(_store?.links || {}),

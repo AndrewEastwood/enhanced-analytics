@@ -35,6 +35,8 @@ export type T_EA_DataSession = {
   fbp?: string;
   fbc?: string;
   agent?: string;
+  ttp?: string;
+  ttclid?: string;
 };
 
 export type T_EA_DataProfile = {
@@ -140,6 +142,7 @@ export enum ETrackers {
   Klaviyo = 'klaviyo',
   FullStory = 'fullstory',
   GoogleAnalytics = 'ga',
+  TikTok = 'tiktok',
 }
 
 export type TEECParams = {
@@ -223,6 +226,12 @@ export type TSettings = {
       rules?: {
         metrics?: {};
       };
+    };
+    [ETrackers.TikTok]?: {
+      enabled: boolean;
+      pixelId?: string | null;
+      token?: string | null;
+      autoTrackPageViews?: boolean;
     };
   };
   links?: {

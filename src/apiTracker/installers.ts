@@ -3,6 +3,7 @@ import { installFB } from './facebook';
 import { installFS } from './fullstory';
 import { installGTM } from './ga';
 import { installK } from './klaviyo';
+import { installTT } from './tiktok';
 import { isBrowserMode } from '../utils';
 import { log } from '../log';
 
@@ -18,6 +19,11 @@ export const installer = {
       s.integrations?.ga?.trackId,
       s.integrations?.ga?.dataLayerName,
       s.debug
+    ),
+  [ETrackers.TikTok]: (s: TSettings) =>
+    installTT(
+      s.integrations?.tiktok?.pixelId,
+      s.integrations?.tiktok?.autoTrackPageViews
     ),
 };
 

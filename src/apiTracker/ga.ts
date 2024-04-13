@@ -155,9 +155,9 @@ export const getEEC = (options: TSettings) => {
     params?: TEECParams
   ) => {
     // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#view_item
-    const dl = trackUtils
-      .Catalog(options, products)
-      .ProductDetails.getEECDataLayer(params);
+    const dl = Catalog(options, products).ProductDetails.getEECDataLayer(
+      params
+    );
     return _evt(dl);
   };
 
@@ -166,42 +166,34 @@ export const getEEC = (options: TSettings) => {
     params?: TEECParams
   ) => {
     // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#view_item_list
-    const dl = trackUtils
-      .Catalog(options, products)
-      .Products.getEECDataLayer(params);
+    const dl = Catalog(options, products).Products.getEECDataLayer(params);
     return _evt(dl);
   };
 
   const getEECCheckoutList = (basket: T_EA_DataBasket, params?: TEECParams) => {
-    const dl = trackUtils
-      .Basket(options, basket)
-      .InitCheckout.getEECDataLayer(params);
+    const dl = Basket(options, basket).InitCheckout.getEECDataLayer(params);
     return _evt(dl);
   };
 
   const getEECPurchased = (order: T_EA_DataOrder, params?: TEECParams) => {
-    const dl = trackUtils
-      .Order(options, order)
-      .Purchase.getEECDataLayer(params);
+    const dl = Order(options, order).Purchase.getEECDataLayer(params);
     return _evt(dl);
   };
 
   const getEECRefund = (order: T_EA_DataOrder, params?: TEECParams) => {
-    const dl = trackUtils.Order(options, order).Refund.getEECDataLayer(params);
+    const dl = Order(options, order).Refund.getEECDataLayer(params);
     return _evt(dl);
   };
 
   const getEECCartAdd = (basket: T_EA_DataBasket, params?: TEECParams) => {
-    const dl = trackUtils
-      .Basket(options, basket)
-      .BasketAddProduct.getEECDataLayer(params);
+    const dl = Basket(options, basket).BasketAddProduct.getEECDataLayer(params);
     return _evt(dl);
   };
 
   const getEECCartRemove = (basket: T_EA_DataBasket, params?: TEECParams) => {
-    const dl = trackUtils
-      .Basket(options, basket)
-      .BasketRemoveProduct.getEECDataLayer(params);
+    const dl = Basket(options, basket).BasketRemoveProduct.getEECDataLayer(
+      params
+    );
     return _evt(dl);
   };
 
@@ -239,9 +231,8 @@ export const getEEC = (options: TSettings) => {
     return _evt({
       event: 'add_to_wishlist',
       ecommerce: {
-        ...trackUtils
-          .Catalog(options, products)
-          .Products.getEECDataLayer(params).ecommerce,
+        ...Catalog(options, products).Products.getEECDataLayer(params)
+          .ecommerce,
       },
     });
   };
@@ -251,18 +242,15 @@ export const getEEC = (options: TSettings) => {
     return _evt({
       event: 'view_cart',
       ecommerce: {
-        ...trackUtils
-          .Basket(options, basket)
-          .InitCheckout.getEECDataLayer(params).ecommerce,
+        ...Basket(options, basket).InitCheckout.getEECDataLayer(params)
+          .ecommerce,
       },
     });
   };
 
   const getEECAddPaymentInfo = (order: T_EA_DataOrder, params?: TEECParams) => {
     // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#add_payment_info
-    const dataGA4 = trackUtils
-      .Order(options, order)
-      .Purchase.getEECDataLayer(params);
+    const dataGA4 = Order(options, order).Purchase.getEECDataLayer(params);
     return _evt({
       event: 'add_payment_info',
       ecommerce: {
@@ -280,9 +268,7 @@ export const getEEC = (options: TSettings) => {
     params?: TEECParams
   ) => {
     // https://developers.google.com/analytics/devguides/collection/ga4/reference/events?client_type=gtag#add_shipping_info
-    const dataGA4 = trackUtils
-      .Order(options, order)
-      .Purchase.getEECDataLayer(params);
+    const dataGA4 = Order(options, order).Purchase.getEECDataLayer(params);
     return _evt({
       event: 'add_shipping_info',
       ecommerce: {
@@ -331,3 +317,613 @@ export const getEEC = (options: TSettings) => {
 };
 
 export default getEEC;
+
+const EECUtils = {
+  getProductItem: (product: T_EA_DataProduct) => {
+    return {
+      item_id: product.sku,
+      item_name: product.title,
+      index: product.viewOrder,
+      item_brand: product.brand,
+      item_category: product.category,
+      discount:
+        product.isSale && product.salePrice
+          ? trackUtils.round(product.price - product.salePrice)
+          : 0,
+      item_variant: product.variant || '',
+      price: product.isSale
+        ? trackUtils.round(product.salePrice)
+        : trackUtils.round(product.price),
+      affiliation: product?.affiliation ?? null,
+      ...(product.categories || []).reduce(
+        (r, v, idx) => ({
+          ...r,
+          [`item_category${idx}`]: v,
+        }),
+        {}
+      ),
+      ...(product.quantity
+        ? {
+            quantity: trackUtils.round(product.quantity),
+          }
+        : {}),
+      ...(product.gaLocationId
+        ? {
+            location_id: product.gaLocationId,
+          }
+        : {}),
+      ...(product.dimensions || []).reduce(
+        (r, v, idx) => ({
+          ...r,
+          [`item_dimension${idx}`]: v,
+        }),
+        {}
+      ),
+      ...(product.metrics || []).reduce(
+        (r, v, idx) => ({
+          ...r,
+          [`item_metric${idx}`]: v,
+        }),
+        {}
+      ),
+    };
+  },
+};
+
+const InitCheckout = (options: TSettings, basket: T_EA_DataBasket) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return InitCheckout(options, basket).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'eec.checkout',
+      basket,
+      custom: {
+        value: trackUtils.round(basket.total),
+        currency: options.currency,
+        totalQuantity: basket.quantity,
+      },
+      ecommerce: {
+        currencyCode: options.currency,
+        checkout: {
+          actionField: {
+            step: 1,
+          },
+          products: basket.products.map((p) => ({
+            list:
+              params?.listName || options.integrations?.ga?.defaultBasketName,
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`dimension${idx}`]: v,
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`metric${idx}`]: v,
+              }),
+              {}
+            ),
+          })),
+        },
+      },
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'begin_checkout',
+      ecommerce: {
+        currency: options.currency,
+        value: trackUtils.round(basket.total),
+        coupon: basket.coupon,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
+        items: basket.products.map((product, idx) => ({
+          ...EECUtils.getProductItem(product),
+        })),
+      },
+    };
+  },
+});
+
+const ProductDetails = (options: TSettings, product: T_EA_DataProduct) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return ProductDetails(options, product).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'eec.detail',
+      custom: {
+        value: product.price,
+        currency: options.currency,
+        totalQuantity: 1,
+        category: product.category,
+        brand: product.brand,
+        title: product.title,
+        id: product.id,
+      },
+      ecommerce: {
+        currencyCode: options.currency,
+        detail: {
+          actionField: {
+            list:
+              params?.listName || options.integrations?.ga?.defaultCatalogName,
+          },
+          products: [
+            {
+              id: product.id,
+              sku: product.sku,
+              name: product.title,
+              category: product.category,
+              brand: product.brand,
+              price: product.price,
+              variant: product.variant,
+              ...(product.dimensions || []).reduce(
+                (r, v, idx) => ({
+                  ...r,
+                  [`dimension${idx}`]: v,
+                }),
+                {}
+              ),
+              ...(product.metrics || []).reduce(
+                (r, v, idx) => ({
+                  ...r,
+                  [`metric${idx}`]: v,
+                }),
+                {}
+              ),
+            },
+          ],
+        },
+      },
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    return {
+      event: 'view_item',
+      ecommerce: {
+        currency: options.currency,
+        value: product.isSale ? product.salePrice : product.price,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultCatalogName,
+        items: [
+          {
+            ...EECUtils.getProductItem(product),
+          },
+        ],
+      },
+    };
+  },
+});
+
+const Purchase = (options: TSettings, order: T_EA_DataOrder) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return Purchase(options, order).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'eec.purchase',
+      custom: {
+        value: order.revenue,
+        currency: options.currency,
+        totalQuantity: order.quantity,
+      },
+      order,
+      shipping: order.shipping,
+      userData: {
+        email: order.customer?.email,
+        phone_number: order.customer?.phone,
+        address: {
+          first_name: order.customer?.firstName,
+          last_name: order.customer?.lastName,
+          street: order.customer?.address?.street,
+          city: order.customer?.address?.city,
+          region: order.customer?.address?.region,
+          postal_code: order.customer?.address?.postcode,
+          country: order.customer?.address?.country,
+        },
+      },
+      ecommerce: {
+        currencyCode: options.currency,
+        purchase: {
+          actionField: {
+            id: order.id,
+            affiliation: options.affiliation,
+            revenue: order.revenue,
+            shipping: order.shipping.cost,
+            coupon: (order.coupon && order.coupon) || '',
+          },
+          products: order.products.map((p) => ({
+            list:
+              params?.listName || options.integrations?.ga?.defaultBasketName,
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`dimension${idx}`]: v,
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`metric${idx}`]: v,
+              }),
+              {}
+            ),
+          })),
+        },
+      },
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName ?? 'purchase',
+      ecommerce: {
+        transaction_id: order.id,
+        value: order.revenue,
+        tax: order.tax,
+        shipping: order.shipping.cost,
+        currency: options.currency,
+        coupon: order.coupon,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
+        items: order.products.map((product) => ({
+          ...EECUtils.getProductItem(product),
+        })),
+      },
+    };
+  },
+});
+
+const Refund = (options: TSettings, order: T_EA_DataOrder) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return Refund(options, order).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'eec.purchase',
+      custom: {
+        value: order.revenue,
+        currency: options.currency,
+        totalQuantity: order.quantity,
+      },
+      ecommerce: {
+        currencyCode: options.currency,
+        purchase: {
+          actionField: {
+            id: order.id,
+            affiliation: options.affiliation,
+            revenue: order.revenue,
+            shipping: order.shipping.cost,
+            coupon: order.coupon || '',
+          },
+          products: order.products.map((p) => ({
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`dimension${idx}`]: v,
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`metric${idx}`]: v,
+              }),
+              {}
+            ),
+          })),
+        },
+      },
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName ?? 'refund',
+      ecommerce: {
+        transaction_id: order.id,
+        value: order.revenue,
+        tax: order.tax,
+        shipping: order.shipping.cost,
+        currency: options.currency,
+        coupon: order.coupon,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
+        items: order.products.map((product, idx) => ({
+          ...EECUtils.getProductItem(product),
+        })),
+      },
+    };
+  },
+});
+
+const BasketAddProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return BasketAddProduct(options, basket).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    const product = basket.lastAdded?.[0] || {};
+    return {
+      event: params?.evName || 'eec.add',
+      basket,
+      custom: {
+        value: product.total || 0,
+        currency: options.currency,
+        totalQuantity: product.quantity,
+        category: product.category,
+        brand: product.brand,
+        title: product.title,
+        id: product.id,
+      },
+      ecommerce: {
+        currencyCode: options.currency,
+        add: {
+          actionField: {
+            list:
+              params?.listName || options.integrations?.ga?.defaultBasketName,
+          },
+          products: basket.lastAdded.map((p) => ({
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`dimension${idx}`]: v,
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`metric${idx}`]: v,
+              }),
+              {}
+            ),
+          })),
+        },
+      },
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    const product = basket.lastAdded?.[0] || {};
+    return {
+      event: params?.evName ?? 'add_to_cart',
+      ecommerce: {
+        currency: options.currency,
+        value: product.total ?? 0,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
+        items: basket.lastAdded.map((product, idx) => ({
+          ...EECUtils.getProductItem(product),
+        })),
+      },
+    };
+  },
+});
+
+const BasketRemoveProduct = (options: TSettings, basket: T_EA_DataBasket) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return BasketRemoveProduct(options, basket).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    const product = basket.lastRemoved?.[0] || {};
+    return {
+      event: params?.evName || 'eec.remove',
+      basket,
+      custom: {
+        value: product.total || 0,
+        currency: options.currency,
+        totalQuantity: product.quantity,
+        category: product.category,
+        brand: product.brand,
+        title: product.title,
+        id: product.id,
+      },
+      ecommerce: {
+        currencyCode: options.currency,
+        remove: {
+          actionField: {
+            list:
+              params?.listName || options.integrations?.ga?.defaultBasketName,
+          },
+          products: basket.lastRemoved.map((p) => ({
+            id: p.id,
+            sku: p.sku,
+            name: p.title,
+            category: p.category,
+            brand: p.brand,
+            price: p.price,
+            quantity: p.quantity,
+            variant: p.variant || '',
+            ...(p.dimensions || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`dimension${idx}`]: v,
+              }),
+              {}
+            ),
+            ...(p.metrics || []).reduce(
+              (r, v, idx) => ({
+                ...r,
+                [`metric${idx}`]: v,
+              }),
+              {}
+            ),
+          })),
+        },
+      },
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    const product = basket.lastRemoved?.[0] || {};
+    return {
+      event: params?.evName ?? 'remove_from_cart',
+      ecommerce: {
+        currency: options.currency,
+        value: product.total ?? 0,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultBasketName,
+        items: basket.lastRemoved.map((product, idx) => ({
+          ...EECUtils.getProductItem(product),
+        })),
+      },
+    };
+  },
+});
+
+const Products = (options: TSettings, products: T_EA_DataProduct[]) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return Products(options, products).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'eec.impressionView',
+      custom: {
+        value: 1,
+        currency: options.currency,
+        totalQuantity: products.length,
+      },
+      ecommerce: {
+        currencyCode: options.currency,
+        impressions: products.map((p) => ({
+          list:
+            p.list ||
+            params?.listName ||
+            options.integrations?.ga?.defaultCatalogName,
+          id: p.id,
+          sku: p.sku,
+          name: p.title,
+          category: p.category,
+          brand: p.brand,
+          price: p.price,
+          variant: p.variant || '',
+          ...(p.dimensions || []).reduce(
+            (r, v, idx) => ({
+              ...r,
+              [`dimension${idx}`]: v,
+            }),
+            {}
+          ),
+          ...(p.metrics || []).reduce(
+            (r, v, idx) => ({
+              ...r,
+              [`metric${idx}`]: v,
+            }),
+            {}
+          ),
+        })),
+      },
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    return {
+      event: 'view_item_list',
+      ecommerce: {
+        currency: options.currency,
+        item_list_name:
+          params?.listName || options.integrations?.ga?.defaultCatalogName,
+        items: products.map((product) => ({
+          ...EECUtils.getProductItem(product),
+        })),
+      },
+    };
+  },
+});
+
+const PageView = (options: TSettings) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return PageView(options).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'eec.pageView',
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'page_view',
+    };
+  },
+});
+
+const ProfileView = (options: TSettings) => ({
+  getEECDataLayer: (param?: TEECParams) => {
+    return ProfileView(options).getEECGA4DataLayer(param);
+  },
+  getEECUADataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'eec.profileView',
+    };
+  },
+  getEECGA4DataLayer: (params?: TEECParams) => {
+    return {
+      event: params?.evName || 'eec.profileView',
+    };
+  },
+});
+
+const Page = (options: TSettings) => {
+  return {
+    View: PageView(options),
+  };
+};
+
+const Profile = (options: TSettings) => {
+  return {
+    View: ProfileView(options),
+  };
+};
+
+const Catalog = (options: TSettings, products: T_EA_DataProduct[]) => {
+  return {
+    Products: Products(options, products),
+    ProductDetails: ProductDetails(options, products[0]),
+  };
+};
+
+const Basket = (options: TSettings, basket: T_EA_DataBasket) => {
+  return {
+    BasketAddProduct: BasketAddProduct(options, basket),
+    BasketRemoveProduct: BasketRemoveProduct(options, basket),
+    InitCheckout: InitCheckout(options, basket),
+  };
+};
+
+const Order = (options: TSettings, order: T_EA_DataOrder) => {
+  return {
+    Purchase: Purchase(options, order),
+    Refund: Refund(options, order),
+  };
+};
