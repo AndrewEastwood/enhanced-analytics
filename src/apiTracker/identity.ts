@@ -48,8 +48,6 @@ export const resolveUser = (
     : isNativePayloadProfile(lastId)
     ? lastId
     : null;
-  // const u =
-  //   (profile?.email ? profile : customResolver?.(lastId)) ?? lastId ?? null;
   if (isNativePayloadProfile(userToStore) && !userToStore?.isAnonymous) {
     store(userToStore);
   }
