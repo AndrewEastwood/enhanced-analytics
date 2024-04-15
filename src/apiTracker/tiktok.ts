@@ -177,7 +177,7 @@ export const tiktokTracker = (options: TSettings) => {
   ): Promise<TServerEventResponse> => {
     const session = options.resolvers?.session?.();
     const page = options.resolvers?.page?.();
-    const user = userData ?? options.resolvers?.profile?.();
+    const user = getUserObj(userData);
 
     const eventProps = payload
       ? {
@@ -227,6 +227,9 @@ export const tiktokTracker = (options: TSettings) => {
       event_source: 'web',
       event_source_id: analytics?.tiktok?.pixelId,
       data: [eventData],
+      ...(analytics?.tiktok?.testCode
+        ? { test_event_code: analytics.tiktok.testCode }
+        : {}),
     };
 
     log(`[EA:TikTok] collecting event ${evtName}`, payload);

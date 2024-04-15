@@ -55,6 +55,7 @@ export type T_EA_DataProfile = {
   loginProvider?: string;
   url?: string;
   facebookId?: number | string;
+  isAnonymous?: boolean;
 };
 
 export type T_EA_DataProduct = {
@@ -163,10 +164,17 @@ type TResolvers = {
   product?: (data?: any) => T_EA_DataProduct;
   order?: (data?: any) => T_EA_DataOrder;
   basket?: (data?: any) => T_EA_DataBasket;
-  profile?: (data?: any) => T_EA_DataProfile | null;
+  profile?: (data: {
+    input: any;
+    lastIdentity: T_EA_DataProfile | null;
+  }) => T_EA_DataProfile | null;
   page?: (data?: any) => T_EA_DataPage;
 };
 
+type TMetricRules = {
+  defaultAllowed?: boolean;
+  metrics?: Partial<Record<keyof TTrackersEvents, boolean>>;
+};
 export type TSettings = {
   _configured: boolean;
   affiliation: string;
@@ -190,17 +198,13 @@ export type TSettings = {
       token?: null | string;
       testCode?: null | string;
       hashUser?: boolean;
-      rules?: {
-        metrics?: Partial<Record<keyof TTrackersEvents, boolean>>;
-      };
+      rules?: TMetricRules;
       conversionServerApiUrl?: string;
     };
     [ETrackers.FullStory]?: {
       enabled: boolean;
       orgId: string | null;
-      rules?: {
-        metrics?: {};
-      };
+      rules?: TMetricRules;
     };
     [ETrackers.Klaviyo]?: {
       enabled: boolean;
@@ -213,9 +217,7 @@ export type TSettings = {
           state: { isIdentified: boolean }
         ) => void;
       };
-      rules?: {
-        metrics?: Partial<Record<keyof TTrackersEvents, boolean>>;
-      };
+      rules?: TMetricRules;
     };
     [ETrackers.GoogleAnalytics]?: {
       enabled: boolean;
@@ -224,19 +226,16 @@ export type TSettings = {
       defaultCatalogName?: string;
       defaultBasketName?: string;
       dataLayerName?: string;
-      rules?: {
-        metrics?: {};
-      };
+      rules?: TMetricRules;
     };
     [ETrackers.TikTok]?: {
       enabled: boolean;
       pixelId?: string | null;
       token?: string | null;
       autoTrackPageViews?: boolean;
-      rules?: {
-        metrics?: {};
-      };
+      rules?: TMetricRules;
       conversionServerApiUrl?: string;
+      testCode?: string | null;
     };
   };
   links?: {

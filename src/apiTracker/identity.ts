@@ -2,6 +2,7 @@ import { isBrowserMode } from '../utils';
 import { type T_EA_DataProfile } from '../shared';
 import cookies from '../cookies';
 import { getConfig } from '../config';
+import { isNativePayloadProfile } from '../guards';
 
 const lastIdentity = new Set<T_EA_DataProfile>();
 const scope = 'EA_Identity';
@@ -36,13 +37,23 @@ export const resolveUser = (
 ): T_EA_DataProfile | null => {
   restore();
   const customResolver = getConfig().resolvers?.profile;
-  const lastId = lastIdentity.values().next().value;
-  const u =
-    (profile?.email ? profile : customResolver?.(lastId)) ?? lastId ?? null;
-  if (u && u.email && u.firstName) {
-    store(u);
+  const lastId = lastIdentity.values().next().value as T_EA_DataProfile | null;
+  const userToStore = customResolver
+    ? customResolver({
+        input: profile,
+        lastIdentity: lastId,
+      })
+    : isNativePayloadProfile(profile)
+    ? profile
+    : isNativePayloadProfile(lastId)
+    ? lastId
+    : null;
+  // const u =
+  //   (profile?.email ? profile : customResolver?.(lastId)) ?? lastId ?? null;
+  if (isNativePayloadProfile(userToStore) && !userToStore?.isAnonymous) {
+    store(userToStore);
   }
-  return u;
+  return userToStore;
 };
 
 export const store = (u: T_EA_DataProfile) => {

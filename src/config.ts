@@ -69,6 +69,7 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
       token: null,
       autoTrackPageViews: true,
       conversionServerApiUrl: '',
+      testCode: null,
     },
   },
   links: {
@@ -83,7 +84,9 @@ export const getDefaultParams = (_store: Partial<TSettings>): TSettings => ({
     product: _store.resolvers?.product || ((p) => p as T_EA_DataProduct),
     order: _store.resolvers?.order || ((p) => p as T_EA_DataOrder),
     basket: _store.resolvers?.basket || ((p) => p as T_EA_DataBasket),
-    profile: _store.resolvers?.profile || ((p) => p as T_EA_DataProfile | null),
+    profile:
+      _store.resolvers?.profile ||
+      ((p) => p.lastIdentity as T_EA_DataProfile | null),
     page: _store.resolvers?.page || ((p) => p as T_EA_DataPage),
   },
 });
