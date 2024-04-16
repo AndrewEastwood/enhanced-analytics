@@ -1312,7 +1312,7 @@ export const fbTracker = (options: TSettings) => {
     A person clicks on a checkout button.	
     content_category, content_ids, contents, currency, num_items, value
 
-    Optional.	
+    Optional.
     INITIATE_CHECKOUT
    */
   const trackInitiateCheckout = async (

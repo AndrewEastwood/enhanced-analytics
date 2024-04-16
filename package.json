@@ -1,6 +1,6 @@
 {
     "name": "enhanced-analytics",
-    "version": "1.0.306",
+    "version": "1.0.308",
     "description": "Couple of convenient tools for populating dataLayer ecommerce event data.",
     "main": "index.js",
     "types": "index.d.ts",

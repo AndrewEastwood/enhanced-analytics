@@ -338,7 +338,7 @@ export const tiktokTracker = (options: TSettings) => {
     const evtName = trackUtils.getEventNameOfTransaction(order);
     await trackIdentify();
     return collectEvent(
-      'PlaceAnOrder',
+      'CompletePayment',
       {
         event_id: evtName,
         event_time: Date.now(),
@@ -429,13 +429,14 @@ export const tiktokTracker = (options: TSettings) => {
   };
 
   const trackPageView = async (page: T_EA_DataPage) => {
-    // setVars?.('page', {
-    //   pageName: page?.name,
-    //   ...normalizePayloadFieldNames(page.extras ?? {}),
-    // });
-    // const evtName = trackUtils.getEventNameOfPageView();
+    const evtName = trackUtils.getEventNameOfPageView();
     await trackIdentify();
-    trackPage?.();
+    return collectEvent('Pageview', {
+      event_id: evtName,
+      event_time: Date.now(),
+      page: { url: page.url },
+      contents: [],
+    });
   };
 
   const trackCustom = async (e: T_EA_DataCustomEvent) => {
